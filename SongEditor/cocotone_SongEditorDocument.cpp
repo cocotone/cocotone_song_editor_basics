@@ -89,7 +89,7 @@ juce::var createScoreJsonInternal(const SongEditorDocumentData& documentData)
 
     jsonRoot->setProperty("notes", jsonNotes);
 
-    return juce::var(jsonRoot);
+    return juce::var(jsonRoot.get());
 }
 
 juce::String createScoreJsonStringInternal(const SongEditorDocumentData& documentData)
