@@ -128,7 +128,7 @@ void SongEditor::resized()
 {
     auto rect_area = getLocalBounds();
 
-    const auto piano_roll_main_top = 24;
+    const auto piano_roll_main_top = 48;
     const auto piano_roll_main_bottom = getHeight() - 24;
 
     const auto rect_piano_roll_keyboard = 
@@ -155,11 +155,35 @@ void SongEditor::resized()
     pianoRollScrollBarHorizontal->setBounds(rect_piano_roll_scrollbar_horizontal);
 
     {
-        const auto rect_time_ruler_content =
-            rect_piano_roll_time_ruler
-            .withLeft(rect_piano_roll_preview.getX())
-            .withRight(rect_piano_roll_preview.getRight());
-        pianoRollTimeRuler->setTimeRulerRectangle(rect_time_ruler_content);
+        {
+            const auto rect_time_ruler_content =
+                rect_piano_roll_time_ruler
+                .withTop(rect_piano_roll_time_ruler.getHeight() * 0.5f)
+                .withLeft(rect_piano_roll_preview.getX())
+                .withRight(rect_piano_roll_preview.getRight());
+            pianoRollTimeRuler->setTimeRulerRectangle(rect_time_ruler_content);
+
+            const auto rect_time_ruler_label =
+                rect_piano_roll_time_ruler
+                .withTop(rect_piano_roll_time_ruler.getHeight() * 0.5f)
+                .withRight(rect_piano_roll_preview.getX());
+            pianoRollTimeRuler->setTimeRulerLabelRectangle(rect_time_ruler_label);
+        }
+
+        {
+            const auto rect_beat_ruler_content =
+                rect_piano_roll_time_ruler
+                .withBottom(rect_piano_roll_time_ruler.getHeight() * 0.5f)
+                .withLeft(rect_piano_roll_preview.getX())
+                .withRight(rect_piano_roll_preview.getRight());
+            pianoRollTimeRuler->setBeatRulerRectangle(rect_beat_ruler_content);
+
+            const auto rect_beat_ruler_label =
+                rect_piano_roll_time_ruler
+                .withBottom(rect_piano_roll_time_ruler.getHeight() * 0.5f)
+                .withRight(rect_piano_roll_preview.getX());
+            pianoRollTimeRuler->setBeatRulerLabelRectangle(rect_beat_ruler_label);
+        }
     }
 }
 
