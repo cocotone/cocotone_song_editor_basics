@@ -225,7 +225,7 @@ void SongEditorDocument::selectNote(const cctn::song::QueryForFindPianoRollNote&
     sendChangeMessage();
 }
 
-void SongEditorDocument::addNote(const cctn::song::QueryForAddPianoRollNote& query)
+void SongEditorDocument::createNote(const cctn::song::QueryForAddPianoRollNote& query)
 {
     cctn::song::SongEditorDocumentNote new_note;
 

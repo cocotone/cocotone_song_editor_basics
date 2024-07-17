@@ -68,7 +68,7 @@ void SongEditorEventBridge::addNote(const cctn::song::QueryForAddPianoRollNote& 
         return;
     }
 
-    attachedDocument.lock()->addNote(query);
+    attachedDocument.lock()->createNote(query);
 }
 
 void SongEditorEventBridge::deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query)

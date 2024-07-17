@@ -40,7 +40,11 @@ public:
     //==============================================================================
     std::optional<cctn::song::SongEditorDocumentNote> findNote(const cctn::song::QueryForFindPianoRollNote& query);
     void selectNote(const cctn::song::QueryForFindPianoRollNote& query);
-    void addNote(const cctn::song::QueryForAddPianoRollNote& query);
+
+    // CRUD operation
+    void createNote(const cctn::song::QueryForAddPianoRollNote& query);
+    void readNote(const cctn::song::QueryForAddPianoRollNote& query) {};
+    void updateNote(const cctn::song::QueryForAddPianoRollNote& query) {};
     void deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query);
 
     //==============================================================================
