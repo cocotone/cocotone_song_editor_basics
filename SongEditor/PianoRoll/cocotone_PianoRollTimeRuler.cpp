@@ -135,18 +135,29 @@ void PianoRollTimeRuler::drawBeatRulerVerticalLines(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
-    const auto vertical_line_positions = createVerticalLinePositions(rangeVisibleTimeInSeconds, verticalLineIntervalInSeconds, rectTimeRulerArea.getX(), rectTimeRulerArea.getRight());
+    // TODO: move to class set by variable.
+    double bpm = 120.0;
+    int numerator = 4;
+    int denominator = 4;
+
+    const auto precise_beat_and_time_array = cctn::song::BeatTimeMapper::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd());
 
     // Set clipping mask
-    g.reduceClipRegion(rectTimeRulerArea);
+    g.reduceClipRegion(rectBeatRulerArea);
 
     g.setFont(juce::Font(juce::Font::getDefaultMonospacedFontName(), 10, 0));
 
-    for (const auto& position_with_time_info : vertical_line_positions)
+    for (const auto& beat_time_point : precise_beat_and_time_array)
     {
+        const auto time_in_seconds = beat_time_point.timeInSeconds;
+        beat_time_point.beat;
+        const auto signature_text = beat_time_point.getFormattedTimeSignature(numerator);
+
+        const auto position_x = timeToPositionX(time_in_seconds, rangeVisibleTimeInSeconds, rectBeatRulerArea.getX(), rectBeatRulerArea.getRight());
+
         g.setColour(juce::Colours::white);
-        g.drawVerticalLine(position_with_time_info.positionX, 0.0f, getHeight());
-        g.drawText(juce::String(position_with_time_info.timeInSeconds, 1), position_with_time_info.positionX + 2, rectTimeRulerArea.getY() + 2, 60, 20, juce::Justification::centredLeft);
+        g.drawVerticalLine(position_x, 0.0f, getHeight());
+        g.drawText(signature_text, position_x + 2, rectBeatRulerArea.getY() + 2, 60, 20, juce::Justification::centredLeft);
     }
 }
 
