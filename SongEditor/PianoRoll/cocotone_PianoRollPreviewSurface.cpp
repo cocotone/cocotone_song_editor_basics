@@ -81,7 +81,7 @@ void PianoRollPreviewSurface::emitMouseEvent(const juce::MouseEvent& mouseEvent,
 
 std::optional<cctn::song::QueryForFindPianoRollNote> PianoRollPreviewSurface::getQueryForFindPianoRollNote(const juce::MouseEvent& mouseEvent)
 {
-    auto position = mouseEvent.getPosition();
+    auto position = mouseEvent.getMouseDownPosition();
 
     const auto note_number_optional = findNoteNumberWithVerticalPosition(position.getY());
     const auto time = positionXToTime(position.getX(), 0, getWidth(), rangeVisibleTimeInSeconds);
@@ -137,6 +137,10 @@ void PianoRollPreviewSurface::fillGridHorizontalRows(juce::Graphics& g)
         note_number++)
     {
         juce::Range<float> key_position_range = juce::Range<float>{ 0.0f, 0.0f };
+        if (mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom.count(note_number) > 0)
+        {
+            key_position_range = mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[note_number];
+        }
 #if 0
         key_position_range = pianoRollKeyboardRef.getPositionRangeForPianoRollGridHorizontalWidth(note_number);
 
@@ -147,10 +151,6 @@ void PianoRollPreviewSurface::fillGridHorizontalRows(juce::Graphics& g)
             key_position_range.getLength()
         };
 #else
-        if (mapVisibleKeyNoteNumberToVerticalPositionRange.count(note_number) > 0)
-        {
-            key_position_range = mapVisibleKeyNoteNumberToVerticalPositionRange[note_number];
-        }
 
         juce::Rectangle<float> rect_to_fill = juce::Rectangle<float>{
             0.0f,
@@ -190,28 +190,19 @@ void PianoRollPreviewSurface::drawGridHorizontalLines(juce::Graphics& g)
         note_number++)
     {
         juce::Range<float> key_position_range = juce::Range<float>{ 0.0f, 0.0f };
+        if (mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom.count(note_number) > 0)
+        {
+            key_position_range = mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[note_number];
+        }
 #if 0
         key_position_range = pianoRollKeyboardRef.getPositionRangeForPianoRollGridHorizontalWidth(note_number);
         juce::Rectangle<float> rect_to_fill = { 0.0f, (float)getHeight() - key_position_range.getEnd(), (float)getWidth(), key_position_range.getLength() };
 #else
-        if (mapVisibleKeyNoteNumberToVerticalPositionRange.count(note_number) > 0)
-        {
-            key_position_range = mapVisibleKeyNoteNumberToVerticalPositionRange[note_number];
-        }
-        juce::Rectangle<float> rect_to_fill = { 0.0f, (float)key_position_range.getStart(), (float)getWidth(), key_position_range.getLength()};
+        juce::Rectangle<float> rect_to_fill = { 0.0f, (float)key_position_range.getStart(), (float)getWidth(), key_position_range.getLength() };
 #endif
 
-        // In case of black key
-        if (juce::MidiMessage::isMidiNoteBlack(note_number))
-        {
-            g.setColour(kColourGridBlackKeyBezel);
-
-            const float horizontal_y_top = rect_to_fill.getY() + 1.0f;
-            const float horizontal_y_bottom = rect_to_fill.getBottom() - 1.0f;
-            g.drawHorizontalLine(horizontal_y_top, 0.0f, static_cast<float>(getWidth()));
-            g.drawHorizontalLine(horizontal_y_bottom, 0.0f, static_cast<float>(getWidth()));
-        }
-        else
+        // In case of white key draw bezel
+        if (!juce::MidiMessage::isMidiNoteBlack(note_number))
         {
             g.setColour(kColourGridWhiteKeyBezel);
 
@@ -254,12 +245,16 @@ void PianoRollPreviewSurface::drawCurrentPreviewData(juce::Graphics& g)
     for (const auto& note : notes)
     {
         const auto note_draw_info = createNoteDrawInfo(note, rangeVisibleTimeInSeconds, 0, getWidth());
-
-        const auto key_position_range = pianoRollKeyboardRef.getPositionRangeForPianoRollGridHorizontalWidth(note_draw_info.noteNumber);
+        
+        juce::Range<float> key_position_range = juce::Range<float>{ 0.0f, 0.0f };
+        if (mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom.count(note_draw_info.noteNumber) > 0)
+        {
+            key_position_range = mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[note_draw_info.noteNumber];
+        }
 
         juce::Rectangle<float> rect_to_fill = juce::Rectangle<float>{
             (float)note_draw_info.positionLeftX,
-            (float)getHeight() - key_position_range.getEnd(),
+            (float)key_position_range.getStart(),
             (float)(note_draw_info.positionRightX - note_draw_info.positionLeftX),
             (float)key_position_range.getLength(),
         };
@@ -319,13 +314,13 @@ void PianoRollPreviewSurface::drawInputPositionMarker(juce::Graphics& g)
 //==============================================================================
 void PianoRollPreviewSurface::updateMapVisibleKeyNoteNumberToVerticalPositionRange()
 {
-    mapVisibleKeyNoteNumberToVerticalPositionRange.clear();
+    mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom.clear();
 
     for (int note_number = rangeVisibleKeyNoteNumbers.getStart();
         note_number < rangeVisibleKeyNoteNumbers.getEnd();
         note_number++)
     {
-        const auto key_position_range_ignore_orientation = pianoRollKeyboardRef.getPositionRangeForPianoRollGridHorizontalWidth(note_number);
+        const auto key_position_range_ignore_orientation = pianoRollKeyboardRef.getPositionRangeForPianoRollGridHorizontalRow(note_number);
         
         const juce::Range<float> key_position_range_vertical = 
             juce::Range<float>{
@@ -333,13 +328,25 @@ void PianoRollPreviewSurface::updateMapVisibleKeyNoteNumberToVerticalPositionRan
             getHeight() - key_position_range_ignore_orientation.getStart()
         };
 
-        mapVisibleKeyNoteNumberToVerticalPositionRange[note_number] = key_position_range_vertical;
+        mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[note_number] = key_position_range_vertical;
+    }
+
+
+    for (int note_number = rangeVisibleKeyNoteNumbers.getStart();
+        note_number < rangeVisibleKeyNoteNumbers.getEnd();
+        note_number++)
+    {
+        juce::Logger::outputDebugString(
+            juce::String(note_number) + " : " + 
+            juce::String(mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[note_number].getStart()) + " : " +
+            juce::String(mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[note_number].getEnd()) + " : " +
+            juce::String(mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[note_number].getLength()));
     }
 }
 
 std::optional<juce::uint8>  PianoRollPreviewSurface::findNoteNumberWithVerticalPosition(float positionY)
 {
-    for (const auto& element : mapVisibleKeyNoteNumberToVerticalPositionRange)
+    for (const auto& element : mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom)
     {
         if (element.second.contains(positionY))
         {

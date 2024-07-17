@@ -86,7 +86,7 @@ private:
     const PianoRollKeyboard& pianoRollKeyboardRef;
 
     // For fast painitng.
-    std::map<juce::uint8, juce::Range<float>> mapVisibleKeyNoteNumberToVerticalPositionRange;
+    std::map<juce::uint8, juce::Range<float>> mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollPreviewSurface)
 };

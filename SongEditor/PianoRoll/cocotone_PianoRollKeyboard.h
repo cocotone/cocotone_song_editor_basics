@@ -5,6 +5,8 @@ namespace cctn
 namespace song
 {
 
+class NonPropotionalKeyboardComponent;
+
 //==============================================================================
 class PianoRollKeyboard final
     : public juce::Component
@@ -20,7 +22,7 @@ public:
 
     //==============================================================================
     juce::Rectangle<float> getRectangleForKeyForwarding(int midiNoteNumber) const;
-    juce::Range<float> getPositionRangeForPianoRollGridHorizontalWidth(int midiNoteNumber) const;
+    juce::Range<float> getPositionRangeForPianoRollGridHorizontalRow(int midiNoteNumber) const;
 
 private:
     //==============================================================================
@@ -28,7 +30,7 @@ private:
     void resized() override;
 
     //==============================================================================
-    std::unique_ptr<juce::MidiKeyboardComponent> midiKeyboardComponent;
+    std::unique_ptr<cctn::song::NonPropotionalKeyboardComponent> midiKeyboardComponent;
     std::unique_ptr<juce::MidiKeyboardState> dummyMidiKeyboardState;
 
     // TODO: Move state value.
