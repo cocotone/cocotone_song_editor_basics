@@ -25,6 +25,25 @@ private:
 };
 
 //==============================================================================
+struct TempoAndTimeSignature
+{
+public:
+    //==============================================================================
+    double bpm;
+    int numerator;
+    int denominator;
+
+    //==============================================================================
+    TempoAndTimeSignature(double b, int num, int denm)
+        : bpm(b), numerator(num), denominator(denm)
+    {}
+
+private:
+    //==============================================================================
+    JUCE_LEAK_DETECTOR(TempoAndTimeSignature)
+};
+
+//==============================================================================
 struct BeatTimePoint
 {
 public:
@@ -59,6 +78,34 @@ public:
 private:
     //==============================================================================
     JUCE_LEAK_DETECTOR(BeatTimePoint)
+};
+
+//==============================================================================
+class PositionInfoExtractor
+{
+public:
+    static std::optional<TempoAndTimeSignature> extractTempoAndTimeSignature(const juce::AudioPlayHead::PositionInfo& positionInfo)
+    {
+        // Check if BPM is available
+        if (!positionInfo.getBpm().hasValue())
+        {
+            return std::nullopt;
+        }
+
+        double bpm = *positionInfo.getBpm();
+
+        // Check if time signature is available
+        if (!positionInfo.getTimeSignature().hasValue())
+        {
+            return std::nullopt;
+        }
+
+        auto timeSignature = *positionInfo.getTimeSignature();
+        int numerator = timeSignature.numerator;
+        int denominator = timeSignature.denominator;
+
+        return TempoAndTimeSignature{ bpm, numerator, denominator };
+    }
 };
 
 //==============================================================================

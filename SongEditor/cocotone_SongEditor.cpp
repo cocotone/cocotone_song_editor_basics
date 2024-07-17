@@ -222,6 +222,7 @@ void SongEditor::timerCallback()
             const double current_position_in_seconds = position_info_optional.value().getTimeInSeconds().orFallback(0.0);
             pianoRollPreviewSurface->setPlayingPositionInSeconds(current_position_in_seconds);
             pianoRollTimeRuler->setPlayingPositionInSeconds(current_position_in_seconds);
+            pianoRollTimeRuler->setCurrentPositionInfo(position_info_optional.value());
         }
     }
 }

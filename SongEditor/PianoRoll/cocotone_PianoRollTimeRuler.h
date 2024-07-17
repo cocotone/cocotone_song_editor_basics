@@ -20,6 +20,7 @@ public:
 
     //==============================================================================
     void setPlayingPositionInSeconds(double positionInSeconds);
+    void setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo);
 
     //==============================================================================
     void setTimeRulerRectangle(const juce::Rectangle<int>& rectangle);
@@ -62,6 +63,8 @@ private:
     juce::Rectangle<int> rectTimeRulerLabelArea;
     juce::Rectangle<int> rectBeatRulerArea;
     juce::Rectangle<int> rectBeatRulerLabelArea;
+
+    juce::AudioPlayHead::PositionInfo currentPositionInfo;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollTimeRuler)
 };

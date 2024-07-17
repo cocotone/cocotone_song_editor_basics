@@ -1,3 +1,4 @@
+#include "cocotone_PianoRollTimeRuler.h"
 namespace cctn
 {
 namespace song
@@ -40,6 +41,12 @@ void PianoRollTimeRuler::setGridVerticalLineIntervaleInSeconds(double intervalIn
 void PianoRollTimeRuler::setPlayingPositionInSeconds(double positionInSeconds)
 {
     playingPositionInSeconds = positionInSeconds;
+    repaint();
+}
+
+void PianoRollTimeRuler::setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo)
+{
+    currentPositionInfo = positionInfo;
     repaint();
 }
 
@@ -135,10 +142,17 @@ void PianoRollTimeRuler::drawBeatRulerVerticalLines(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
-    // TODO: move to class set by variable.
     double bpm = 120.0;
     int numerator = 4;
     int denominator = 4;
+
+    const auto tempo_and_time_signature_optional = cctn::song::PositionInfoExtractor::extractTempoAndTimeSignature(currentPositionInfo);
+    if (tempo_and_time_signature_optional.has_value())
+    {
+        bpm = tempo_and_time_signature_optional.value().bpm;
+        numerator = tempo_and_time_signature_optional.value().numerator;
+        denominator = tempo_and_time_signature_optional.value().denominator;
+    }
 
     const auto precise_beat_and_time_array = cctn::song::BeatTimeMapper::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd());
 
