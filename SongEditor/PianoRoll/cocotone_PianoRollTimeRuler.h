@@ -23,7 +23,9 @@ public:
 
     //==============================================================================
     void setTimeRulerRectangle(const juce::Rectangle<int>& rectangle);
-    void setRulerNameRectangle(const juce::Rectangle<int>& rectangle);
+    void setTimeRulerLabelRectangle(const juce::Rectangle<int>& rectangle);
+    void setBeatRulerRectangle(const juce::Rectangle<int>& rectangle);
+    void setBeatRulerLabelRectangle(const juce::Rectangle<int>& rectangle);
 
     void updateLayout();
 
@@ -33,7 +35,8 @@ private:
     void resized() override;
 
     //==============================================================================
-    void drawGridVerticalLines(juce::Graphics& g);
+    void drawTimeRulerVerticalLines(juce::Graphics& g);
+    void drawBeatRulerVerticalLines(juce::Graphics& g);
     void drawPlayingPositionMarker(juce::Graphics& g);
 
     //==============================================================================
@@ -51,9 +54,14 @@ private:
     double verticalLineIntervalInSeconds;
     double playingPositionInSeconds;
 
+    std::unique_ptr<juce::Label> labelTimeRuler;
+    std::unique_ptr<juce::Label> labelBeatRuler;
+
     //==============================================================================
     juce::Rectangle<int> rectTimeRulerArea;
-    juce::Rectangle<int> rectRulerNameArea;
+    juce::Rectangle<int> rectTimeRulerLabelArea;
+    juce::Rectangle<int> rectBeatRulerArea;
+    juce::Rectangle<int> rectBeatRulerLabelArea;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollTimeRuler)
 };

@@ -9,6 +9,15 @@ PianoRollTimeRuler::PianoRollTimeRuler()
     , verticalLineIntervalInSeconds(1.0)
     , playingPositionInSeconds(0.0)
 {
+    labelTimeRuler = std::make_unique<juce::Label>();
+    labelTimeRuler->setText("Time", juce::dontSendNotification);
+    labelTimeRuler->setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(labelTimeRuler.get());
+
+    labelBeatRuler = std::make_unique<juce::Label>();
+    labelBeatRuler->setText("Beat", juce::dontSendNotification);
+    labelBeatRuler->setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(labelBeatRuler.get());
 }
 
 PianoRollTimeRuler::~PianoRollTimeRuler()
@@ -40,14 +49,29 @@ void PianoRollTimeRuler::setTimeRulerRectangle(const juce::Rectangle<int>& recta
     updateLayout();
 }
 
-void PianoRollTimeRuler::setRulerNameRectangle(const juce::Rectangle<int>& rectangle)
+void PianoRollTimeRuler::setTimeRulerLabelRectangle(const juce::Rectangle<int>& rectangle)
 {
-    rectRulerNameArea = rectangle;
+    rectTimeRulerLabelArea = rectangle;
+    updateLayout();
+}
+
+void PianoRollTimeRuler::setBeatRulerRectangle(const juce::Rectangle<int>& rectangle)
+{
+    rectBeatRulerArea = rectangle;
+    updateLayout();
+}
+
+void PianoRollTimeRuler::setBeatRulerLabelRectangle(const juce::Rectangle<int>& rectangle)
+{
+    rectBeatRulerLabelArea = rectangle;
     updateLayout();
 }
 
 void PianoRollTimeRuler::updateLayout()
 {
+    labelTimeRuler->setBounds(rectTimeRulerLabelArea);
+    labelBeatRuler->setBounds(rectBeatRulerLabelArea);
+
     repaint();
 }
 
@@ -59,10 +83,27 @@ void PianoRollTimeRuler::paint(juce::Graphics& g)
     g.fillAll(kColourWallpaper);
 
     g.setColour(kColourMainBackground);
+    
+    //
     g.fillRect(rectTimeRulerArea);
+    g.fillRect(rectTimeRulerLabelArea);
+    
+    //
+    g.fillRect(rectBeatRulerArea);
+    g.fillRect(rectBeatRulerLabelArea);
 
-    drawGridVerticalLines(g);
+    //
+    drawTimeRulerVerticalLines(g);
+    drawBeatRulerVerticalLines(g);
     drawPlayingPositionMarker(g);
+
+    //
+    g.setColour(kColourGridLines);
+    g.drawHorizontalLine(rectTimeRulerArea.getBottom() - 1, 0, rectTimeRulerArea.getRight());
+
+    //
+    g.setColour(kColourGridLines);
+    g.drawHorizontalLine(rectBeatRulerArea.getBottom() - 1, 0, rectBeatRulerArea.getRight());
 }
 
 void PianoRollTimeRuler::resized()
@@ -71,7 +112,7 @@ void PianoRollTimeRuler::resized()
 }
 
 //==============================================================================
-void PianoRollTimeRuler::drawGridVerticalLines(juce::Graphics& g)
+void PianoRollTimeRuler::drawTimeRulerVerticalLines(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
@@ -86,7 +127,26 @@ void PianoRollTimeRuler::drawGridVerticalLines(juce::Graphics& g)
     {
         g.setColour(juce::Colours::white);
         g.drawVerticalLine(position_with_time_info.positionX, 0.0f, getHeight());
-        g.drawText(juce::String(position_with_time_info.timeInSeconds, 1), position_with_time_info.positionX + 2, 0.0f, 60, 20, juce::Justification::centredLeft);
+        g.drawText(juce::String(position_with_time_info.timeInSeconds, 1), position_with_time_info.positionX + 2, rectTimeRulerArea.getY() + 2, 60, 20, juce::Justification::centredLeft);
+    }
+}
+
+void PianoRollTimeRuler::drawBeatRulerVerticalLines(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    const auto vertical_line_positions = createVerticalLinePositions(rangeVisibleTimeInSeconds, verticalLineIntervalInSeconds, rectTimeRulerArea.getX(), rectTimeRulerArea.getRight());
+
+    // Set clipping mask
+    g.reduceClipRegion(rectTimeRulerArea);
+
+    g.setFont(juce::Font(juce::Font::getDefaultMonospacedFontName(), 10, 0));
+
+    for (const auto& position_with_time_info : vertical_line_positions)
+    {
+        g.setColour(juce::Colours::white);
+        g.drawVerticalLine(position_with_time_info.positionX, 0.0f, getHeight());
+        g.drawText(juce::String(position_with_time_info.timeInSeconds, 1), position_with_time_info.positionX + 2, rectTimeRulerArea.getY() + 2, 60, 20, juce::Justification::centredLeft);
     }
 }
 
@@ -100,7 +160,7 @@ void PianoRollTimeRuler::drawPlayingPositionMarker(juce::Graphics& g)
         juce::Rectangle<int>{ position_x, 0, 2, getHeight() };
 
     // Set clipping mask
-    g.reduceClipRegion(rectTimeRulerArea);
+    g.reduceClipRegion(rectTimeRulerArea.getUnion(rectBeatRulerArea));
 
     g.setColour(juce::Colours::yellow);
     g.fillRect(rect_marker);
