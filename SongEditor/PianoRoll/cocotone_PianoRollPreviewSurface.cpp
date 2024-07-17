@@ -10,6 +10,7 @@ PianoRollPreviewSurface::PianoRollPreviewSurface(const PianoRollKeyboard& pianoR
     , verticalLineIntervalInSeconds(1.0)
     , playingPositionInSeconds(0.0)
     , inputPositionInSeconds(0.0)
+    , isInputPositionInsertable(false)
     , currentPreviewData({})
 {
     numVisibleWhiteAndBlackKeys = 24;
@@ -65,13 +66,13 @@ void PianoRollPreviewSurface::setPianoRollPreviewData(cctn::song::PianoRollPrevi
 }
 
 //==============================================================================
-void PianoRollPreviewSurface::emitMouseEvent(const juce::MouseEvent& mouseEvent, bool isExit)
+void PianoRollPreviewSurface::emitMouseEvent(const juce::MouseEvent& mouseEvent, bool isExitAction)
 {
     lastMousePosition = mouseEvent.getPosition();
 
     inputPositionInSeconds = positionXToTime(lastMousePosition.getX(), 0, getWidth(), rangeVisibleTimeInSeconds);
 
-    if (isExit)
+    if (isExitAction)
     {
         inputPositionInSeconds = -1.0;
     }
@@ -102,6 +103,8 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
+    updateViewContext();
+
     g.fillAll(kColourMainBackground);
 
     fillGridHorizontalRows(g);
@@ -121,6 +124,24 @@ void PianoRollPreviewSurface::resized()
     updateMapVisibleKeyNoteNumberToVerticalPositionRange();
 
     repaint();
+}
+
+//==============================================================================
+void PianoRollPreviewSurface::updateViewContext()
+{
+    JUCE_ASSERT_MESSAGE_MANAGER_EXISTS;
+
+    const auto& notes = currentPreviewData.notes;
+
+    isInputPositionInsertable = true;
+    for (const auto& note : notes)
+    {
+        if (juce::Range<float>(note.startInSeconds, note.endInSeconds).contains(inputPositionInSeconds))
+        {
+            isInputPositionInsertable = false;
+            break;
+        }
+    }
 }
 
 //==============================================================================
@@ -255,7 +276,7 @@ void PianoRollPreviewSurface::drawCurrentPreviewData(juce::Graphics& g)
         juce::Rectangle<float> rect_to_fill = juce::Rectangle<float>{
             (float)note_draw_info.positionLeftX,
             (float)key_position_range.getStart(),
-            (float)(note_draw_info.positionRightX - note_draw_info.positionLeftX),
+            (float)juce::jmax<int>(note_draw_info.positionRightX - note_draw_info.positionLeftX, 16),
             (float)key_position_range.getLength(),
         };
 
@@ -301,12 +322,18 @@ void PianoRollPreviewSurface::drawInputPositionMarker(juce::Graphics& g)
 
     if (inputPositionInSeconds > 0.0)
     {
+        if (isInputPositionInsertable)
+        {
+            g.setColour(kColourPianoRollMousePositionInsertable);
+        }
+        else
+        {
+            g.setColour(kColourPianoRollMousePositionNotInsertable);
+        }
+
         const auto position_x = timeToPositionX(inputPositionInSeconds, rangeVisibleTimeInSeconds, getWidth());
+        juce::Rectangle<int> rect_marker = juce::Rectangle<int>{ position_x, 0, 2, getHeight() };
 
-        juce::Rectangle<int> rect_marker =
-            juce::Rectangle<int>{ position_x, 0, 2, getHeight() };
-
-        g.setColour(kColourGridNote);
         g.fillRect(rect_marker);
     }
 }

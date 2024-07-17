@@ -27,13 +27,16 @@ public:
     void setPianoRollPreviewData(cctn::song::PianoRollPreviewData previewData);
 
     //==============================================================================
-    void emitMouseEvent(const juce::MouseEvent& mouseEvent, bool isExit);
+    void emitMouseEvent(const juce::MouseEvent& mouseEvent, bool isExitAction);
     std::optional<cctn::song::QueryForFindPianoRollNote> getQueryForFindPianoRollNote(const juce::MouseEvent& mouseEvent);
 
 private:
     //==============================================================================
     void paint(juce::Graphics& g) override;
     void resized() override;
+
+    //==============================================================================
+    void updateViewContext();
 
     //==============================================================================
     void fillGridHorizontalRows(juce::Graphics& g);
@@ -79,6 +82,7 @@ private:
     double verticalLineIntervalInSeconds;
     double playingPositionInSeconds;
     double inputPositionInSeconds;
+    bool isInputPositionInsertable;
     cctn::song::PianoRollPreviewData currentPreviewData;
     juce::Point<int> lastMousePosition;
 

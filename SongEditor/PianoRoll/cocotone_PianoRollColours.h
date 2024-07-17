@@ -15,6 +15,8 @@ const juce::Colour kColourGridLines = juce::Colour(0x26ffffff);
 const juce::Colour kColourGridNoteBezel = juce::Colour(0xff1e1e1e);
 const juce::Colour kColourGridNote = juce::Colour(0xff3d9461);
 const juce::Colour kColourGridNoteSelected = juce::Colour(juce::Colours::orange);
+const juce::Colour kColourPianoRollMousePositionInsertable = juce::Colour(0xff3d9461);
+const juce::Colour kColourPianoRollMousePositionNotInsertable = juce::Colour(juce::Colours::red);
 const juce::Colour kColourWhiteKeyNote = juce::Colour(0xff4FC3F7);
 
 }
