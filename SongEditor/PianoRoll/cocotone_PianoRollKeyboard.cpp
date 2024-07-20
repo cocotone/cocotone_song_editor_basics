@@ -14,21 +14,20 @@ public:
     {
     }
 
-    ~NonPropotionalKeyboardComponent()
+    ~NonPropotionalKeyboardComponent() override
     {
     }
 
     //==============================================================================
-    float NonPropotionalKeyboardComponent::getNonPropotinalKeyWidth() const
+    float getNonPropotinalKeyWidth() const
     {
         const auto width_of_octave = getKeyWidth() * 7.0f;
         const auto width_of_per_key = width_of_octave / 12.0f;
         return width_of_per_key;
     }
 
-private:
     //==============================================================================
-    juce::Range<float> NonPropotionalKeyboardComponent::getKeyPosition(int midiNoteNumber, float targetKeyWidth) const
+    juce::Range<float> getKeyPosition(int midiNoteNumber, float targetKeyWidth) const override
     {
         const int num_keys_in_octave = 12;
         const auto octave = midiNoteNumber / 12;
@@ -79,7 +78,10 @@ private:
 
         return { start_of_key, start_of_key + width_of_per_key };
     }
-
+    
+private:
+    //==============================================================================
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NonPropotionalKeyboardComponent)
 };
 
