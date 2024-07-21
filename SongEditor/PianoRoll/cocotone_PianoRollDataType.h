@@ -5,61 +5,42 @@ namespace cctn
 namespace song
 {
 
-//==============================================================================
-struct PianoRollNote
-{
-    double startInSeconds;
-    double endInSeconds;
-    juce::int64 noteNumber;
-    juce::String lyric;
-    juce::String extraPhoneme;
-    bool isSelected;
+// //==============================================================================
+// struct PianoRollNote
+// {
+//     double startInSeconds;
+//     double endInSeconds;
+//     juce::int64 noteNumber;
+//     juce::String lyric;
+//     juce::String extraPhoneme;
+//     bool isSelected;
 
-    JUCE_LEAK_DETECTOR(PianoRollNote)
-};
+//     JUCE_LEAK_DETECTOR(PianoRollNote)
+// };
 
-//==============================================================================
-struct PianoRollPreviewData
-{
-    juce::Array<PianoRollNote> notes;
+// //==============================================================================
+// struct PianoRollPreviewData
+// {
+//     juce::Array<PianoRollNote> notes;
 
-    JUCE_LEAK_DETECTOR(PianoRollPreviewData)
-};
+//     JUCE_LEAK_DETECTOR(PianoRollPreviewData)
+// };
 
-//==============================================================================
-struct QueryForFindPianoRollNote
-{
-    double timeInSeconds{ 0.0 };
-    int noteNumber;
+// //==============================================================================
+// class IPianoRollPreviewDataSource
+// {
+// public:
+//     //==============================================================================
+//     virtual ~IPianoRollPreviewDataSource() = default;
 
-    JUCE_LEAK_DETECTOR(QueryForFindPianoRollNote)
-};
+//     //==============================================================================
+//     virtual std::optional<cctn::song::PianoRollPreviewData> getPianoRollPreviewData() = 0;
 
-//==============================================================================
-struct QueryForAddPianoRollNote
-{
-    double startTimeInSeconds{ 0.0 };
-    double endTimeInSeconds{ 0.0 };
-    int noteNumber;
+// private:
+//     //==============================================================================
 
-    JUCE_LEAK_DETECTOR(QueryForAddPianoRollNote)
-};
-
-//==============================================================================
-class IPianoRollPreviewDataSource
-{
-public:
-    //==============================================================================
-    virtual ~IPianoRollPreviewDataSource() = default;
-
-    //==============================================================================
-    virtual std::optional<cctn::song::PianoRollPreviewData> getPianoRollPreviewData() = 0;
-
-private:
-    //==============================================================================
-
-    JUCE_LEAK_DETECTOR(IPianoRollPreviewDataSource)
-};
+//     JUCE_LEAK_DETECTOR(IPianoRollPreviewDataSource)
+// };
 
 
 }

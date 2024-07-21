@@ -6,6 +6,11 @@ namespace cctn
 namespace song
 {
 
+namespace
+{
+constexpr int kNumVisibleOctaves = 1;
+}
+
 //==============================================================================
 SongEditor::SongEditor()
     : positionInfoProviderPtr(nullptr)
@@ -15,10 +20,10 @@ SongEditor::SongEditor()
 
     pianoRollEventDispatcher = std::make_unique<cctn::song::PianoRollEventDispatcher>(songEditorEventBridge);
 
-    pianoRollKeyboard = std::make_unique<cctn::song::PianoRollKeyboard>();
+    pianoRollKeyboard = std::make_unique<cctn::song::PianoRollKeyboard>(kNumVisibleOctaves);
     addAndMakeVisible(pianoRollKeyboard.get());
 
-    pianoRollPreviewSurface = std::make_unique<cctn::song::PianoRollPreviewSurface>(*pianoRollKeyboard);
+    pianoRollPreviewSurface = std::make_unique<cctn::song::PianoRollPreviewSurface>(*pianoRollKeyboard, kNumVisibleOctaves);
     addAndMakeVisible(pianoRollPreviewSurface.get());
 
     pianoRollInteractionSurface = 
@@ -27,10 +32,14 @@ SongEditor::SongEditor()
 
     const int num_visible_keys = pianoRollKeyboard->getVisibleKeySize();
 
-    pianoRollSliderVertical = std::make_unique<juce::Slider>(juce::Slider::SliderStyle::LinearVertical, juce::Slider::TextEntryBoxPosition::NoTextBox);
+    pianoRollSliderVertical = std::make_unique<juce::Slider>(
+        juce::Slider::SliderStyle::LinearVertical, 
+        juce::Slider::TextEntryBoxPosition::NoTextBox);
     pianoRollSliderVertical->getValueObject().referTo(valuePianoRollBottomKeyNumber);
     pianoRollSliderVertical->setRange(0.0, 127.0 - num_visible_keys, 1.0);
-    pianoRollSliderVertical->setColour(juce::Slider::ColourIds::trackColourId, pianoRollSliderVertical->findColour(juce::Slider::ColourIds::backgroundColourId));
+    pianoRollSliderVertical->setColour(
+        juce::Slider::ColourIds::trackColourId, 
+        pianoRollSliderVertical->findColour(juce::Slider::ColourIds::backgroundColourId));
     addAndMakeVisible(pianoRollSliderVertical.get());
 
     pianoRollScrollBarHorizontal = std::make_unique<juce::ScrollBar>(false);
@@ -93,15 +102,10 @@ void SongEditor::registerSongEditorDocument(std::shared_ptr<cctn::song::SongEdit
     if (songEditorDocumentPtr.lock().get() != document.get())
     {
         songEditorDocumentPtr = document;
-
-        const auto preview_data_optional = songEditorDocumentPtr.lock()->getPianoRollPreviewData();
-        if (preview_data_optional.has_value())
-        {
-            pianoRollPreviewSurface->setPianoRollPreviewData(preview_data_optional.value());
-        }
-
         songEditorDocumentPtr.lock()->addChangeListener(this);
         songEditorEventBridge->attachDocument(songEditorDocumentPtr.lock());
+
+        pianoRollPreviewSurface->setDocumentForPreview(document);
     }
 }
 
@@ -114,7 +118,7 @@ void SongEditor::unregisterSongEditorDocument(std::shared_ptr<cctn::song::SongEd
 
         songEditorDocumentPtr.reset();
 
-        pianoRollPreviewSurface->setPianoRollPreviewData({});
+        pianoRollPreviewSurface->setDocumentForPreview(nullptr);
     }
 }
 
@@ -234,11 +238,11 @@ void SongEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
     {
         if (source == songEditorDocumentPtr.lock().get())
         {
-            const auto preview_data_optional = songEditorDocumentPtr.lock()->getPianoRollPreviewData();
-            if (preview_data_optional.has_value())
-            {
-                pianoRollPreviewSurface->setPianoRollPreviewData(preview_data_optional.value());
-            }
+            //const auto preview_data_optional = songEditorDocumentPtr.lock()->getPianoRollPreviewData();
+            //if (preview_data_optional.has_value())
+            //{
+            //    pianoRollPreviewSurface->setPianoRollPreviewData(preview_data_optional.value());
+            //}
         }
     }
 }

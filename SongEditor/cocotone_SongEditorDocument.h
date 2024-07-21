@@ -6,27 +6,13 @@ namespace song
 {
 
 //==============================================================================
-struct PianoRollNote;
-struct PianoRollPreviewData;
-struct QueryForFindPianoRollNote;
-class IPianoRollPreviewDataSource;
-
-using SongEditorDocumentNote = PianoRollNote;
-using SongEditorDocumentData = PianoRollPreviewData;
-
-//==============================================================================
 class SongEditorDocument
-    : public cctn::song::IPianoRollPreviewDataSource
-    , public juce::ChangeBroadcaster
+    : public juce::ChangeBroadcaster
 {
 public:
     //==============================================================================
     SongEditorDocument();
     ~SongEditorDocument() override;
-
-    //==============================================================================
-    // cctn::song::IPianoRollPreviewDataSource
-    std::optional<cctn::song::PianoRollPreviewData> getPianoRollPreviewData() override;
 
     //==============================================================================
     // voicevox specified format
@@ -38,7 +24,7 @@ public:
     void deserialize();
 
     //==============================================================================
-    std::optional<cctn::song::SongEditorDocumentNote> findNote(const cctn::song::QueryForFindPianoRollNote& query);
+    std::optional<cctn::song::SongEditorNoteExtended> findNote(const cctn::song::QueryForFindPianoRollNote& query);
     void selectNote(const cctn::song::QueryForFindPianoRollNote& query);
 
     // CRUD operation
@@ -48,13 +34,29 @@ public:
     void deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query);
 
     //==============================================================================
-    static double calculateDocumentDuration(const cctn::song::PianoRollPreviewData& data, double minimumDuration = 0.05);
-    static cctn::song::PianoRollNote createSilenceNote(double startTimeInSeconds, double endTimeInSeconds);
-    static cctn::song::PianoRollPreviewData makeSilenceFilledScore(const cctn::song::PianoRollPreviewData& data, double documentDuration);
+    static double calculateDocumentDuration(const cctn::song::SongEditorDocumentData& data, double minimumDuration = 0.05);
+    static cctn::song::SongEditorNoteExtended createSilenceNote(double startPositionInSeconds, double endPositionInSeconds);
+    static cctn::song::SongEditorDocumentData makeSilenceFilledScore(const cctn::song::SongEditorDocumentData& data, double documentDuration);
+
+    //==============================================================================
+    std::optional<const cctn::song::SongEditorDocumentData*> getRawDocumentData() const;
+
+    //==============================================================================
+    class Listener
+    {
+    public:
+        virtual ~Listener() = default;
+
+        virtual void onDataChanged() = 0;
+
+    private:
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Listener)
+    };
 
 private:
     //==============================================================================
-    std::unique_ptr<SongEditorDocumentData> documentData;
+    std::unique_ptr<cctn::song::SongEditorDocumentData> documentData;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SongEditorDocument)
 };

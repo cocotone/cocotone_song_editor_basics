@@ -8,10 +8,11 @@ namespace song
 //==============================================================================
 class PianoRollPreviewSurface final
     : public juce::Component
+    , private juce::ChangeListener
 {
 public:
     //==============================================================================
-    explicit PianoRollPreviewSurface(const cctn::song::PianoRollKeyboard& pianoRollKeyboard);
+    explicit PianoRollPreviewSurface(const cctn::song::PianoRollKeyboard& pianoRollKeyboard, int numVisibleOctaves);
     ~PianoRollPreviewSurface() override;
 
     //==============================================================================
@@ -24,16 +25,19 @@ public:
     void setInputPositionInSeconds(double positionInSeconds);
 
     //==============================================================================
-    void setPianoRollPreviewData(cctn::song::PianoRollPreviewData previewData);
-
-    //==============================================================================
     void emitMouseEvent(const juce::MouseEvent& mouseEvent, bool isExitAction);
     std::optional<cctn::song::QueryForFindPianoRollNote> getQueryForFindPianoRollNote(const juce::MouseEvent& mouseEvent);
+
+    //==============================================================================
+    void setDocumentForPreview(std::shared_ptr<cctn::song::SongEditorDocument> document);
 
 private:
     //==============================================================================
     void paint(juce::Graphics& g) override;
     void resized() override;
+
+    //==============================================================================
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
     //==============================================================================
     void updateViewContext();
@@ -71,7 +75,7 @@ private:
 
         JUCE_LEAK_DETECTOR(NoteDrawInfo)
     };
-    static NoteDrawInfo createNoteDrawInfo(PianoRollNote note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight);
+    static NoteDrawInfo createNoteDrawInfo(const cctn::song::SongEditorNoteExtended& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight);
 
     //==============================================================================
     // TODO: Move state value.
@@ -83,7 +87,6 @@ private:
     double playingPositionInSeconds;
     double inputPositionInSeconds;
     bool isInputPositionInsertable;
-    cctn::song::PianoRollPreviewData currentPreviewData;
     juce::Point<int> lastMousePosition;
 
     // Generate for Grid.
@@ -91,6 +94,9 @@ private:
 
     // For fast painitng.
     std::map<juce::uint8, juce::Range<float>> mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom;
+
+    std::weak_ptr<cctn::song::SongEditorDocument> documentForPreviewPtr;
+    const cctn::song::SongEditorDocumentData* paintScopedDocumentDataPtr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollPreviewSurface)
 };

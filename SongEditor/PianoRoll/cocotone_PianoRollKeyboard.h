@@ -5,6 +5,7 @@ namespace cctn
 namespace song
 {
 
+//==============================================================================
 class NonPropotionalKeyboardComponent;
 
 //==============================================================================
@@ -13,7 +14,7 @@ class PianoRollKeyboard final
 {
 public:
     //==============================================================================
-    PianoRollKeyboard();
+    PianoRollKeyboard(int numVisibleOctaves);
     ~PianoRollKeyboard() override;
 
     //==============================================================================

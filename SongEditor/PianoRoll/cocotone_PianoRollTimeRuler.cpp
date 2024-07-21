@@ -165,7 +165,7 @@ void PianoRollTimeRuler::drawBeatRulerVerticalLines(juce::Graphics& g)
     {
         const auto time_in_seconds = beat_time_point.timeInSeconds;
         beat_time_point.beat;
-        const auto signature_text = beat_time_point.getFormattedTimeSignature(numerator);
+        const auto signature_text = beat_time_point.getFormattedTimeSignature(numerator, false);
 
         const auto position_x = timeToPositionX(time_in_seconds, rangeVisibleTimeInSeconds, rectBeatRulerArea.getX(), rectBeatRulerArea.getRight());
 

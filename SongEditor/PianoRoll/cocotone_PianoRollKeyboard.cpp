@@ -86,10 +86,10 @@ private:
 };
 
 //==============================================================================
-PianoRollKeyboard::PianoRollKeyboard()
+PianoRollKeyboard::PianoRollKeyboard(int numVisibleOctaves)
 {
-    numVisibleWhiteAndBlackKeys = 24;
-    numVisibleWhiteKeys = 14;
+    numVisibleWhiteAndBlackKeys = 12 * numVisibleOctaves;
+    numVisibleWhiteKeys = 7 * numVisibleOctaves;
 
     dummyMidiKeyboardState = std::make_unique<juce::MidiKeyboardState>();
 

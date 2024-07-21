@@ -58,11 +58,11 @@ juce::Array<ScoreNote> convertToScoreNotes(const SongEditorDocumentData& documen
         const auto& note = documentData.notes[i];
 
         // Calculate note duration in frames
-        int noteFrames = std::round((note.endInSeconds - note.startInSeconds) / secondsPerFrame);
+        int noteFrames = std::round((note.endPositionInSeconds - note.startPositionInSeconds) / secondsPerFrame);
 
         scoreNotes.add({ note.noteNumber, noteFrames, note.lyric });
 
-        currentTime = note.endInSeconds;
+        currentTime = note.endPositionInSeconds;
     }
 
     // Add final silence (4 frames)
@@ -97,7 +97,7 @@ juce::String createScoreJsonStringInternal(const SongEditorDocumentData& documen
     return juce::JSON::toString(createScoreJsonInternal(documentData));
 }
 
-void createDoReMiScoreDocument(PianoRollPreviewData& data)
+void createDoReMiScoreDocument(SongEditorDocumentData& data)
 {
     // Clear any existing notes
     data.notes.clear();
@@ -138,11 +138,11 @@ void createDoReMiScoreDocument(PianoRollPreviewData& data)
 class TimeDomainNoteSorter
 {
 public:
-    static int compareElements(const PianoRollNote& first, const PianoRollNote& second)
+    static int compareElements(const SongEditorNoteBasic& first, const SongEditorNoteBasic& second)
     {
-        if (first.startInSeconds < second.startInSeconds)
+        if (first.startPositionInSeconds < second.startPositionInSeconds)
             return -1;
-        if (first.startInSeconds > second.startInSeconds)
+        if (first.startPositionInSeconds > second.startPositionInSeconds)
             return 1;
         return 0;
     }
@@ -160,12 +160,6 @@ SongEditorDocument::SongEditorDocument()
 
 SongEditorDocument::~SongEditorDocument()
 {
-}
-
-//==============================================================================
-std::optional<cctn::song::PianoRollPreviewData> SongEditorDocument::getPianoRollPreviewData()
-{
-    return *documentData;
 }
 
 //==============================================================================
@@ -194,11 +188,11 @@ void SongEditorDocument::deserialize()
 }
 
 //==============================================================================
-std::optional<cctn::song::SongEditorDocumentNote> SongEditorDocument::findNote(const cctn::song::QueryForFindPianoRollNote& query)
+std::optional<cctn::song::SongEditorNoteExtended> SongEditorDocument::findNote(const cctn::song::QueryForFindPianoRollNote& query)
 {
     for (auto& note : (*documentData).notes)
     {
-        if (juce::Range<double>(note.startInSeconds, note.endInSeconds).contains(query.timeInSeconds))
+        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(query.timeInSeconds))
         {
             return note;
         }
@@ -211,7 +205,7 @@ void SongEditorDocument::selectNote(const cctn::song::QueryForFindPianoRollNote&
 {
     for (auto& note : (*documentData).notes)
     {
-        if (juce::Range<double>(note.startInSeconds, note.endInSeconds).contains(query.timeInSeconds) &&
+        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(query.timeInSeconds) &&
             note.noteNumber == query.noteNumber)
         {
             note.isSelected = true;
@@ -227,19 +221,19 @@ void SongEditorDocument::selectNote(const cctn::song::QueryForFindPianoRollNote&
 
 void SongEditorDocument::createNote(const cctn::song::QueryForAddPianoRollNote& query)
 {
-    cctn::song::SongEditorDocumentNote new_note;
+    cctn::song::SongEditorNoteExtended new_note;
 
     new_note.noteNumber = query.noteNumber;
-    new_note.startInSeconds = query.startTimeInSeconds;
-    new_note.endInSeconds = query.endTimeInSeconds;
+    new_note.startPositionInSeconds = query.startTimeInSeconds;
+    new_note.endPositionInSeconds = query.endTimeInSeconds;
     new_note.isSelected = true;
     new_note.lyric = juce::CharPointer_UTF8("\xe3\x83\xa9"); // ra
 
     for (auto& note : (*documentData).notes)
     {
-        if (juce::Range<double>(note.startInSeconds, note.endInSeconds).contains(new_note.endInSeconds))
+        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(new_note.endPositionInSeconds))
         {
-            new_note.endInSeconds = note.startInSeconds;
+            new_note.endPositionInSeconds = note.startPositionInSeconds;
         }
     }
 
@@ -250,11 +244,11 @@ void SongEditorDocument::createNote(const cctn::song::QueryForAddPianoRollNote& 
 
 void SongEditorDocument::deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query)
 {
-    PianoRollNote* note_to_delete = nullptr;
+    cctn::song::SongEditorNoteExtended* note_to_delete = nullptr;
 
     for (auto& note : (*documentData).notes)
     {
-        if (juce::Range<double>(note.startInSeconds, note.endInSeconds).contains(query.timeInSeconds))
+        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(query.timeInSeconds))
         {
             note_to_delete = &note;
         }
@@ -269,7 +263,7 @@ void SongEditorDocument::deleteNoteSingle(const cctn::song::QueryForFindPianoRol
 }
 
 //==============================================================================
-double SongEditorDocument::calculateDocumentDuration(const cctn::song::PianoRollPreviewData& data, double minimumDuration)
+double SongEditorDocument::calculateDocumentDuration(const cctn::song::SongEditorDocumentData& data, double minimumDuration)
 {
     if (data.notes.isEmpty())
     {
@@ -279,19 +273,27 @@ double SongEditorDocument::calculateDocumentDuration(const cctn::song::PianoRoll
     double latestEndTime = 0.0;
     for (const auto& note : data.notes)
     {
-        latestEndTime = std::max(latestEndTime, note.endInSeconds);
+        latestEndTime = std::max(latestEndTime, note.endPositionInSeconds);
     }
 
     return std::max(latestEndTime, minimumDuration);
 }
 
-PianoRollNote SongEditorDocument::createSilenceNote(double startTimeInSeconds, double endTimeInSeconds)
+SongEditorNoteExtended SongEditorDocument::createSilenceNote(double startPositionInSeconds, double endPositionInSeconds)
 {
     // Use -1 as noteNumber to represent silence
-    return { startTimeInSeconds, endTimeInSeconds, -1, "", "", false };
+    SongEditorNoteExtended silence_note;
+    silence_note.startPositionInSeconds = startPositionInSeconds;
+    silence_note.endPositionInSeconds = endPositionInSeconds;
+    silence_note.noteNumber = -1;
+    silence_note.lyric = "";
+    silence_note.extraPhoneme = "";
+    silence_note.isSelected = false;
+
+    return silence_note;
 }
 
-cctn::song::PianoRollPreviewData SongEditorDocument::makeSilenceFilledScore(const cctn::song::PianoRollPreviewData& data, double documentDuration)
+cctn::song::SongEditorDocumentData SongEditorDocument::makeSilenceFilledScore(const cctn::song::SongEditorDocumentData& data, double documentDuration)
 {
     if (data.notes.isEmpty())
     {
@@ -299,21 +301,21 @@ cctn::song::PianoRollPreviewData SongEditorDocument::makeSilenceFilledScore(cons
         return {};
     }
 
-    juce::Array<PianoRollNote> notes_sorted = data.notes;
+    juce::Array<SongEditorNoteExtended> notes_sorted = data.notes;
     {
         // Sort notes by start time using JUCE Array's sort method with SortFunctionConverter
         TimeDomainNoteSorter note_sorter;
         notes_sorted.sort(note_sorter);
     }
 
-    juce::Array<PianoRollNote> notes_artefact;
+    juce::Array<SongEditorNoteExtended> notes_artefact;
     {
         // Add silence at the beginning if needed
         // Ignore under 0.05 msec gap.
         // 1000 msec / 24000 Hz * 256 samples per frame * 4 frames = 0.0426 sec
-        if (notes_sorted.getFirst().startInSeconds > 0.05)
+        if (notes_sorted.getFirst().startPositionInSeconds > 0.05)
         {
-            notes_artefact.add(createSilenceNote(0.0, notes_sorted.getFirst().startInSeconds));
+            notes_artefact.add(createSilenceNote(0.0, notes_sorted.getFirst().startPositionInSeconds));
         }
 
         // Add existing notes and fill gaps
@@ -323,8 +325,8 @@ cctn::song::PianoRollPreviewData SongEditorDocument::makeSilenceFilledScore(cons
 
             if (note_idx < notes_sorted.size() - 1)
             {
-                const double gap_start_time = notes_sorted[note_idx].endInSeconds;
-                const double gap_end_time = notes_sorted[note_idx + 1].startInSeconds;
+                const double gap_start_time = notes_sorted[note_idx].endPositionInSeconds;
+                const double gap_end_time = notes_sorted[note_idx + 1].startPositionInSeconds;
 
                 // Ignore under 0.05 msec gap.
                 // 1000 msec / 24000 Hz * 256 samples per frame * 4 frames = 0.0426 sec
@@ -336,14 +338,24 @@ cctn::song::PianoRollPreviewData SongEditorDocument::makeSilenceFilledScore(cons
         }
 
         // Add silence at the end if needed
-        if (notes_sorted.getLast().endInSeconds < documentDuration)
+        if (notes_sorted.getLast().endPositionInSeconds < documentDuration)
         {
-            notes_artefact.add(createSilenceNote(notes_sorted.getLast().endInSeconds, documentDuration));
+            notes_artefact.add(createSilenceNote(notes_sorted.getLast().endPositionInSeconds, documentDuration));
         }
     }
 
     // Return silence filled notes
-    return cctn::song::PianoRollPreviewData{ notes_artefact };
+    return cctn::song::SongEditorDocumentData{ notes_artefact };
+}
+
+std::optional<const cctn::song::SongEditorDocumentData*> SongEditorDocument::getRawDocumentData() const
+{
+    if (documentData.get() != nullptr)
+    {
+        return documentData.get();
+    }
+
+    return std::nullopt;
 }
 
 }
