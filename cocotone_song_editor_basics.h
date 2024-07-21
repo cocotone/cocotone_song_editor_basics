@@ -34,15 +34,10 @@
 //==============================================================================
 
 #include "SongEditor/cocotone_SongEditorTypes.h"
-
-#include "SongEditor/PianoRoll/cocotone_PianoRollDataType.h"
-#include "SongEditor/PianoRoll/cocotone_PianoRollEventDispatcher.h"
-#include "SongEditor/Transport/cocotone_BeatTimeMapper.h"
-#include "SongEditor/Transport/cocotone_TransportEmulator.h"
-
 #include "SongEditor/cocotone_IPositionInfoProvider.h"
 #include "SongEditor/cocotone_ISongEditorDocumentObserver.h"
 #include "SongEditor/cocotone_SongEditorDataModel.h"
 #include "SongEditor/cocotone_SongEditorDocument.h"
 #include "SongEditor/cocotone_SongEditorCommand.h"
 #include "SongEditor/cocotone_SongEditor.h"
+#include "SongEditor/Transport/cocotone_TransportEmulator.h"

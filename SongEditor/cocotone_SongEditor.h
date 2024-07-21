@@ -63,7 +63,7 @@ private:
     std::unique_ptr<cctn::song::PianoRollEventDispatcher> pianoRollEventDispatcher;
 
     std::weak_ptr<cctn::song::SongEditorDocument> songEditorDocumentPtr;
-    std::shared_ptr<cctn::song::SongEditorEventBridge> songEditorEventBridge;
+    std::shared_ptr<cctn::song::SongEditorOperation> songEditorOperation;
 
     IPositionInfoProvider* positionInfoProviderPtr;
 

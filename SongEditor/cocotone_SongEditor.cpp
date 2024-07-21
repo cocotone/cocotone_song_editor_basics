@@ -16,9 +16,9 @@ SongEditor::SongEditor()
     : positionInfoProviderPtr(nullptr)
     , songEditorDocumentPtr({})
 {
-    songEditorEventBridge = std::make_shared<cctn::song::SongEditorEventBridge>();
+    songEditorOperation = std::make_shared<cctn::song::SongEditorOperation>();
 
-    pianoRollEventDispatcher = std::make_unique<cctn::song::PianoRollEventDispatcher>(songEditorEventBridge);
+    pianoRollEventDispatcher = std::make_unique<cctn::song::PianoRollEventDispatcher>(songEditorOperation);
 
     pianoRollKeyboard = std::make_unique<cctn::song::PianoRollKeyboard>(kNumVisibleOctaves);
     addAndMakeVisible(pianoRollKeyboard.get());
@@ -103,7 +103,7 @@ void SongEditor::registerSongEditorDocument(std::shared_ptr<cctn::song::SongEdit
     {
         songEditorDocumentPtr = document;
         songEditorDocumentPtr.lock()->addChangeListener(this);
-        songEditorEventBridge->attachDocument(songEditorDocumentPtr.lock());
+        songEditorOperation->attachDocument(songEditorDocumentPtr.lock());
 
         pianoRollPreviewSurface->setDocumentForPreview(document);
     }
@@ -113,7 +113,7 @@ void SongEditor::unregisterSongEditorDocument(std::shared_ptr<cctn::song::SongEd
 {
     if (songEditorDocumentPtr.lock().get() == document.get())
     {
-        songEditorEventBridge->detachDocument();
+        songEditorOperation->detachDocument();
         songEditorDocumentPtr.lock()->removeChangeListener(this);
 
         songEditorDocumentPtr.reset();
@@ -238,11 +238,6 @@ void SongEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
     {
         if (source == songEditorDocumentPtr.lock().get())
         {
-            //const auto preview_data_optional = songEditorDocumentPtr.lock()->getPianoRollPreviewData();
-            //if (preview_data_optional.has_value())
-            //{
-            //    pianoRollPreviewSurface->setPianoRollPreviewData(preview_data_optional.value());
-            //}
         }
     }
 }

@@ -6,30 +6,11 @@ namespace song
 {
 
 //==============================================================================
-class IPianoRollEventTarget
-{
-public:
-    //==============================================================================
-    virtual ~IPianoRollEventTarget() = default;
-
-    //==============================================================================
-    virtual bool testNoteExist(const cctn::song::QueryForFindPianoRollNote& query) = 0;
-    virtual void selectNote(const cctn::song::QueryForFindPianoRollNote& query) = 0;
-    virtual void addNote(const cctn::song::QueryForAddPianoRollNote& query) = 0;
-    virtual void deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query) = 0;
-
-private:
-    //==============================================================================
-
-    JUCE_LEAK_DETECTOR(IPianoRollEventTarget)
-};
-
-//==============================================================================
 class PianoRollEventDispatcher final
 {
 public:
     //==============================================================================
-    explicit PianoRollEventDispatcher(std::shared_ptr<cctn::song::IPianoRollEventTarget> eventTarget);
+    explicit PianoRollEventDispatcher(std::shared_ptr<cctn::song::SongEditorOperation> eventTarget);
     ~PianoRollEventDispatcher();
 
     //==============================================================================
@@ -40,7 +21,7 @@ public:
 
 private:
     //==============================================================================
-    std::weak_ptr<cctn::song::IPianoRollEventTarget> pianoRollEventTarget;
+    std::weak_ptr<cctn::song::SongEditorOperation> pianoRollEventTarget;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollEventDispatcher)
 };

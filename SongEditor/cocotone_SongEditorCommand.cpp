@@ -1,28 +1,27 @@
-#include "cocotone_SongEditorCommand.h"
 namespace cctn
 {
 namespace song
 {
 
 //==============================================================================
-SongEditorEventBridge::SongEditorEventBridge()
+SongEditorOperation::SongEditorOperation()
 {
 }
 
-SongEditorEventBridge::~SongEditorEventBridge()
+SongEditorOperation::~SongEditorOperation()
 {
     attachedDocument.reset();
 }
 
 //==============================================================================
-void SongEditorEventBridge::attachDocument(std::shared_ptr<cctn::song::SongEditorDocument> documentToAttach)
+void SongEditorOperation::attachDocument(std::shared_ptr<cctn::song::SongEditorDocument> documentToAttach)
 {
     std::lock_guard lock(mutex);
 
     attachedDocument = documentToAttach;
 }
 
-void SongEditorEventBridge::detachDocument()
+void SongEditorOperation::detachDocument()
 {
     std::lock_guard lock(mutex);
 
@@ -30,7 +29,7 @@ void SongEditorEventBridge::detachDocument()
 }
 
 //==============================================================================
-bool SongEditorEventBridge::testNoteExist(const cctn::song::QueryForFindPianoRollNote& query)
+bool SongEditorOperation::testNoteExist(const cctn::song::QueryForFindPianoRollNote& query)
 {
     std::lock_guard lock(mutex);
 
@@ -47,7 +46,7 @@ bool SongEditorEventBridge::testNoteExist(const cctn::song::QueryForFindPianoRol
     return false;
 }
 
-void SongEditorEventBridge::selectNote(const cctn::song::QueryForFindPianoRollNote& query)
+void SongEditorOperation::selectNote(const cctn::song::QueryForFindPianoRollNote& query)
 {
     std::lock_guard lock(mutex);
 
@@ -59,7 +58,7 @@ void SongEditorEventBridge::selectNote(const cctn::song::QueryForFindPianoRollNo
     attachedDocument.lock()->selectNote(query);
 }
 
-void SongEditorEventBridge::addNote(const cctn::song::QueryForAddPianoRollNote& query)
+void SongEditorOperation::addNote(const cctn::song::QueryForAddPianoRollNote& query)
 {
     std::lock_guard lock(mutex);
 
@@ -71,7 +70,7 @@ void SongEditorEventBridge::addNote(const cctn::song::QueryForAddPianoRollNote& 
     attachedDocument.lock()->createNote(query);
 }
 
-void SongEditorEventBridge::deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query)
+void SongEditorOperation::deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query)
 {
     std::lock_guard lock(mutex);
 

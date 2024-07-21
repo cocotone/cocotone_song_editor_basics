@@ -5,7 +5,7 @@ namespace song
 {
 
 //==============================================================================
-PianoRollEventDispatcher::PianoRollEventDispatcher(std::shared_ptr<cctn::song::IPianoRollEventTarget> eventTarget)
+PianoRollEventDispatcher::PianoRollEventDispatcher(std::shared_ptr<cctn::song::SongEditorOperation> eventTarget)
     : pianoRollEventTarget(eventTarget)
 {
 }

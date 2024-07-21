@@ -9,6 +9,7 @@
 #include "SongEditor/PianoRoll/cocotone_PianoRollEventDispatcher.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollPreviewSurface.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollInteractionSurface.h"
+#include "SongEditor/Transport/cocotone_BeatTimeMapper.h"
 #include "SongEditor/cocotone_SongEditorCommand.h"
 
 //==============================================================================
