@@ -33,6 +33,8 @@
 
 //==============================================================================
 
+#include "SongEditor/Transport/cocotone_BeatTimeUtility.h"
+#include "SongEditor/Quantize/cocotone_QuantizeEngine.h"
 #include "SongEditor/cocotone_SongEditorTypes.h"
 #include "SongEditor/cocotone_IPositionInfoProvider.h"
 #include "SongEditor/cocotone_ISongEditorDocumentObserver.h"

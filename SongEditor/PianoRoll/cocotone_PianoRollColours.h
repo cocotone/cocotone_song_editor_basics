@@ -17,6 +17,7 @@ const juce::Colour kColourGridNote = juce::Colour(0xff3d9461);
 const juce::Colour kColourGridNoteSelected = juce::Colour(juce::Colours::orange);
 const juce::Colour kColourPianoRollMousePositionInsertable = juce::Colour(0xff3d9461);
 const juce::Colour kColourPianoRollMousePositionNotInsertable = juce::Colour(juce::Colours::red);
+const juce::Colour kColourPianoRollQuantizedInputRegion = juce::Colour(juce::Colours::grey.withAlpha(0.4f));
 const juce::Colour kColourWhiteKeyNote = juce::Colour(0xff4FC3F7);
 
 }

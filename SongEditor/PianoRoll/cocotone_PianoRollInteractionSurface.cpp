@@ -79,6 +79,7 @@ void PianoRollInteractionSurface::mouseUp(const juce::MouseEvent& mouseEvent)
                 query_for_add.startTimeInSeconds = query.timeInSeconds;
                 query_for_add.endTimeInSeconds = query.timeInSeconds + 0.500;
                 query_for_add.noteNumber = query.noteNumber;
+                query_for_add.snapToQuantizeGrid = true;
                 pianoRollEventDispatcher.emitAddNote(query_for_add);
 
                 cctn::song::QueryForFindPianoRollNote query_for_select;

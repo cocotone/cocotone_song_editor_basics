@@ -9,6 +9,7 @@
 #include "SongEditor/PianoRoll/cocotone_PianoRollPreviewSurface.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollInteractionSurface.h"
 #include "SongEditor/Transport/cocotone_BeatTimeUtility.h"
+#include "SongEditor/Quantize/cocotone_QuantizeEngine.h"
 #include "SongEditor/cocotone_SongEditorCommand.h"
 
 //==============================================================================
@@ -18,6 +19,7 @@
 #include "SongEditor/PianoRoll/cocotone_PianoRollPreviewSurface.cpp"
 #include "SongEditor/PianoRoll/cocotone_PianoRollInteractionSurface.cpp"
 #include "SongEditor/Transport/cocotone_TransportEmulator.cpp"
+#include "SongEditor/Quantize/cocotone_QuantizeEngine.cpp"
 #include "SongEditor/cocotone_SongEditorDataModel.cpp"
 #include "SongEditor/cocotone_SongEditorDocument.cpp"
 #include "SongEditor/cocotone_SongEditorCommand.cpp"

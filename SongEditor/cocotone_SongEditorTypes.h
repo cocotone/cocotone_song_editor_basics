@@ -48,7 +48,8 @@ struct QueryForAddPianoRollNote
 {
     double startTimeInSeconds{ 0.0 };
     double endTimeInSeconds{ 0.0 };
-    int noteNumber;
+    int noteNumber{ -1 };
+    bool snapToQuantizeGrid{ false };
 
     JUCE_LEAK_DETECTOR(QueryForAddPianoRollNote)
 };

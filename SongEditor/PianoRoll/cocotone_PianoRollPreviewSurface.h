@@ -22,7 +22,7 @@ public:
 
     //==============================================================================
     void setPlayingPositionInSeconds(double positionInSeconds);
-    void setInputPositionInSeconds(double positionInSeconds);
+    void setUserInputPositionInSeconds(double positionInSeconds);
 
     //==============================================================================
     void emitMouseEvent(const juce::MouseEvent& mouseEvent, bool isExitAction);
@@ -48,7 +48,8 @@ private:
     void drawGridVerticalLines(juce::Graphics& g);
     void drawCurrentPreviewData(juce::Graphics& g);
     void drawPlayingPositionMarker(juce::Graphics& g);
-    void drawInputPositionMarker(juce::Graphics& g);
+    void drawUserInputPositionMarker(juce::Graphics& g);
+    void drawQuantizedInputRegionRectangle(juce::Graphics& g);
 
     //==============================================================================
     // For fast painitng.
@@ -85,9 +86,10 @@ private:
     juce::Range<double> rangeVisibleTimeInSeconds;
     double verticalLineIntervalInSeconds;
     double playingPositionInSeconds;
-    double inputPositionInSeconds;
+    double userInputPositionInSeconds;
     bool isInputPositionInsertable;
     juce::Point<int> lastMousePosition;
+    juce::Range<double> quantizedInputRegionInSeconds;
 
     // Generate for Grid.
     const PianoRollKeyboard& pianoRollKeyboardRef;

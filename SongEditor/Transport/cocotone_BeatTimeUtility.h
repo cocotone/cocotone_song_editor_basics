@@ -56,6 +56,17 @@ public:
         : beat(b), timeInSeconds(t)
     {}
 
+    // Copy
+    BeatTimePoint(const BeatTimePoint& other)
+        : beat(other.beat), timeInSeconds(other.timeInSeconds)
+    {}
+
+    // Move
+    BeatTimePoint(BeatTimePoint&& other) noexcept
+        : beat(std::exchange(other.beat, 0.0)),
+        timeInSeconds(std::exchange(other.timeInSeconds, 0.0))
+    {}
+
     //==============================================================================
     TimeSignature toTimeSignature(int beatsPerBar, int ticksPerBeat = 960) const
     {
@@ -115,13 +126,16 @@ public:
 };
 
 //==============================================================================
-class BeatTimeMapper
+using BeatTimePointList = std::vector<BeatTimePoint>;
+
+//==============================================================================
+class BeatTimePointFactory
 {
 public:
     //==============================================================================
-    static std::vector<BeatTimePoint> generateBeatTimeMap(double bpm, int numerator, int denominator, double startInSeconds, double endInSeconds)
+    static BeatTimePointList generateBeatTimePointList(double bpm, int numerator, int denominator, double startInSeconds, double endInSeconds)
     {
-        std::vector<BeatTimePoint> beatTimeMap;
+        BeatTimePointList beat_time_array;
 
         double secondsPerBeat = 60.0 / bpm;
         double secondsPerBar = secondsPerBeat * numerator;
@@ -135,14 +149,14 @@ public:
         // Add the exact start time if it doesn't fall on a beat
         if (currentTime < startInSeconds)
         {
-            beatTimeMap.emplace_back(currentBeat, currentTime);
+            beat_time_array.emplace_back(currentBeat, currentTime);
             currentBeat = (startInSeconds - currentTime) / secondsPerBeat + currentBeat;
             currentTime = startInSeconds;
         }
 
         while (currentTime <= endInSeconds)
         {
-            beatTimeMap.emplace_back(currentBeat, currentTime);
+            beat_time_array.emplace_back(currentBeat, currentTime);
 
             currentBeat += 1.0;
             currentTime += secondsPerBeat;
@@ -155,19 +169,19 @@ public:
         }
 
         // Add the final time point if it's not exactly on a beat
-        if (!beatTimeMap.empty() && beatTimeMap.back().timeInSeconds < endInSeconds)
+        if (!beat_time_array.empty() && beat_time_array.back().timeInSeconds < endInSeconds)
         {
-            double finalBeat = (endInSeconds - beatTimeMap.back().timeInSeconds) / secondsPerBeat + beatTimeMap.back().beat;
-            beatTimeMap.emplace_back(finalBeat, endInSeconds);
+            double finalBeat = (endInSeconds - beat_time_array.back().timeInSeconds) / secondsPerBeat + beat_time_array.back().beat;
+            beat_time_array.emplace_back(finalBeat, endInSeconds);
         }
 
-        return beatTimeMap;
+        return beat_time_array;
     }
 
     //==============================================================================
-    static std::vector<BeatTimePoint> extractPreciseBeatPoints(double bpm, int numerator, int denominator, double startInSeconds, double endInSeconds)
+    static BeatTimePointList extractPreciseBeatPoints(double bpm, int numerator, int denominator, double startInSeconds, double endInSeconds)
     {
-        std::vector<BeatTimePoint> beatPoints;
+        BeatTimePointList beatPoints;
 
         double secondsPerBeat = 60.0 / bpm;
         double beatsPerBar = static_cast<double>(numerator);

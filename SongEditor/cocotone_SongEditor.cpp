@@ -227,6 +227,11 @@ void SongEditor::timerCallback()
             pianoRollPreviewSurface->setPlayingPositionInSeconds(current_position_in_seconds);
             pianoRollTimeRuler->setPlayingPositionInSeconds(current_position_in_seconds);
             pianoRollTimeRuler->setCurrentPositionInfo(position_info_optional.value());
+
+            if (!songEditorDocumentPtr.expired())
+            {
+                songEditorDocumentPtr.lock()->updateQuantizeRegions(position_info_optional.value());
+            }
         }
     }
 }

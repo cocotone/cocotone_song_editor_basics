@@ -152,7 +152,10 @@ public:
 
 //==============================================================================
 SongEditorDocument::SongEditorDocument()
+    : beatTimePointList(nullptr)
 {
+    quantizeEngine = std::make_unique<cctn::song::QuantizeEngine>();
+
     documentData = std::make_unique<cctn::song::SongEditorDocumentData>();
 
     //createDoReMiScoreDocument(*documentData);
@@ -229,6 +232,16 @@ void SongEditorDocument::createNote(const cctn::song::QueryForAddPianoRollNote& 
     new_note.isSelected = true;
     new_note.lyric = juce::CharPointer_UTF8("\xe3\x83\xa9"); // ra
 
+    if (query.snapToQuantizeGrid)
+    {
+        const auto quantize_region_optional = quantizeEngine->findNearestQuantizeRegion(query.startTimeInSeconds);
+        if (quantize_region_optional.has_value())
+        {
+            new_note.startPositionInSeconds = quantize_region_optional.value().startPositionInSeconds;
+            new_note.endPositionInSeconds = quantize_region_optional.value().endPositionInSeconds;
+        }
+    }
+
     for (auto& note : (*documentData).notes)
     {
         if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(new_note.endPositionInSeconds))
@@ -260,6 +273,33 @@ void SongEditorDocument::deleteNoteSingle(const cctn::song::QueryForFindPianoRol
     }
 
     sendChangeMessage();
+}
+
+void SongEditorDocument::updateQuantizeRegions(const juce::AudioPlayHead::PositionInfo& positionInfo)
+{
+    double bpm = 120.0;
+    int numerator = 4;
+    int denominator = 4;
+
+    const auto tempo_and_time_signature_optional = cctn::song::PositionInfoExtractor::extractTempoAndTimeSignature(positionInfo);
+    if (tempo_and_time_signature_optional.has_value())
+    {
+        bpm = tempo_and_time_signature_optional.value().bpm;
+        numerator = tempo_and_time_signature_optional.value().numerator;
+        denominator = tempo_and_time_signature_optional.value().denominator;
+    }
+
+    beatTimePointList = std::make_unique<BeatTimePointList>(BeatTimePointFactory::generateBeatTimePointList(bpm, numerator, denominator, 0.0, 600.0));
+
+    if (beatTimePointList.get() != nullptr)
+    {
+        quantizeEngine->updateQuantizeRegions(*beatTimePointList.get());
+    }
+}
+
+std::optional<QuantizeEngine::Region> SongEditorDocument::findNearestQuantizeRegion(double timePositionInSeconds) const
+{
+    return quantizeEngine->findNearestQuantizeRegion(timePositionInSeconds);
 }
 
 //==============================================================================
@@ -348,6 +388,7 @@ cctn::song::SongEditorDocumentData SongEditorDocument::makeSilenceFilledScore(co
     return cctn::song::SongEditorDocumentData{ notes_artefact };
 }
 
+//==============================================================================
 std::optional<const cctn::song::SongEditorDocumentData*> SongEditorDocument::getRawDocumentData() const
 {
     if (documentData.get() != nullptr)
