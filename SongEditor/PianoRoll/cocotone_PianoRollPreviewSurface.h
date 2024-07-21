@@ -50,6 +50,7 @@ private:
     void drawPlayingPositionMarker(juce::Graphics& g);
     void drawUserInputPositionMarker(juce::Graphics& g);
     void drawQuantizedInputRegionRectangle(juce::Graphics& g);
+    void drawUserInputPositionCellRectangle(juce::Graphics& g);
 
     //==============================================================================
     // For fast painitng.
@@ -87,6 +88,7 @@ private:
     double verticalLineIntervalInSeconds;
     double playingPositionInSeconds;
     double userInputPositionInSeconds;
+    int userInputPositionInNoteNumber;
     bool isInputPositionInsertable;
     juce::Point<int> lastMousePosition;
     juce::Range<double> quantizedInputRegionInSeconds;

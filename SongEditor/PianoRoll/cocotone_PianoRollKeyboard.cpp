@@ -1,3 +1,4 @@
+#include "cocotone_PianoRollKeyboard.h"
 namespace cctn
 {
 namespace song
@@ -159,6 +160,11 @@ juce::Range<float> PianoRollKeyboard::getPositionRangeForPianoRollGridHorizontal
 
     // Fallback
     return { my_key_start_position, my_key_start_position + non_propotional_key_width };
+}
+
+juce::KeyboardComponentBase::NoteAndVelocity PianoRollKeyboard::getNoteAndVelocityAtPositionForwarding(juce::Point<float> position, bool includeChildComponents) const
+{
+    return midiKeyboardComponent->getNoteAndVelocityAtPosition(position, includeChildComponents);
 }
 
 //==============================================================================

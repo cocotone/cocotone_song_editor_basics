@@ -24,6 +24,7 @@ public:
     //==============================================================================
     juce::Rectangle<float> getRectangleForKeyForwarding(int midiNoteNumber) const;
     juce::Range<float> getPositionRangeForPianoRollGridHorizontalRow(int midiNoteNumber) const;
+    juce::KeyboardComponentBase::NoteAndVelocity getNoteAndVelocityAtPositionForwarding(juce::Point<float> position, bool includeChildComponents = false) const;
 
 private:
     //==============================================================================

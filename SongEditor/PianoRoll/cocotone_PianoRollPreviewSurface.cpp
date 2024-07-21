@@ -10,6 +10,7 @@ PianoRollPreviewSurface::PianoRollPreviewSurface(const PianoRollKeyboard& pianoR
     , verticalLineIntervalInSeconds(1.0)
     , playingPositionInSeconds(0.0)
     , userInputPositionInSeconds(0.0)
+    , userInputPositionInNoteNumber(-1)
     , quantizedInputRegionInSeconds(juce::Range<double>{0.0, 0.0})
     , isInputPositionInsertable(false)
     , paintScopedDocumentDataPtr(nullptr)
@@ -71,9 +72,13 @@ void PianoRollPreviewSurface::emitMouseEvent(const juce::MouseEvent& mouseEvent,
 
     userInputPositionInSeconds = positionXToTime(lastMousePosition.getX(), 0, getWidth(), rangeVisibleTimeInSeconds);
 
+    const auto note_and_velocity = pianoRollKeyboardRef.getNoteAndVelocityAtPositionForwarding(lastMousePosition.withX(pianoRollKeyboardRef.getX()).toFloat(), false);
+    userInputPositionInNoteNumber = note_and_velocity.note;
+
     if (isExitAction)
     {
         userInputPositionInSeconds = -1.0;
+        userInputPositionInNoteNumber = -1;
     }
 
     repaint();
@@ -145,9 +150,11 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
 
     drawPlayingPositionMarker(g);
 
-    drawUserInputPositionMarker(g);
+    //drawUserInputPositionMarker(g);
 
     drawQuantizedInputRegionRectangle(g);
+
+    drawUserInputPositionCellRectangle(g);
 }
 
 void PianoRollPreviewSurface::resized()
@@ -182,6 +189,7 @@ void PianoRollPreviewSurface::updateViewContext()
 
     const auto& notes = paintScopedDocumentDataPtr->notes;
 
+    // Initialize
     isInputPositionInsertable = true;
     for (const auto& note : notes)
     {
@@ -192,6 +200,8 @@ void PianoRollPreviewSurface::updateViewContext()
         }
     }
 
+    // Initialize
+    quantizedInputRegionInSeconds = juce::Range<double>{ 0.0f, 0.0f };
     if (!documentForPreviewPtr.expired() &&
         documentForPreviewPtr.lock()->getRawDocumentData().has_value())
     {
@@ -201,11 +211,6 @@ void PianoRollPreviewSurface::updateViewContext()
             quantizedInputRegionInSeconds =
                 juce::Range<double>{ region_optional.value().startPositionInSeconds, region_optional.value().endPositionInSeconds };
         }
-    }
-    else
-    {
-        quantizedInputRegionInSeconds =
-            juce::Range<double>{ 0.0f, 0.0f };
     }
 }
 
@@ -414,14 +419,7 @@ void PianoRollPreviewSurface::drawQuantizedInputRegionRectangle(juce::Graphics& 
 
     if (quantizedInputRegionInSeconds.getLength() > 0.0)
     {
-        if (isInputPositionInsertable)
-        {
-            g.setColour(kColourPianoRollQuantizedInputRegion);
-        }
-        else
-        {
-            return;
-        }
+        g.setColour(kColourPianoRollQuantizedInputRegion);
 
         const auto position_start_x = timeToPositionX(quantizedInputRegionInSeconds.getStart(), rangeVisibleTimeInSeconds, getWidth());
         const auto position_end_x = timeToPositionX(quantizedInputRegionInSeconds.getEnd(), rangeVisibleTimeInSeconds, getWidth());
@@ -429,6 +427,41 @@ void PianoRollPreviewSurface::drawQuantizedInputRegionRectangle(juce::Graphics& 
             juce::Rectangle<int>{ position_start_x, 0, position_end_x - position_start_x, getHeight() };
 
         g.fillRect(rect_region);
+    }
+}
+
+void PianoRollPreviewSurface::drawUserInputPositionCellRectangle(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    if (quantizedInputRegionInSeconds.getLength() > 0.0 && userInputPositionInNoteNumber >= 0)
+    {
+        const auto position_start_x = timeToPositionX(quantizedInputRegionInSeconds.getStart(), rangeVisibleTimeInSeconds, getWidth());
+        const auto position_end_x = timeToPositionX(quantizedInputRegionInSeconds.getEnd(), rangeVisibleTimeInSeconds, getWidth());
+
+        juce::Range<float> key_position_range = juce::Range<float>{ 0.0f, 0.0f };
+        if (mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom.count(userInputPositionInNoteNumber) > 0)
+        {
+            key_position_range = mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[userInputPositionInNoteNumber];
+        }
+
+        juce::Rectangle<float> rect_to_draw = juce::Rectangle<float>{
+            (float)position_start_x,
+            (float)key_position_range.getStart(),
+            (float)position_end_x - position_start_x,
+            (float)key_position_range.getLength(),
+        };
+
+        if (isInputPositionInsertable)
+        {
+            g.setColour(kColourPianoRollMousePositionInsertable);
+        }
+        else
+        {
+            g.setColour(kColourPianoRollMousePositionNotInsertable);
+        }
+
+        g.drawRect(rect_to_draw, 2.0f);
     }
 }
 
