@@ -69,10 +69,16 @@ public:
         return TimeSignature(bar, beatInBar, tick);
     }
 
-    juce::String getFormattedTimeSignature(int beatsPerBar, int ticksPerBeat = 960) const
+    juce::String getFormattedTimeSignature(int beatsPerBar, bool showTick, int ticksPerBeat = 960) const
     {
-        auto ts = toTimeSignature(beatsPerBar, ticksPerBeat);
-        return juce::String::formatted("%d|%d|%03d", ts.bar + 1, ts.beat + 1, ts.tick);
+        const auto time_signature = toTimeSignature(beatsPerBar, ticksPerBeat);
+        
+        if (showTick)
+        {
+            return juce::String::formatted("%d|%d|%03d", time_signature.bar + 1, time_signature.beat + 1, time_signature.tick);
+        }
+
+        return juce::String::formatted("%d|%d", time_signature.bar + 1, time_signature.beat + 1);
     }
 
 private:
@@ -190,137 +196,6 @@ public:
 
         return beatPoints;
     }
-
-#if 0
-    //==============================================================================
-    static std::vector<BeatTimePoint> generateBeatTimeMap(double bpm, int numerator, int denominator, double startInSeconds, double endInSeconds)
-    {
-        std::vector<BeatTimePoint> beatTimeMap;
-
-        double secondsPerBeat = 60.0 / bpm;
-        double secondsPerBar = secondsPerBeat * numerator;
-        double beatsPerBar = static_cast<double>(numerator);
-
-        // Calculate the starting beat
-        double startBeat = std::floor(startInSeconds / secondsPerBeat);
-        double currentTime = startBeat * secondsPerBeat;
-        double currentBeat = startBeat;
-
-        // Add the exact start time if it doesn't fall on a beat
-        if (currentTime < startInSeconds)
-        {
-            beatTimeMap.emplace_back(currentBeat, currentTime);
-            currentBeat = (startInSeconds - currentTime) / secondsPerBeat + currentBeat;
-            currentTime = startInSeconds;
-        }
-
-        while (currentTime <= endInSeconds)
-        {
-            beatTimeMap.emplace_back(currentBeat, currentTime);
-
-            currentBeat += 1.0;
-            currentTime += secondsPerBeat;
-
-            // Adjust for bar boundaries if needed
-            if (std::fmod(currentBeat, beatsPerBar) == 0.0)
-            {
-                currentBeat = std::round(currentBeat); // Ensure we're on an exact bar
-            }
-        }
-
-        // Add the final time point if it's not exactly on a beat
-        if (!beatTimeMap.empty() && beatTimeMap.back().timeInSeconds < endInSeconds)
-        {
-            double finalBeat = (endInSeconds - beatTimeMap.back().timeInSeconds) / secondsPerBeat + beatTimeMap.back().beat;
-            beatTimeMap.emplace_back(finalBeat, endInSeconds);
-        }
-
-        return beatTimeMap;
-    }
-
-
-    //==============================================================================
-    static std::map<double, double> generateBeatTimeMap(double bpm, int numerator, int denominator, double startInSeconds, double endInSeconds)
-    {
-        std::map<double, double> beatTimeMap;
-
-        double secondsPerBeat = 60.0 / bpm;
-        double secondsPerBar = secondsPerBeat * numerator;
-        double beatsPerBar = static_cast<double>(numerator);
-
-        // Calculate the starting beat
-        double startBeat = std::floor(startInSeconds / secondsPerBeat);
-        double currentTime = startBeat * secondsPerBeat;
-        double currentBeat = startBeat;
-
-        // Add the exact start time if it doesn't fall on a beat
-        if (currentTime < startInSeconds)
-        {
-            beatTimeMap[currentBeat] = currentTime;
-            currentBeat = (startInSeconds - currentTime) / secondsPerBeat + currentBeat;
-            currentTime = startInSeconds;
-        }
-
-        while (currentTime <= endInSeconds)
-        {
-            beatTimeMap[currentBeat] = currentTime;
-
-            currentBeat += 1.0;
-            currentTime += secondsPerBeat;
-
-            // Adjust for bar boundaries if needed
-            if (std::fmod(currentBeat, beatsPerBar) == 0.0)
-            {
-                currentBeat = std::round(currentBeat); // Ensure we're on an exact bar
-            }
-        }
-
-        // Add the final time point if it's not exactly on a beat
-        if (beatTimeMap.rbegin()->second < endInSeconds)
-        {
-            double finalBeat = (endInSeconds - beatTimeMap.rbegin()->second) / secondsPerBeat + beatTimeMap.rbegin()->first;
-            beatTimeMap[finalBeat] = endInSeconds;
-        }
-
-        return beatTimeMap;
-    }
-
-    //==============================================================================
-    static std::map<double, double> generateBeatTimeMap(double bpm, int numerator, int denominator, double durationInSeconds)
-    {
-        std::map<double, double> beatTimeMap;
-        
-        double secondsPerBeat = 60.0 / bpm;
-        double secondsPerBar = secondsPerBeat * numerator;
-        double beatsPerBar = static_cast<double>(numerator);
-        
-        double currentTime = 0.0;
-        double currentBeat = 0.0;
-        
-        while (currentTime <= durationInSeconds)
-        {
-            beatTimeMap[currentBeat] = currentTime;
-            
-            currentBeat += 1.0;
-            currentTime += secondsPerBeat;
-            
-            // Adjust for bar boundaries if needed
-            if (std::fmod(currentBeat, beatsPerBar) == 0.0)
-            {
-                currentBeat = std::round(currentBeat); // Ensure we're on an exact bar
-            }
-        }
-        
-        // Add the final time point if it's not exactly on a beat
-        if (beatTimeMap.rbegin()->second < durationInSeconds)
-        {
-            double finalBeat = (durationInSeconds - beatTimeMap.rbegin()->second) / secondsPerBeat + beatTimeMap.rbegin()->first;
-            beatTimeMap[finalBeat] = durationInSeconds;
-        }
-        
-        return beatTimeMap;
-    }
-#endif
 };
 
 }
