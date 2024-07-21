@@ -34,7 +34,7 @@ void QuantizeEngine::updateQuantizeRegions(const cctn::song::BeatTimePointList& 
 
 std::optional<QuantizeEngine::Region> QuantizeEngine::findNearestQuantizeRegion(double timePositionInSeconds) const
 {
-    if (quantizeRegions.isEmpty())
+    if (quantizeRegions.isEmpty() || timePositionInSeconds < 0.0)
     {
         return std::nullopt;
     }
