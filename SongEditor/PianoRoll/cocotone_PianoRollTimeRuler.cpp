@@ -1,4 +1,3 @@
-#include "cocotone_PianoRollTimeRuler.h"
 namespace cctn
 {
 namespace song

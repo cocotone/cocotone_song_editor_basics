@@ -1,15 +1,14 @@
 #include "cocotone_song_editor_basics.h"
 
 //==============================================================================
-#include "SongEditor/PianoRoll/cocotone_PianoRollDataType.h"
-#include "SongEditor/PianoRoll/cocotone_PianoRollUtils.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollColours.h"
+#include "SongEditor/PianoRoll/cocotone_PianoRollPositionUtility.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollKeyboard.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollTimeRuler.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollEventDispatcher.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollPreviewSurface.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollInteractionSurface.h"
-#include "SongEditor/Transport/cocotone_BeatTimeMapper.h"
+#include "SongEditor/Transport/cocotone_BeatTimeUtility.h"
 #include "SongEditor/cocotone_SongEditorCommand.h"
 
 //==============================================================================
