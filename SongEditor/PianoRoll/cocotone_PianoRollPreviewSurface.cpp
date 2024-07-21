@@ -23,6 +23,10 @@ PianoRollPreviewSurface::PianoRollPreviewSurface(const PianoRollKeyboard& pianoR
 
 PianoRollPreviewSurface::~PianoRollPreviewSurface()
 {
+    if (!documentForPreviewPtr.expired())
+    {
+        documentForPreviewPtr.lock()->removeChangeListener(this);
+    }
 }
 
 //==============================================================================
@@ -96,6 +100,15 @@ std::optional<cctn::song::QueryForFindPianoRollNote> PianoRollPreviewSurface::ge
 //==============================================================================
 void PianoRollPreviewSurface::setDocumentForPreview(std::shared_ptr<cctn::song::SongEditorDocument> document)
 {
+    if (!documentForPreviewPtr.expired())
+    {
+        if (documentForPreviewPtr.lock().get() != document.get())
+        {
+            documentForPreviewPtr.lock()->removeChangeListener(this);
+            documentForPreviewPtr.reset();
+        }
+    }
+
     documentForPreviewPtr = document;
 
     if (!documentForPreviewPtr.expired())
