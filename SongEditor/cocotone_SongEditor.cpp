@@ -224,7 +224,10 @@ void SongEditor::timerCallback()
         if (position_info_optional.has_value())
         {
             const double current_position_in_seconds = position_info_optional.value().getTimeInSeconds().orFallback(0.0);
+            
             pianoRollPreviewSurface->setPlayingPositionInSeconds(current_position_in_seconds);
+            pianoRollPreviewSurface->setCurrentPositionInfo(position_info_optional.value());
+
             pianoRollTimeRuler->setPlayingPositionInSeconds(current_position_in_seconds);
             pianoRollTimeRuler->setCurrentPositionInfo(position_info_optional.value());
 

@@ -22,6 +22,9 @@ public:
 
     //==============================================================================
     void setPlayingPositionInSeconds(double positionInSeconds);
+    void setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo);
+
+    //==============================================================================
     void setUserInputPositionInSeconds(double positionInSeconds);
 
     //==============================================================================
@@ -115,6 +118,9 @@ private:
 
     std::weak_ptr<cctn::song::SongEditorDocument> documentForPreviewPtr;
     const cctn::song::SongEditorDocumentData* paintScopedDocumentDataPtr;
+
+    // TODO: should abstract
+    juce::AudioPlayHead::PositionInfo currentPositionInfo;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollPreviewSurface)
 };

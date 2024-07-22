@@ -60,6 +60,12 @@ void PianoRollPreviewSurface::setPlayingPositionInSeconds(double positionInSecon
     repaint();
 }
 
+void PianoRollPreviewSurface::setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo)
+{
+    currentPositionInfo = positionInfo;
+    repaint();
+}
+
 void PianoRollPreviewSurface::setUserInputPositionInSeconds(double positionInSeconds)
 {
     userInputPositionInSeconds = positionInSeconds;
@@ -337,7 +343,23 @@ void PianoRollPreviewSurface::drawGridVerticalLinesInTimeSignatureDomain(juce::G
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
-    const auto vertical_line_positions = createVerticalLinePositionsInTimeSignatureDomain(rangeVisibleTimeInSeconds, {}, getWidth());
+    // NOTE: Make abstract.
+    double bpm = 120.0;
+    int numerator = 4;
+    int denominator = 4;
+
+    const auto tempo_and_time_signature_optional = cctn::song::PositionInfoExtractor::extractTempoAndTimeSignature(currentPositionInfo);
+    if (tempo_and_time_signature_optional.has_value())
+    {
+        bpm = tempo_and_time_signature_optional.value().bpm;
+        numerator = tempo_and_time_signature_optional.value().numerator;
+        denominator = tempo_and_time_signature_optional.value().denominator;
+    }
+
+    // NOTE: This procedure will fit to feature of tempo map track.
+    const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd());
+
+    const auto vertical_line_positions = createVerticalLinePositionsInTimeSignatureDomain(rangeVisibleTimeInSeconds, precise_beat_and_time_array, getWidth());
 
     for (const auto& position_with_time_info : vertical_line_positions)
     {

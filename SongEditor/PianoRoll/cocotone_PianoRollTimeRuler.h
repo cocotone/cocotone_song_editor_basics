@@ -64,6 +64,7 @@ private:
     juce::Rectangle<int> rectBeatRulerArea;
     juce::Rectangle<int> rectBeatRulerLabelArea;
 
+    // TODO: should abstract
     juce::AudioPlayHead::PositionInfo currentPositionInfo;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollTimeRuler)
