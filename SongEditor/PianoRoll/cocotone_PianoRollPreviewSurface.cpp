@@ -14,6 +14,7 @@ PianoRollPreviewSurface::PianoRollPreviewSurface(const PianoRollKeyboard& pianoR
     , quantizedInputRegionInSeconds(juce::Range<double>{0.0, 0.0})
     , isInputPositionInsertable(false)
     , paintScopedDocumentDataPtr(nullptr)
+    , visibleGridVerticalLineType(juce::var((int)VisibleGridVerticalType::kTimeSignature))
 {
     numVisibleWhiteAndBlackKeys = 12 * numVisibleOctaves;
     numVisibleWhiteKeys = 7 * numVisibleOctaves;
@@ -144,7 +145,21 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
 
     fillGridHorizontalRows(g);
     drawGridHorizontalLines(g);
-    drawGridVerticalLines(g);
+
+    if ((VisibleGridVerticalType)(int)visibleGridVerticalLineType.getValue() == VisibleGridVerticalType::kNone)
+    {
+    }
+    else if ((VisibleGridVerticalType)(int)visibleGridVerticalLineType.getValue() == VisibleGridVerticalType::kTimeSeconds)
+    {
+        drawGridVerticalLinesInTimeSecondsDomain(g);
+    }
+    else if ((VisibleGridVerticalType)(int)visibleGridVerticalLineType.getValue() == VisibleGridVerticalType::kTimeSignature)
+    {
+        drawGridVerticalLinesInTimeSignatureDomain(g);
+    }
+    else if ((VisibleGridVerticalType)(int)visibleGridVerticalLineType.getValue() == VisibleGridVerticalType::kQuantize)
+    {
+    }
 
     drawCurrentPreviewData(g);
 
@@ -305,26 +320,35 @@ void PianoRollPreviewSurface::drawGridHorizontalLines(juce::Graphics& g)
     }
 }
 
-void PianoRollPreviewSurface::drawGridVerticalLines(juce::Graphics& g)
+void PianoRollPreviewSurface::drawGridVerticalLinesInTimeSecondsDomain(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
-    const auto vertical_line_positions = createVerticalLinePositions(rangeVisibleTimeInSeconds, verticalLineIntervalInSeconds, getWidth());
-
-#if 0
-    g.setFont(juce::Font(juce::Font::getDefaultMonospacedFontName(), 10, 0));
-#endif
+    const auto vertical_line_positions = createVerticalLinePositionsInTimeSecondsDomain(rangeVisibleTimeInSeconds, verticalLineIntervalInSeconds, getWidth());
 
     for (const auto& position_with_time_info : vertical_line_positions)
     {
         g.setColour(juce::Colours::white);
         g.drawVerticalLine(position_with_time_info.positionX, 0.0f, getHeight());
-
-#if 0
-        g.setColour(juce::Colours::white);
-        g.drawText(juce::String(position_with_time_info.timeInSeconds, 2), position_with_time_info.positionX, 0.0f, 60, 20, juce::Justification::centredLeft);
-#endif
     }
+}
+
+void PianoRollPreviewSurface::drawGridVerticalLinesInTimeSignatureDomain(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    const auto vertical_line_positions = createVerticalLinePositionsInTimeSignatureDomain(rangeVisibleTimeInSeconds, {}, getWidth());
+
+    for (const auto& position_with_time_info : vertical_line_positions)
+    {
+        g.setColour(juce::Colours::white);
+        g.drawVerticalLine(position_with_time_info.positionX, 0.0f, getHeight());
+    }
+}
+
+void PianoRollPreviewSurface::drawGridVerticalLinesInQuantizeDomain(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
 }
 
 void PianoRollPreviewSurface::drawCurrentPreviewData(juce::Graphics& g)
@@ -512,20 +536,20 @@ std::optional<juce::uint8>  PianoRollPreviewSurface::findNoteNumberWithVerticalP
 }
 
 //==============================================================================
-juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> PianoRollPreviewSurface::createVerticalLinePositions(const juce::Range<double> visibleRangeSeconds, double timeUnitSeconds, int width)
+juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> PianoRollPreviewSurface::createVerticalLinePositionsInTimeSecondsDomain(const juce::Range<double> visibleRangeSeconds, double timeStepInSeconds, int width)
 {
-    juce::Array<PositionWithTimeInfo> result;
+    juce::Array<PositionWithTimeInfo> positions;
 
     std::vector<double> time_secnds_vertical_lines;
     {
         // Find the smallest multiple of 10 within the range
-        double min_units = static_cast<double>(std::ceil(visibleRangeSeconds.getStart() / timeUnitSeconds)) * (double)timeUnitSeconds;
+        double min_units = static_cast<double>(std::ceil(visibleRangeSeconds.getStart() / timeStepInSeconds)) * (double)timeStepInSeconds;
 
         // Find the largest multiple of 10 within the range
-        double max_units = static_cast<double>(std::floor(visibleRangeSeconds.getEnd() / timeUnitSeconds)) * (double)timeUnitSeconds;
+        double max_units = static_cast<double>(std::floor(visibleRangeSeconds.getEnd() / timeStepInSeconds)) * (double)timeStepInSeconds;
 
         // List up multiples of 10 within the range
-        for (double value = min_units; value <= max_units; value += (double)timeUnitSeconds)
+        for (double value = min_units; value <= max_units; value += (double)timeStepInSeconds)
         {
             time_secnds_vertical_lines.push_back((double)value);
         }
@@ -540,14 +564,68 @@ juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> PianoRollPreviewSurfa
                 juce::jmap<double>(time_seconds_vertical_line, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), 0, width);
 
             PositionWithTimeInfo position_with_time_info;
-            position_with_time_info.positionX = position_x;
+            position_with_time_info.positionX = (int)position_x;
             position_with_time_info.timeInSeconds = time_seconds_vertical_line;
 
-            result.add(position_with_time_info);
+            positions.add(position_with_time_info);
         }
     }
 
-    return result;
+    return positions;
+}
+
+juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const BeatTimePointList& beatTimePoints, int width)
+{
+    juce::Array<PositionWithTimeInfo> positions;
+
+    if (beatTimePoints.empty() || width <= 0)
+    {
+        return positions;
+    }
+
+    // Find the start and end indices in beatTimePoints that fall within the visible range
+    auto start_iter = std::lower_bound(beatTimePoints.begin(), beatTimePoints.end(), visibleRangeSeconds.getStart(),
+        [](const BeatTimePoint& btp, double time) 
+        { 
+            return btp.timeInSeconds < time;
+        });
+
+    auto end_iter = std::upper_bound(beatTimePoints.begin(), beatTimePoints.end(), visibleRangeSeconds.getEnd(),
+        [](double time, const BeatTimePoint& btp)
+        { 
+            return time < btp.timeInSeconds;
+        });
+
+    if (start_iter == beatTimePoints.end() || end_iter == beatTimePoints.begin())
+    {
+        return positions;
+    }
+
+    // If the first visible beat is after the start of the visible range, include the previous beat
+    if (start_iter != beatTimePoints.begin() && start_iter->timeInSeconds > visibleRangeSeconds.getStart())
+    {
+        --start_iter;
+    }
+
+    double visible_duration_in_seconds = visibleRangeSeconds.getLength();
+
+    for (auto it = start_iter; it != end_iter; ++it)
+    {
+        if (it->timeInSeconds >= visibleRangeSeconds.getStart() && it->timeInSeconds <= visibleRangeSeconds.getEnd())
+        {
+            // Convert time to position X.
+            const double position_x =
+                juce::jmap<double>(it->timeInSeconds, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), 0, width);
+
+            PositionWithTimeInfo pos;
+            pos.positionX = (int)position_x;
+            pos.timeInSeconds = it->timeInSeconds;
+
+            positions.add(pos);
+        }
+    }
+
+    return positions;
 }
 
 PianoRollPreviewSurface::NoteDrawInfo PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongEditorNoteExtended& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight)

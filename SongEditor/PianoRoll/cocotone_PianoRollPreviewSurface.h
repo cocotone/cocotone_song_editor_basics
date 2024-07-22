@@ -31,6 +31,15 @@ public:
     //==============================================================================
     void setDocumentForPreview(std::shared_ptr<cctn::song::SongEditorDocument> document);
 
+    //==============================================================================
+    enum class VisibleGridVerticalType
+    {
+        kNone = 0,
+        kTimeSeconds = 1,
+        kTimeSignature = 2,
+        kQuantize = 3,
+    };
+
 private:
     //==============================================================================
     void paint(juce::Graphics& g) override;
@@ -45,7 +54,9 @@ private:
     //==============================================================================
     void fillGridHorizontalRows(juce::Graphics& g);
     void drawGridHorizontalLines(juce::Graphics& g);
-    void drawGridVerticalLines(juce::Graphics& g);
+    void drawGridVerticalLinesInTimeSecondsDomain(juce::Graphics& g);
+    void drawGridVerticalLinesInTimeSignatureDomain(juce::Graphics& g);
+    void drawGridVerticalLinesInQuantizeDomain(juce::Graphics& g);
     void drawCurrentPreviewData(juce::Graphics& g);
     void drawPlayingPositionMarker(juce::Graphics& g);
     void drawUserInputPositionMarker(juce::Graphics& g);
@@ -65,7 +76,8 @@ private:
 
         JUCE_LEAK_DETECTOR(PositionWithTimeInfo)
     };
-    static juce::Array<PositionWithTimeInfo> createVerticalLinePositions(const juce::Range<double> visibleRangeSeconds, double timeUnitSeconds, int width);
+    static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSecondsDomain(const juce::Range<double> visibleRangeSeconds, double timeStepInSeconds, int width);
+    static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const BeatTimePointList& beatTimePoints, int width);
     
     struct NoteDrawInfo
     {
@@ -92,6 +104,8 @@ private:
     bool isInputPositionInsertable;
     juce::Point<int> lastMousePosition;
     juce::Range<double> quantizedInputRegionInSeconds;
+
+    juce::Value visibleGridVerticalLineType;
 
     // Generate for Grid.
     const PianoRollKeyboard& pianoRollKeyboardRef;
