@@ -56,8 +56,10 @@ SongEditor::SongEditor()
     
     // Set initial state.
     valuePianoRollBottomKeyNumber.setValue(55);
+
     pianoRollPreviewSurface->setVisibleRangeTimeInSeconds(juce::Range<double>{0.0, 6.0});
     pianoRollPreviewSurface->setGridVerticalLineIntervaleInSeconds(1.0);
+
     pianoRollTimeRuler->setVisibleRangeTimeInSeconds(juce::Range<double>{0.0, 6.0});
     pianoRollTimeRuler->setGridVerticalLineIntervaleInSeconds(0.500);
 
@@ -160,33 +162,33 @@ void SongEditor::resized()
 
     {
         {
-            const auto rect_time_ruler_content =
-                rect_piano_roll_time_ruler
-                .withTop(rect_piano_roll_time_ruler.getHeight() * 0.5f)
-                .withLeft(rect_piano_roll_preview.getX())
-                .withRight(rect_piano_roll_preview.getRight());
-            pianoRollTimeRuler->setTimeRulerRectangle(rect_time_ruler_content);
-
-            const auto rect_time_ruler_label =
-                rect_piano_roll_time_ruler
-                .withTop(rect_piano_roll_time_ruler.getHeight() * 0.5f)
-                .withRight(rect_piano_roll_preview.getX());
-            pianoRollTimeRuler->setTimeRulerLabelRectangle(rect_time_ruler_label);
-        }
-
-        {
             const auto rect_beat_ruler_content =
                 rect_piano_roll_time_ruler
-                .withBottom(rect_piano_roll_time_ruler.getHeight() * 0.5f)
+                .withTop(rect_piano_roll_time_ruler.getHeight() * 0.5f)
                 .withLeft(rect_piano_roll_preview.getX())
                 .withRight(rect_piano_roll_preview.getRight());
             pianoRollTimeRuler->setBeatRulerRectangle(rect_beat_ruler_content);
 
             const auto rect_beat_ruler_label =
                 rect_piano_roll_time_ruler
-                .withBottom(rect_piano_roll_time_ruler.getHeight() * 0.5f)
+                .withTop(rect_piano_roll_time_ruler.getHeight() * 0.5f)
                 .withRight(rect_piano_roll_preview.getX());
             pianoRollTimeRuler->setBeatRulerLabelRectangle(rect_beat_ruler_label);
+        }
+
+        {
+            const auto rect_time_ruler_content =
+                rect_piano_roll_time_ruler
+                .withBottom(rect_piano_roll_time_ruler.getHeight() * 0.5f)
+                .withLeft(rect_piano_roll_preview.getX())
+                .withRight(rect_piano_roll_preview.getRight());
+            pianoRollTimeRuler->setTimeRulerRectangle(rect_time_ruler_content);
+
+            const auto rect_time_ruler_label =
+                rect_piano_roll_time_ruler
+                .withBottom(rect_piano_roll_time_ruler.getHeight() * 0.5f)
+                .withRight(rect_piano_roll_preview.getX());
+            pianoRollTimeRuler->setTimeRulerLabelRectangle(rect_time_ruler_label);
         }
     }
 }
