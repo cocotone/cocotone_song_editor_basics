@@ -132,6 +132,7 @@ using BeatTimePointList = std::vector<BeatTimePoint>;
 class BeatTimePointFactory
 {
 public:
+#if 0
     //==============================================================================
     static BeatTimePointList generateBeatTimePointList(double bpm, int numerator, int denominator, double startInSeconds, double endInSeconds)
     {
@@ -177,8 +178,10 @@ public:
 
         return beat_time_array;
     }
+#endif
 
     //==============================================================================
+    // This function returns quantize friendly beat positions.
     static BeatTimePointList extractPreciseBeatPoints(double bpm, int numerator, int denominator, double startInSeconds, double endInSeconds)
     {
         BeatTimePointList beatPoints;

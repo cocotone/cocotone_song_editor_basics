@@ -153,7 +153,9 @@ void PianoRollTimeRuler::drawBeatRulerVerticalLines(juce::Graphics& g)
         denominator = tempo_and_time_signature_optional.value().denominator;
     }
 
-    const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::generateBeatTimePointList(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd());
+
+    // NOTE: This procedure will fit to feature of tempo map track.
+    const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd());
 
     // Set clipping mask
     g.reduceClipRegion(rectBeatRulerArea);
