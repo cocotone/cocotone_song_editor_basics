@@ -132,7 +132,7 @@ public:
         double beatsPerBar = static_cast<double>(numerator);
 
         // Calculate the number of specified note lengths per quarter note
-        double noteLengthsPerQuarterNote;
+        double noteLengthsPerQuarterNote = 0.0;
         switch (noteLength)
         {
             case NoteLength::Whole: noteLengthsPerQuarterNote = 0.25; break;
