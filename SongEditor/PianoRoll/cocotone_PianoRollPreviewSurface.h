@@ -26,6 +26,7 @@ public:
 
     //==============================================================================
     void setUserInputPositionInSeconds(double positionInSeconds);
+    void setDrawingGridInterval(cctn::song::NoteLength intervalLength);
 
     //==============================================================================
     void emitMouseEvent(const juce::MouseEvent& mouseEvent, bool isExitAction);
@@ -109,6 +110,7 @@ private:
     juce::Range<double> quantizedInputRegionInSeconds;
 
     juce::Value visibleGridVerticalLineType;
+    juce::Value drawingGirdVerticalInterval;
 
     // Generate for Grid.
     const PianoRollKeyboard& pianoRollKeyboardRef;

@@ -50,6 +50,31 @@ SongEditor::SongEditor()
     pianoRollTimeRuler = std::make_unique<PianoRollTimeRuler>();
     addAndMakeVisible(pianoRollTimeRuler.get());
 
+    // Grid Interval
+    labelPianoRollGridInterval = std::make_unique<juce::Label>();
+    labelPianoRollGridInterval->setText("Grid Interval: ", juce::dontSendNotification);
+    labelPianoRollGridInterval->setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(labelPianoRollGridInterval.get());
+
+    comboboxPianoRollGridInterval = std::make_unique<juce::ComboBox>();
+    comboboxPianoRollGridInterval->onChange =
+        [safe_this = juce::Component::SafePointer(this)]() {
+        if (safe_this.getComponent() == nullptr)
+        {
+            return;
+        }
+
+        const auto item_idx = safe_this->comboboxPianoRollGridInterval->getSelectedItemIndex();
+        if (safe_this->mapIndexToGridInterval.count(item_idx) > 0)
+        {
+            safe_this->valuePianoRollGridInterval = (int)safe_this->mapIndexToGridInterval[item_idx];
+        }
+        };
+    addAndMakeVisible(comboboxPianoRollGridInterval.get());
+
+    populateComboBoxWithNoteLength(*comboboxPianoRollGridInterval.get(), mapIndexToGridInterval);
+
+    // Note Length
     labelInputNoteLength = std::make_unique<juce::Label>();
     labelInputNoteLength->setText("Note Length: ", juce::dontSendNotification);
     labelInputNoteLength->setJustificationType(juce::Justification::centredRight);
@@ -78,6 +103,7 @@ SongEditor::SongEditor()
 
     valuePianoRollBottomKeyNumber.addListener(this);
     valuePianoRollInputNoteLength.addListener(this);
+    valuePianoRollGridInterval.addListener(this);
 
     // Set initial state.
     valuePianoRollBottomKeyNumber.setValue(55);
@@ -100,6 +126,7 @@ SongEditor::~SongEditor()
 
     valuePianoRollBottomKeyNumber.removeListener(this);
     valuePianoRollInputNoteLength.removeListener(this);
+    valuePianoRollGridInterval.removeListener(this);
 
     pianoRollScrollBarHorizontal->removeListener(this);
 
@@ -174,6 +201,9 @@ void SongEditor::resized()
     const auto piano_roll_main_top = piano_roll_time_ruler_top + height_piano_roll_time_ruler;
     const auto piano_roll_main_bottom = getHeight() - width_piano_roll_scrollbar;
 
+    labelPianoRollGridInterval->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
+    comboboxPianoRollGridInterval->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
+
     labelInputNoteLength->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
     comboboxInputNoteLength->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
 
@@ -231,13 +261,17 @@ void SongEditor::valueChanged(juce::Value& value)
     if (value.refersToSameSourceAs(valuePianoRollBottomKeyNumber))
     {
         pianoRollKeyboard->setVisibleBottomKeyNoteNumber((int)valuePianoRollBottomKeyNumber.getValue());
-
         pianoRollPreviewSurface->setVisibleBottomKeyNoteNumber((int)valuePianoRollBottomKeyNumber.getValue());
     }
     else if (value.refersToSameSourceAs(valuePianoRollInputNoteLength))
     {
         comboboxInputNoteLength->setSelectedItemIndex((int)valuePianoRollInputNoteLength.getValue(), juce::dontSendNotification);
         songEditorDocumentPtr.lock()->getDocumentContext().currentNoteLength = (cctn::song::NoteLength)(int)valuePianoRollInputNoteLength.getValue();
+    }
+    else if (value.refersToSameSourceAs(valuePianoRollGridInterval))
+    {
+        comboboxPianoRollGridInterval->setSelectedItemIndex((int)valuePianoRollGridInterval.getValue(), juce::dontSendNotification);
+        pianoRollPreviewSurface->setDrawingGridInterval((cctn::song::NoteLength)(int)valuePianoRollGridInterval.getValue());
     }
 }
 
@@ -327,6 +361,7 @@ void SongEditor::populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::m
 void SongEditor::initialUpdate()
 {
     valuePianoRollInputNoteLength = (int)cctn::song::NoteLength::Quarter;
+    valuePianoRollGridInterval = (int)cctn::song::NoteLength::Sixteenth;
 }
 
 }
