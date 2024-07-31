@@ -211,41 +211,18 @@ void SongEditor::resized()
     pianoRollInteractionSurface->setBounds(rect_piano_roll_preview);
 
     pianoRollKeyboard->setBounds(rect_piano_roll_keyboard);
-    pianoRollTimeRuler->setBounds(rect_piano_roll_time_ruler);
     pianoRollSliderVertical->setBounds(rect_piano_roll_scrollbar_vertical);
     pianoRollScrollBarHorizontal->setBounds(rect_piano_roll_scrollbar_horizontal);
 
     {
-        {
-            const auto rect_beat_ruler_content =
-                rect_piano_roll_time_ruler
-                .withTop(rect_piano_roll_time_ruler.getHeight() * 0.5f)
-                .withLeft(rect_piano_roll_preview.getX())
-                .withRight(rect_piano_roll_preview.getRight());
-            pianoRollTimeRuler->setBeatRulerRectangle(rect_beat_ruler_content);
-
-            const auto rect_beat_ruler_label =
-                rect_piano_roll_time_ruler
-                .withTop(rect_piano_roll_time_ruler.getHeight() * 0.5f)
-                .withRight(rect_piano_roll_preview.getX());
-            pianoRollTimeRuler->setBeatRulerLabelRectangle(rect_beat_ruler_label);
-        }
-
-        {
-            const auto rect_time_ruler_content =
-                rect_piano_roll_time_ruler
-                .withBottom(rect_piano_roll_time_ruler.getHeight() * 0.5f)
-                .withLeft(rect_piano_roll_preview.getX())
-                .withRight(rect_piano_roll_preview.getRight());
-            pianoRollTimeRuler->setTimeRulerRectangle(rect_time_ruler_content);
-
-            const auto rect_time_ruler_label =
-                rect_piano_roll_time_ruler
-                .withBottom(rect_piano_roll_time_ruler.getHeight() * 0.5f)
-                .withRight(rect_piano_roll_preview.getX());
-            pianoRollTimeRuler->setTimeRulerLabelRectangle(rect_time_ruler_label);
-        }
+        PianoRollTimeRuler::LayoutSource layout_source;
+        layout_source.labelLeft = 0;
+        layout_source.labelRight = rect_piano_roll_preview.getX();
+        layout_source.rulerLeft = rect_piano_roll_preview.getX();
+        layout_source.rulerRight = rect_piano_roll_preview.getRight();
+        pianoRollTimeRuler->setLayoutSource(layout_source);
     }
+    pianoRollTimeRuler->setBounds(rect_piano_roll_time_ruler);
 }
 
 //==============================================================================

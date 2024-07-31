@@ -23,11 +23,17 @@ public:
     void setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo);
 
     //==============================================================================
-    void setTimeRulerRectangle(const juce::Rectangle<int>& rectangle);
-    void setTimeRulerLabelRectangle(const juce::Rectangle<int>& rectangle);
-    void setBeatRulerRectangle(const juce::Rectangle<int>& rectangle);
-    void setBeatRulerLabelRectangle(const juce::Rectangle<int>& rectangle);
+    struct LayoutSource
+    {
+        int labelLeft{ 0 };
+        int labelRight{ 0 };
+        int rulerLeft{ 0 };
+        int rulerRight{ 0 };
 
+        JUCE_LEAK_DETECTOR(LayoutSource)
+    };
+
+    void setLayoutSource(const LayoutSource& layoutSource);
     void updateLayout();
 
 private:
@@ -63,6 +69,8 @@ private:
     juce::Rectangle<int> rectTimeRulerLabelArea;
     juce::Rectangle<int> rectBeatRulerArea;
     juce::Rectangle<int> rectBeatRulerLabelArea;
+
+    LayoutSource currentLayoutSource;
 
     // TODO: should abstract
     juce::AudioPlayHead::PositionInfo currentPositionInfo;

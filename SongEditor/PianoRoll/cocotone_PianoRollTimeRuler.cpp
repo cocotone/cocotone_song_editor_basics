@@ -49,28 +49,10 @@ void PianoRollTimeRuler::setCurrentPositionInfo(const juce::AudioPlayHead::Posit
     repaint();
 }
 
-void PianoRollTimeRuler::setTimeRulerRectangle(const juce::Rectangle<int>& rectangle)
+//==============================================================================
+void PianoRollTimeRuler::setLayoutSource(const LayoutSource& layoutSource)
 {
-    rectTimeRulerArea = rectangle;
-    updateLayout();
-}
-
-void PianoRollTimeRuler::setTimeRulerLabelRectangle(const juce::Rectangle<int>& rectangle)
-{
-    rectTimeRulerLabelArea = rectangle;
-    updateLayout();
-}
-
-void PianoRollTimeRuler::setBeatRulerRectangle(const juce::Rectangle<int>& rectangle)
-{
-    rectBeatRulerArea = rectangle;
-    updateLayout();
-}
-
-void PianoRollTimeRuler::setBeatRulerLabelRectangle(const juce::Rectangle<int>& rectangle)
-{
-    rectBeatRulerLabelArea = rectangle;
-    updateLayout();
+    currentLayoutSource = layoutSource;
 }
 
 void PianoRollTimeRuler::updateLayout()
@@ -114,6 +96,30 @@ void PianoRollTimeRuler::paint(juce::Graphics& g)
 
 void PianoRollTimeRuler::resized()
 {
+    auto rect_area = getLocalBounds();
+
+    rectBeatRulerLabelArea.setLeft(0);
+    rectBeatRulerLabelArea.setRight(currentLayoutSource.labelRight);
+    rectBeatRulerLabelArea.setTop(0);
+    rectBeatRulerLabelArea.setBottom(rect_area.getHeight() * 0.5f);
+
+    rectBeatRulerArea.setLeft(currentLayoutSource.rulerLeft);
+    rectBeatRulerArea.setRight(currentLayoutSource.rulerRight);
+    rectBeatRulerArea.setTop(0);
+    rectBeatRulerArea.setBottom(rect_area.getHeight() * 0.5f);
+
+    rectTimeRulerLabelArea.setLeft(0);
+    rectTimeRulerLabelArea.setRight(currentLayoutSource.labelRight);
+    rectTimeRulerLabelArea.setTop(rect_area.getHeight() * 0.5f);
+    rectTimeRulerLabelArea.setBottom(rect_area.getHeight());
+
+    rectTimeRulerArea.setLeft(currentLayoutSource.rulerLeft);
+    rectTimeRulerArea.setRight(currentLayoutSource.rulerRight);
+    rectTimeRulerArea.setTop(rect_area.getHeight() * 0.5f);
+    rectTimeRulerArea.setBottom(rect_area.getHeight());
+    
+    updateLayout();
+
     repaint();
 }
 
