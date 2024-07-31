@@ -124,6 +124,57 @@ public:
         return beatPoints;
     }
 
+    static BeatTimePointList extractPreciseBeatPoints(double bpm, int numerator, int denominator, double startInSeconds, double endInSeconds, NoteLength noteLength)
+    {
+        BeatTimePointList beatPoints;
+
+        double secondsPerQuarterNote = 60.0 / bpm;
+        double beatsPerBar = static_cast<double>(numerator);
+
+        // Calculate the number of specified note lengths per quarter note
+        double noteLengthsPerQuarterNote;
+        switch (noteLength)
+        {
+            case NoteLength::Whole: noteLengthsPerQuarterNote = 0.25; break;
+            case NoteLength::Half: noteLengthsPerQuarterNote = 0.5; break;
+            case NoteLength::Quarter: noteLengthsPerQuarterNote = 1.0; break;
+            case NoteLength::Eighth: noteLengthsPerQuarterNote = 2.0; break;
+            case NoteLength::Sixteenth: noteLengthsPerQuarterNote = 4.0; break;
+            case NoteLength::ThirtySecond: noteLengthsPerQuarterNote = 8.0; break;
+            case NoteLength::SixtyFourth: noteLengthsPerQuarterNote = 16.0; break;
+            case NoteLength::Triplet: noteLengthsPerQuarterNote = 3.0; break;
+            case NoteLength::DottedQuarter: noteLengthsPerQuarterNote = 2.0 / 3.0; break;
+            case NoteLength::DottedEighth: noteLengthsPerQuarterNote = 4.0 / 3.0; break;
+        }
+
+        double secondsPerNoteLength = secondsPerQuarterNote / noteLengthsPerQuarterNote;
+
+        // Find the first beat after or at the start time
+        double firstBeat = std::ceil(startInSeconds / secondsPerNoteLength);
+        double currentTime = firstBeat * secondsPerNoteLength;
+        double currentBeat = firstBeat / noteLengthsPerQuarterNote;
+
+        while (currentTime <= endInSeconds)
+        {
+            if (currentTime >= startInSeconds)
+            {
+                beatPoints.emplace_back(currentBeat, currentTime, noteLength);
+            }
+
+            currentBeat += 1.0 / noteLengthsPerQuarterNote;
+            currentTime += secondsPerNoteLength;
+
+            // Adjust for bar boundaries if needed
+            if (std::fmod(currentBeat, beatsPerBar) < 1e-10)
+            {
+                // Ensure we're on an exact bar
+                currentBeat = std::round(currentBeat);
+            }
+        }
+
+        return beatPoints;
+    }
+
 private:
     BeatTimePointFactory() = delete;
     ~BeatTimePointFactory() = delete;

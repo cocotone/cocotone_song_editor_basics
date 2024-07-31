@@ -154,11 +154,11 @@ public:
 SongEditorDocument::SongEditorDocument()
     : beatTimePointList(nullptr)
 {
+    documentContext = std::make_unique<cctn::song::SongEditorDocument::DocumentContext>();
+
     quantizeEngine = std::make_unique<cctn::song::QuantizeEngine>();
 
     documentData = std::make_unique<cctn::song::SongEditorDocumentData>();
-
-    //createDoReMiScoreDocument(*documentData);
 }
 
 SongEditorDocument::~SongEditorDocument()
@@ -289,7 +289,7 @@ void SongEditorDocument::updateQuantizeRegions(const juce::AudioPlayHead::Positi
         denominator = tempo_and_time_signature_optional.value().denominator;
     }
 
-    beatTimePointList = std::make_unique<BeatTimePointList>(BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, 0.0, 600.0));
+    beatTimePointList = std::make_unique<BeatTimePointList>(BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, 0.0, 600.0, documentContext->currentNoteLength));
 
     if (beatTimePointList.get() != nullptr)
     {

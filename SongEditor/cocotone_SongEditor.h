@@ -52,13 +52,26 @@ private:
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
     //==============================================================================
+    void populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToNoteLength);
+
+    void initialUpdate();
+
+    //==============================================================================
     std::unique_ptr<cctn::song::PianoRollKeyboard> pianoRollKeyboard;
     std::unique_ptr<cctn::song::PianoRollTimeRuler> pianoRollTimeRuler;
     std::unique_ptr<cctn::song::PianoRollPreviewSurface> pianoRollPreviewSurface;
     std::unique_ptr<cctn::song::PianoRollInteractionSurface> pianoRollInteractionSurface;
     std::unique_ptr<juce::Slider> pianoRollSliderVertical;
     std::unique_ptr<juce::ScrollBar> pianoRollScrollBarHorizontal;
+    
+    juce::Rectangle<int> rectInputOptions;
+    std::unique_ptr<juce::Label> labelInputNoteLength;
+    std::unique_ptr<juce::ComboBox> comboboxInputNoteLength;
+    std::map<int, cctn::song::NoteLength> mapIndexToNoteLength;
+
     juce::Value valuePianoRollBottomKeyNumber;
+    juce::Value valuePianoRollInputNoteLength;
+    juce::Value valuePianoRollGridInterval;
 
     std::unique_ptr<cctn::song::PianoRollEventDispatcher> pianoRollEventDispatcher;
 

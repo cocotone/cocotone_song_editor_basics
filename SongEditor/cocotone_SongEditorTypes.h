@@ -6,6 +6,21 @@ namespace song
 {
 
 //==============================================================================
+enum class NoteLength
+{
+    Whole,           // Whole note
+    Half,            // Half note
+    Quarter,         // Quarter note
+    Eighth,          // Eighth note
+    Sixteenth,       // Sixteenth note
+    ThirtySecond,    // Thirty-second note
+    SixtyFourth,     // Sixty-fourth note
+    Triplet,         // Triplet
+    DottedQuarter,   // Dotted quarter note
+    DottedEighth     // Dotted eighth note
+};
+
+//==============================================================================
 struct SongEditorNoteBasic
 {
     double startPositionInSeconds;
@@ -99,21 +114,32 @@ public:
     //==============================================================================
     double beat{ 0.0 };
     double timeInSeconds{ 0.0 };
+    NoteLength noteLength{ NoteLength::Quarter };
 
     //==============================================================================
+    BeatTimePoint(double b, double t, NoteLength nl)
+        : beat(b)
+        , timeInSeconds(t)
+        , noteLength(nl)
+    {}
+
     BeatTimePoint(double b, double t)
-        : beat(b), timeInSeconds(t)
+        : beat(b)
+        , timeInSeconds(t)
     {}
 
     // Copy
     BeatTimePoint(const BeatTimePoint& other)
-        : beat(other.beat), timeInSeconds(other.timeInSeconds)
+        : beat(other.beat)
+        , timeInSeconds(other.timeInSeconds)
+        , noteLength(other.noteLength)
     {}
 
     // Move
     BeatTimePoint(BeatTimePoint&& other) noexcept
-        : beat(std::exchange(other.beat, 0.0)),
-        timeInSeconds(std::exchange(other.timeInSeconds, 0.0))
+        : beat(std::exchange(other.beat, 0.0))
+        , timeInSeconds(std::exchange(other.timeInSeconds, 0.0))
+        , noteLength(std::exchange(other.noteLength, NoteLength::Quarter))
     {}
 
     //==============================================================================

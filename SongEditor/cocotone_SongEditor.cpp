@@ -50,10 +50,35 @@ SongEditor::SongEditor()
     pianoRollTimeRuler = std::make_unique<PianoRollTimeRuler>();
     addAndMakeVisible(pianoRollTimeRuler.get());
 
+    labelInputNoteLength = std::make_unique<juce::Label>();
+    labelInputNoteLength->setText("Note Length: ", juce::dontSendNotification);
+    labelInputNoteLength->setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(labelInputNoteLength.get());
+
+    comboboxInputNoteLength = std::make_unique<juce::ComboBox>();
+    comboboxInputNoteLength->onChange = 
+        [safe_this = juce::Component::SafePointer(this)]() {
+        if (safe_this.getComponent() == nullptr)
+        {
+            return;
+        }
+
+        const auto item_idx = safe_this->comboboxInputNoteLength->getSelectedItemIndex();
+        if (safe_this->mapIndexToNoteLength.count(item_idx) > 0)
+        {
+            safe_this->valuePianoRollInputNoteLength = (int)safe_this->mapIndexToNoteLength[item_idx];
+        }
+        };
+    addAndMakeVisible(comboboxInputNoteLength.get());
+
+    populateComboBoxWithNoteLength(*comboboxInputNoteLength.get(), mapIndexToNoteLength);
+
+    // Add listener
     pianoRollScrollBarHorizontal->addListener(this);
 
     valuePianoRollBottomKeyNumber.addListener(this);
-    
+    valuePianoRollInputNoteLength.addListener(this);
+
     // Set initial state.
     valuePianoRollBottomKeyNumber.setValue(55);
 
@@ -63,6 +88,9 @@ SongEditor::SongEditor()
     pianoRollTimeRuler->setVisibleRangeTimeInSeconds(juce::Range<double>{0.0, 6.0});
     pianoRollTimeRuler->setGridVerticalLineIntervaleInSeconds(0.500);
 
+    // Trigger Initial Update.
+    initialUpdate();
+
     startTimerHz(30);
 }
 
@@ -71,6 +99,7 @@ SongEditor::~SongEditor()
     stopTimer();
 
     valuePianoRollBottomKeyNumber.removeListener(this);
+    valuePianoRollInputNoteLength.removeListener(this);
 
     pianoRollScrollBarHorizontal->removeListener(this);
 
@@ -108,6 +137,8 @@ void SongEditor::registerSongEditorDocument(std::shared_ptr<cctn::song::SongEdit
         songEditorOperation->attachDocument(songEditorDocumentPtr.lock());
 
         pianoRollPreviewSurface->setDocumentForPreview(document);
+
+        valuePianoRollInputNoteLength = (int)songEditorDocumentPtr.lock()->getDocumentContext().currentNoteLength;
     }
 }
 
@@ -134,23 +165,47 @@ void SongEditor::resized()
 {
     auto rect_area = getLocalBounds();
 
-    const auto piano_roll_main_top = 48;
-    const auto piano_roll_main_bottom = getHeight() - 24;
+    rectInputOptions = rect_area.removeFromTop(32);
+
+    const auto width_piano_roll_keyboard = 80;
+    const auto width_piano_roll_scrollbar = 24;
+    const auto height_piano_roll_time_ruler = 48;
+    const auto piano_roll_time_ruler_top = rectInputOptions.getBottom();
+    const auto piano_roll_main_top = piano_roll_time_ruler_top + height_piano_roll_time_ruler;
+    const auto piano_roll_main_bottom = getHeight() - width_piano_roll_scrollbar;
+
+    labelInputNoteLength->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
+    comboboxInputNoteLength->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
 
     const auto rect_piano_roll_keyboard = 
-        juce::Rectangle<int>{ 0, (int)piano_roll_main_top, 80, piano_roll_main_bottom  - piano_roll_main_top };
+        juce::Rectangle<int>{ 0, 
+        (int)piano_roll_main_top, 
+        width_piano_roll_keyboard, 
+        piano_roll_main_bottom  - piano_roll_main_top };
     
     const auto rect_piano_roll_preview =
-        juce::Rectangle<int>{ 80, (int)piano_roll_main_top, getWidth() - 80 - 24, piano_roll_main_bottom - piano_roll_main_top};
+        juce::Rectangle<int>{ width_piano_roll_keyboard, 
+        (int)piano_roll_main_top,
+        getWidth() - width_piano_roll_keyboard - width_piano_roll_scrollbar,
+        piano_roll_main_bottom - piano_roll_main_top};
     
     const auto rect_piano_roll_time_ruler =
-        juce::Rectangle<int>{ 0, 0, getWidth(), piano_roll_main_top };
+        juce::Rectangle<int>{ 0,
+        piano_roll_time_ruler_top,
+        getWidth(),
+        piano_roll_main_top - piano_roll_time_ruler_top };
     
     const auto rect_piano_roll_scrollbar_vertical =
-        juce::Rectangle<int>{ getWidth() - 24, (int)piano_roll_main_top, 24, piano_roll_main_bottom - piano_roll_main_top };
+        juce::Rectangle<int>{ getWidth() - width_piano_roll_scrollbar,
+        (int)piano_roll_main_top,
+        width_piano_roll_scrollbar,
+        piano_roll_main_bottom - piano_roll_main_top };
     
     const auto rect_piano_roll_scrollbar_horizontal = 
-        juce::Rectangle<int>{ 80, piano_roll_main_bottom, getWidth() - 80 - 24, 24 };
+        juce::Rectangle<int>{ width_piano_roll_keyboard,
+        piano_roll_main_bottom,
+        getWidth() - width_piano_roll_keyboard - width_piano_roll_scrollbar,
+        width_piano_roll_scrollbar };
 
     pianoRollPreviewSurface->setBounds(rect_piano_roll_preview);
     pianoRollInteractionSurface->setBounds(rect_piano_roll_preview);
@@ -202,6 +257,11 @@ void SongEditor::valueChanged(juce::Value& value)
 
         pianoRollPreviewSurface->setVisibleBottomKeyNoteNumber((int)valuePianoRollBottomKeyNumber.getValue());
     }
+    else if (value.refersToSameSourceAs(valuePianoRollInputNoteLength))
+    {
+        comboboxInputNoteLength->setSelectedItemIndex((int)valuePianoRollInputNoteLength.getValue(), juce::dontSendNotification);
+        songEditorDocumentPtr.lock()->getDocumentContext().currentNoteLength = (cctn::song::NoteLength)(int)valuePianoRollInputNoteLength.getValue();
+    }
 }
 
 //==============================================================================
@@ -250,6 +310,46 @@ void SongEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
         {
         }
     }
+}
+
+//==============================================================================
+void SongEditor::populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToNoteLength)
+{
+    struct NoteLengthItem 
+    {
+        cctn::song::NoteLength noteLength;
+        const juce::String name;
+    };
+
+    const NoteLengthItem items[] =
+    {
+        { NoteLength::Whole, "1/1" },
+        { NoteLength::Half, "1/2" },
+        { NoteLength::Quarter, "1/4" },
+        { NoteLength::Eighth, "1/8" },
+        { NoteLength::Sixteenth, "1/16" },
+        { NoteLength::ThirtySecond, "1/32" },
+        { NoteLength::SixtyFourth, "1/64" },
+        { NoteLength::Triplet, "1/4T" },
+        { NoteLength::DottedQuarter, "1/4." },
+        { NoteLength::DottedEighth, "1/8." }
+    };
+
+    comboBox.clear(juce::dontSendNotification);
+    mapIndexToNoteLength.clear();
+
+    for (int item_idx = 0; item_idx < std::size(items); item_idx++)
+    {
+        comboBox.addItem(items[item_idx].name, item_idx + 1);
+        mapIndexToNoteLength[item_idx] = items[item_idx].noteLength;
+    }
+
+    comboBox.setSelectedItemIndex((int)cctn::song::NoteLength::Quarter, juce::dontSendNotification);
+}
+
+void SongEditor::initialUpdate()
+{
+    valuePianoRollInputNoteLength = (int)cctn::song::NoteLength::Quarter;
 }
 
 }

@@ -58,11 +58,23 @@ public:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Listener)
     };
 
+    //==============================================================================
+    class DocumentContext
+    {
+    public:
+        cctn::song::NoteLength currentNoteLength{ cctn::song::NoteLength::Quarter };
+
+    private:
+        JUCE_LEAK_DETECTOR(DocumentContext)
+    };
+    DocumentContext& getDocumentContext() const { return *documentContext.get(); };
+
 private:
     //==============================================================================
     std::unique_ptr<cctn::song::SongEditorDocumentData> documentData;
     std::unique_ptr<cctn::song::QuantizeEngine> quantizeEngine;
     std::unique_ptr<cctn::song::BeatTimePointList> beatTimePointList;
+    std::unique_ptr<DocumentContext> documentContext;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SongEditorDocument)
 };
