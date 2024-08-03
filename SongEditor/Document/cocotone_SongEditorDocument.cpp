@@ -244,7 +244,7 @@ void SongEditorDocument::createNote(const cctn::song::QueryForAddPianoRollNote& 
 
     for (auto& note : (*documentData).notes)
     {
-        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(new_note.endPositionInSeconds))
+        if (juce::Range<double>(new_note.startPositionInSeconds, new_note.endPositionInSeconds).contains(note.startPositionInSeconds))
         {
             new_note.endPositionInSeconds = note.startPositionInSeconds;
         }
