@@ -230,7 +230,7 @@ void SongEditorDocument::createNote(const cctn::song::QueryForAddPianoRollNote& 
     new_note.startPositionInSeconds = query.startTimeInSeconds;
     new_note.endPositionInSeconds = query.endTimeInSeconds;
     new_note.isSelected = true;
-    new_note.lyric = juce::CharPointer_UTF8("\xe3\x83\xa9"); // ra
+    new_note.lyric = documentContext->currentNoteLyric.text;
 
     if (query.snapToQuantizeGrid)
     {

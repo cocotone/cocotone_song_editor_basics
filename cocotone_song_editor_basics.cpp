@@ -1,6 +1,7 @@
 #include "cocotone_song_editor_basics.h"
 
 //==============================================================================
+#include "SongEditor/Lyric/cocotone_MoraKana.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollColours.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollPositionUtility.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollKeyboard.h"
@@ -13,6 +14,7 @@
 #include "SongEditor/cocotone_SongEditorCommand.h"
 
 //==============================================================================
+#include "SongEditor/Lyric/cocotone_MoraKana.cpp"
 #include "SongEditor/PianoRoll/cocotone_PianoRollKeyboard.cpp"
 #include "SongEditor/PianoRoll/cocotone_PianoRollTimeRuler.cpp"
 #include "SongEditor/PianoRoll/cocotone_PianoRollEventDispatcher.cpp"

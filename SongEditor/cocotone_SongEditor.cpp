@@ -98,12 +98,38 @@ SongEditor::SongEditor()
 
     populateComboBoxWithNoteLength(*comboboxInputNoteLength.get(), mapIndexToNoteLength);
 
+    // Lyric Mora
+    labelInputMora = std::make_unique<juce::Label>();
+    labelInputMora->setText("Lyric Mora: ", juce::dontSendNotification);
+    labelInputMora->setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(labelInputMora.get());
+
+    comboboxInputMora = std::make_unique<juce::ComboBox>();
+    comboboxInputMora->onChange =
+        [safe_this = juce::Component::SafePointer(this)]() {
+        if (safe_this.getComponent() == nullptr)
+        {
+            return;
+        }
+
+        const auto item_idx = safe_this->comboboxInputMora->getSelectedItemIndex();
+        if (safe_this->mapIndexToMora.count(item_idx) > 0)
+        {
+            safe_this->valuePianoRollInputMora = safe_this->mapIndexToMora[item_idx];
+        }
+        };
+    addAndMakeVisible(comboboxInputMora.get());
+
+    populateComboBoxWithLyricMora(*comboboxInputMora.get(), mapIndexToMora);
+
+
     // Add listener
     pianoRollScrollBarHorizontal->addListener(this);
 
     valuePianoRollBottomKeyNumber.addListener(this);
-    valuePianoRollInputNoteLength.addListener(this);
     valuePianoRollGridInterval.addListener(this);
+    valuePianoRollInputNoteLength.addListener(this);
+    valuePianoRollInputMora.addListener(this);
 
     // Set initial state.
     valuePianoRollBottomKeyNumber.setValue(55);
@@ -125,8 +151,9 @@ SongEditor::~SongEditor()
     stopTimer();
 
     valuePianoRollBottomKeyNumber.removeListener(this);
-    valuePianoRollInputNoteLength.removeListener(this);
     valuePianoRollGridInterval.removeListener(this);
+    valuePianoRollInputNoteLength.removeListener(this);
+    valuePianoRollInputMora.removeListener(this);
 
     pianoRollScrollBarHorizontal->removeListener(this);
 
@@ -166,6 +193,8 @@ void SongEditor::registerSongEditorDocument(std::shared_ptr<cctn::song::SongEdit
         pianoRollPreviewSurface->setDocumentForPreview(document);
 
         valuePianoRollInputNoteLength = (int)songEditorDocumentPtr.lock()->getDocumentContext().currentNoteLength;
+
+        valuePianoRollInputMora = songEditorDocumentPtr.lock()->getDocumentContext().currentNoteLyric.text;
     }
 }
 
@@ -206,6 +235,9 @@ void SongEditor::resized()
 
     labelInputNoteLength->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
     comboboxInputNoteLength->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
+
+    labelInputMora->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
+    comboboxInputMora->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
 
     const auto rect_piano_roll_keyboard = 
         juce::Rectangle<int>{ 0, 
@@ -272,6 +304,11 @@ void SongEditor::valueChanged(juce::Value& value)
     {
         comboboxPianoRollGridInterval->setSelectedItemIndex((int)valuePianoRollGridInterval.getValue(), juce::dontSendNotification);
         pianoRollPreviewSurface->setDrawingGridInterval((cctn::song::NoteLength)(int)valuePianoRollGridInterval.getValue());
+    }
+    else if (value.refersToSameSourceAs(valuePianoRollInputMora))
+    {
+        comboboxInputMora->setText(valuePianoRollInputMora.getValue(), juce::dontSendNotification);
+        songEditorDocumentPtr.lock()->getDocumentContext().currentNoteLyric.text = valuePianoRollInputMora.getValue();
     }
 }
 
@@ -356,6 +393,22 @@ void SongEditor::populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::m
     }
 
     comboBox.setSelectedItemIndex((int)cctn::song::NoteLength::Quarter, juce::dontSendNotification);
+}
+
+void SongEditor::populateComboBoxWithLyricMora(juce::ComboBox& comboBox, std::map<int, cctn::song::Mora>& mapIndexToMora)
+{
+    const auto mora_kanas = StaticMoraKana().getMoraKanas();
+
+    comboBox.clear(juce::dontSendNotification);
+    mapIndexToMora.clear();
+
+    for (int item_idx = 0; item_idx < std::size(mora_kanas); item_idx++)
+    {
+        comboBox.addItem(mora_kanas[item_idx], item_idx + 1);
+        mapIndexToMora[item_idx] = mora_kanas[item_idx];
+    }
+
+    comboBox.setSelectedItemIndex(0, juce::dontSendNotification);
 }
 
 void SongEditor::initialUpdate()

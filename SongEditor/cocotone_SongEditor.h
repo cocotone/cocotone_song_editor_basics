@@ -52,7 +52,8 @@ private:
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
     //==============================================================================
-    void populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToNoteLength);
+    static void populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToNoteLength);
+    static void populateComboBoxWithLyricMora(juce::ComboBox& comboBox, std::map<int, cctn::song::Mora>& mapIndexToMora);
 
     void initialUpdate();
 
@@ -67,15 +68,20 @@ private:
     
     juce::Rectangle<int> rectInputOptions;
     
+    std::unique_ptr<juce::Label> labelPianoRollGridInterval;
+    std::unique_ptr<juce::ComboBox> comboboxPianoRollGridInterval;
+    std::map<int, cctn::song::NoteLength> mapIndexToGridInterval;
+    juce::Value valuePianoRollGridInterval;
+
     std::unique_ptr<juce::Label> labelInputNoteLength;
     std::unique_ptr<juce::ComboBox> comboboxInputNoteLength;
     std::map<int, cctn::song::NoteLength> mapIndexToNoteLength;
     juce::Value valuePianoRollInputNoteLength;
 
-    std::unique_ptr<juce::Label> labelPianoRollGridInterval;
-    std::unique_ptr<juce::ComboBox> comboboxPianoRollGridInterval;
-    std::map<int, cctn::song::NoteLength> mapIndexToGridInterval;
-    juce::Value valuePianoRollGridInterval;
+    std::unique_ptr<juce::Label> labelInputMora;
+    std::unique_ptr<juce::ComboBox> comboboxInputMora;
+    std::map<int, cctn::song::Mora> mapIndexToMora;
+    juce::Value valuePianoRollInputMora;
 
     std::unique_ptr<cctn::song::PianoRollEventDispatcher> pianoRollEventDispatcher;
 

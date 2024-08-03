@@ -21,6 +21,19 @@ enum class NoteLength
 };
 
 //==============================================================================
+using MoraKana = juce::String;
+using Mora = MoraKana;
+
+//==============================================================================
+struct NoteLyric
+{
+    juce::String text;  // UTF-8 encode.
+    std::vector<juce::String> phonemes;  // UTF-8 encode.
+
+    JUCE_LEAK_DETECTOR(NoteLyric)
+};
+
+//==============================================================================
 struct SongEditorNoteBasic
 {
     double startPositionInSeconds;

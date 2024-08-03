@@ -63,6 +63,7 @@ public:
     {
     public:
         cctn::song::NoteLength currentNoteLength{ cctn::song::NoteLength::Quarter };
+        cctn::song::NoteLyric currentNoteLyric{ juce::CharPointer_UTF8("\xe3\x83\xa9") }; // ra
 
     private:
         JUCE_LEAK_DETECTOR(DocumentContext)
