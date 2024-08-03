@@ -487,7 +487,7 @@ void PianoRollPreviewSurface::drawQuantizedInputRegionRectangle(juce::Graphics& 
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
-    if (quantizedInputRegionInSeconds.getLength() > 0.0)
+    if (quantizedInputRegionInSeconds.getLength() > 0.0 && userInputPositionInNoteNumber >= 0)
     {
         g.setColour(kColourPianoRollQuantizedInputRegion);
 
