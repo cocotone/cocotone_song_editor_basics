@@ -206,6 +206,28 @@ void PianoRollPreviewSurface::changeListenerCallback(juce::ChangeBroadcaster* so
     }
 }
 
+double calculate_note_end_time(double x_start, double x_end, NoteLength x_length, NoteLength y_length)
+{
+    // Calculate the duration of the X note
+    double x_duration = x_end - x_start;
+
+    // Get the note values
+    double x_value = getNoteValue(x_length);
+    double y_value = getNoteValue(y_length);
+
+    // Calculate the tempo in BPM
+    double tempo = 60.0 * 4.0 / (x_duration * x_value);
+
+    // Calculate the duration of one beat (quarter note) in seconds
+    double beat_duration = 60.0 / tempo;
+
+    // Calculate the duration of the Y note
+    double y_duration = beat_duration * 4.0 / y_value;
+
+    // Calculate and return the end time of the Y note
+    return x_start + y_duration;
+}
+
 //==============================================================================
 void PianoRollPreviewSurface::updateViewContext()
 {
@@ -237,8 +259,19 @@ void PianoRollPreviewSurface::updateViewContext()
         const auto region_optional = documentForPreviewPtr.lock()->findNearestQuantizeRegion(userInputPositionInSeconds);
         if (region_optional.has_value())
         {
+            //quantizedInputRegionInSeconds =
+            //    juce::Range<double>{ region_optional.value().startPositionInSeconds, region_optional.value().endPositionInSeconds };
+
+            // Get the note values
+            const auto note_end_position_in_seconds =
+                calculate_note_end_time(
+                    region_optional.value().startPositionInSeconds, 
+                    region_optional.value().endPositionInSeconds, 
+                    documentForPreviewPtr.lock()->getDocumentContext().currentGridInterval,
+                    documentForPreviewPtr.lock()->getDocumentContext().currentNoteLength);
+
             quantizedInputRegionInSeconds =
-                juce::Range<double>{ region_optional.value().startPositionInSeconds, region_optional.value().endPositionInSeconds };
+                juce::Range<double>{ region_optional.value().startPositionInSeconds, note_end_position_in_seconds };
         }
     }
 }

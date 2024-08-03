@@ -289,7 +289,7 @@ void SongEditorDocument::updateQuantizeRegions(const juce::AudioPlayHead::Positi
         denominator = tempo_and_time_signature_optional.value().denominator;
     }
 
-    beatTimePointList = std::make_unique<BeatTimePointList>(BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, 0.0, 600.0, documentContext->currentNoteLength));
+    beatTimePointList = std::make_unique<BeatTimePointList>(BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, 0.0, 600.0, documentContext->currentGridInterval));
 
     if (beatTimePointList.get() != nullptr)
     {

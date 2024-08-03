@@ -20,6 +20,23 @@ enum class NoteLength
     DottedEighth     // Dotted eighth note
 };
 
+inline double getNoteValue(NoteLength noteLength) {
+    switch (noteLength)
+    {
+    case NoteLength::Whole: return 1.0;
+    case NoteLength::Half: return 2.0;
+    case NoteLength::Quarter: return 4.0;
+    case NoteLength::Eighth: return 8.0;
+    case NoteLength::Sixteenth: return 16.0;
+    case NoteLength::ThirtySecond: return 32.0;
+    case NoteLength::SixtyFourth: return 64.0;
+    case NoteLength::Triplet: return 6.0; // Assuming quarter note triplet
+    case NoteLength::DottedQuarter: return 4.0 / 1.5;
+    case NoteLength::DottedEighth: return 8.0 / 1.5;
+    default: throw std::invalid_argument("Invalid note length");
+    }
+}
+
 //==============================================================================
 using MoraKana = juce::String;
 using Mora = MoraKana;

@@ -192,6 +192,8 @@ void SongEditor::registerSongEditorDocument(std::shared_ptr<cctn::song::SongEdit
 
         pianoRollPreviewSurface->setDocumentForPreview(document);
 
+        valuePianoRollGridInterval = (int)songEditorDocumentPtr.lock()->getDocumentContext().currentGridInterval;
+
         valuePianoRollInputNoteLength = (int)songEditorDocumentPtr.lock()->getDocumentContext().currentNoteLength;
 
         valuePianoRollInputMora = songEditorDocumentPtr.lock()->getDocumentContext().currentNoteLyric.text;
@@ -304,10 +306,13 @@ void SongEditor::valueChanged(juce::Value& value)
     {
         comboboxPianoRollGridInterval->setSelectedItemIndex((int)valuePianoRollGridInterval.getValue(), juce::dontSendNotification);
         pianoRollPreviewSurface->setDrawingGridInterval((cctn::song::NoteLength)(int)valuePianoRollGridInterval.getValue());
+
+        songEditorDocumentPtr.lock()->getDocumentContext().currentGridInterval = (cctn::song::NoteLength)(int)valuePianoRollGridInterval.getValue();
     }
     else if (value.refersToSameSourceAs(valuePianoRollInputMora))
     {
         comboboxInputMora->setText(valuePianoRollInputMora.getValue(), juce::dontSendNotification);
+
         songEditorDocumentPtr.lock()->getDocumentContext().currentNoteLyric.text = valuePianoRollInputMora.getValue();
     }
 }

@@ -62,6 +62,7 @@ public:
     class DocumentContext
     {
     public:
+        cctn::song::NoteLength currentGridInterval{ cctn::song::NoteLength::Quarter };
         cctn::song::NoteLength currentNoteLength{ cctn::song::NoteLength::Quarter };
         cctn::song::NoteLyric currentNoteLyric{ juce::CharPointer_UTF8("\xe3\x83\xa9") }; // ra
 
@@ -76,6 +77,8 @@ private:
     std::unique_ptr<cctn::song::QuantizeEngine> quantizeEngine;
     std::unique_ptr<cctn::song::BeatTimePointList> beatTimePointList;
     std::unique_ptr<DocumentContext> documentContext;
+
+    // Tempo
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SongEditorDocument)
 };
