@@ -259,9 +259,6 @@ void PianoRollPreviewSurface::updateViewContext()
         const auto region_optional = documentForPreviewPtr.lock()->findNearestQuantizeRegion(userInputPositionInSeconds);
         if (region_optional.has_value())
         {
-            //quantizedInputRegionInSeconds =
-            //    juce::Range<double>{ region_optional.value().startPositionInSeconds, region_optional.value().endPositionInSeconds };
-
             // Get the note values
             const auto note_end_position_in_seconds =
                 calculate_note_end_time(
@@ -294,16 +291,6 @@ void PianoRollPreviewSurface::fillGridHorizontalRows(juce::Graphics& g)
         {
             key_position_range = mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[note_number];
         }
-#if 0
-        key_position_range = pianoRollKeyboardRef.getPositionRangeForPianoRollGridHorizontalWidth(note_number);
-
-        juce::Rectangle<float> rect_to_fill = juce::Rectangle<float>{
-            0.0f,
-            (float)getHeight() - key_position_range.getEnd(),
-            (float)getWidth(),
-            key_position_range.getLength()
-        };
-#else
 
         juce::Rectangle<float> rect_to_fill = juce::Rectangle<float>{
             0.0f,
@@ -311,7 +298,6 @@ void PianoRollPreviewSurface::fillGridHorizontalRows(juce::Graphics& g)
             (float)getWidth(),
             key_position_range.getLength()
         };
-#endif
 
         // In case of black key
         if (juce::MidiMessage::isMidiNoteBlack(note_number))
@@ -347,12 +333,9 @@ void PianoRollPreviewSurface::drawGridHorizontalLines(juce::Graphics& g)
         {
             key_position_range = mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom[note_number];
         }
-#if 0
-        key_position_range = pianoRollKeyboardRef.getPositionRangeForPianoRollGridHorizontalWidth(note_number);
-        juce::Rectangle<float> rect_to_fill = { 0.0f, (float)getHeight() - key_position_range.getEnd(), (float)getWidth(), key_position_range.getLength() };
-#else
-        juce::Rectangle<float> rect_to_fill = { 0.0f, (float)key_position_range.getStart(), (float)getWidth(), key_position_range.getLength() };
-#endif
+
+        juce::Rectangle<float> rect_to_fill = 
+            juce::Rectangle<float>{ 0.0f, (float)key_position_range.getStart(), (float)getWidth(), key_position_range.getLength() };
 
         // In case of white key draw bezel
         if (!juce::MidiMessage::isMidiNoteBlack(note_number))
@@ -599,7 +582,8 @@ std::optional<juce::uint8>  PianoRollPreviewSurface::findNoteNumberWithVerticalP
 }
 
 //==============================================================================
-juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> PianoRollPreviewSurface::createVerticalLinePositionsInTimeSecondsDomain(const juce::Range<double> visibleRangeSeconds, double timeStepInSeconds, int width)
+juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> 
+PianoRollPreviewSurface::createVerticalLinePositionsInTimeSecondsDomain(const juce::Range<double> visibleRangeSeconds, double timeStepInSeconds, int width)
 {
     juce::Array<PositionWithTimeInfo> positions;
 
@@ -637,7 +621,8 @@ juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> PianoRollPreviewSurfa
     return positions;
 }
 
-juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const BeatTimePointList& beatTimePoints, int width)
+juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> 
+PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const BeatTimePointList& beatTimePoints, int width)
 {
     juce::Array<PositionWithTimeInfo> positions;
 
@@ -691,7 +676,8 @@ juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> PianoRollPreviewSurfa
     return positions;
 }
 
-PianoRollPreviewSurface::NoteDrawInfo PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongEditorNoteExtended& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight)
+PianoRollPreviewSurface::NoteDrawInfo 
+PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongEditorNoteExtended& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight)
 {
     NoteDrawInfo result;
 
