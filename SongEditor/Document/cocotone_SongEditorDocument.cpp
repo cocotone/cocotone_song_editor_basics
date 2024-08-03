@@ -240,6 +240,22 @@ void SongEditorDocument::createNote(const cctn::song::QueryForAddPianoRollNote& 
             new_note.startPositionInSeconds = quantize_region_optional.value().startPositionInSeconds;
             new_note.endPositionInSeconds = quantize_region_optional.value().endPositionInSeconds;
         }
+
+        // TODO: support offset
+        const auto region_optional = quantizeEngine->findNearestQuantizeRegion(query.startTimeInSeconds);
+        if (region_optional.has_value())
+        {
+            // Get the note values
+            const auto note_end_position_in_seconds =
+                calculate_note_end_time(
+                    region_optional.value().startPositionInSeconds,
+                    region_optional.value().endPositionInSeconds,
+                    documentContext->currentGridInterval,
+                    documentContext->currentNoteLength);
+
+            new_note.startPositionInSeconds = region_optional.value().startPositionInSeconds;
+            new_note.endPositionInSeconds = note_end_position_in_seconds;
+        }
     }
 
     for (auto& note : (*documentData).notes)
