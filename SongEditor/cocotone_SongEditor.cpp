@@ -374,6 +374,24 @@ void SongEditor::populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::m
         const juce::String name;
     };
 
+    /** 
+    enum class NoteLength
+    {
+        Whole,           // Whole note
+        Half,            // Half note
+        Quarter,         // Quarter note
+        Eighth,          // Eighth note
+        Sixteenth,       // Sixteenth note
+        ThirtySecond,    // Thirty-second note
+        SixtyFourth,     // Sixty-fourth note
+        Triplet,         // Quarter note triplet
+        EighthTriplet,   // Eighth note triplet
+        SixteenthTriplet,// Sixteenth note triplet
+        DottedQuarter,   // Dotted quarter note
+        DottedEighth,    // Dotted eighth note
+        DottedSixteenth  // Dotted sixteenth note
+    };
+    */
     const NoteLengthItem items[] =
     {
         { NoteLength::Whole, "1/1" },
@@ -384,8 +402,11 @@ void SongEditor::populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::m
         { NoteLength::ThirtySecond, "1/32" },
         { NoteLength::SixtyFourth, "1/64" },
         { NoteLength::Triplet, "1/4T" },
+        { NoteLength::EighthTriplet, "1/8T" },
+        { NoteLength::SixteenthTriplet, "1/16T" },
         { NoteLength::DottedQuarter, "1/4." },
-        { NoteLength::DottedEighth, "1/8." }
+        { NoteLength::DottedEighth, "1/8." },
+        { NoteLength::DottedSixteenth, "1/16." }
     };
 
     comboBox.clear(juce::dontSendNotification);
