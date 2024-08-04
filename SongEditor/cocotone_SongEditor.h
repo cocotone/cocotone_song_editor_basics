@@ -31,8 +31,8 @@ public:
     void unregisterPositionInfoProvider(IPositionInfoProvider* provider);
 
     //==============================================================================
-    void registerSongEditorDocument(std::shared_ptr<cctn::song::SongEditorDocument> document);
-    void unregisterSongEditorDocument(std::shared_ptr<cctn::song::SongEditorDocument> document);
+    void registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
+    void unregisterSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
 
 private:
     //==============================================================================
@@ -85,7 +85,7 @@ private:
 
     std::unique_ptr<cctn::song::PianoRollEventDispatcher> pianoRollEventDispatcher;
 
-    std::weak_ptr<cctn::song::SongEditorDocument> songEditorDocumentPtr;
+    std::weak_ptr<cctn::song::SongDocumentEditor> songDocumentEditorPtr;
     std::shared_ptr<cctn::song::SongEditorOperation> songEditorOperation;
 
     IPositionInfoProvider* positionInfoProviderPtr;

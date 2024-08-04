@@ -14,7 +14,7 @@ SongEditorOperation::~SongEditorOperation()
 }
 
 //==============================================================================
-void SongEditorOperation::attachDocument(std::shared_ptr<cctn::song::SongEditorDocument> documentToAttach)
+void SongEditorOperation::attachDocument(std::shared_ptr<cctn::song::SongDocumentEditor> documentToAttach)
 {
     std::lock_guard lock(mutex);
 

@@ -21,13 +21,13 @@ public:
 
 private:
     //==============================================================================
-    void attachDocument(std::shared_ptr<cctn::song::SongEditorDocument> documentToAttach);
+    void attachDocument(std::shared_ptr<cctn::song::SongDocumentEditor> documentToAttach);
     void detachDocument();
 
     friend class SongEditor;
 
     mutable std::mutex mutex;
-    std::weak_ptr<cctn::song::SongEditorDocument> attachedDocument;
+    std::weak_ptr<cctn::song::SongDocumentEditor> attachedDocument;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SongEditorOperation)
 };

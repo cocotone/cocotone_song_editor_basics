@@ -25,9 +25,9 @@ PianoRollPreviewSurface::PianoRollPreviewSurface(const PianoRollKeyboard& pianoR
 
 PianoRollPreviewSurface::~PianoRollPreviewSurface()
 {
-    if (!documentForPreviewPtr.expired())
+    if (!documentEditorForPreviewPtr.expired())
     {
-        documentForPreviewPtr.lock()->removeChangeListener(this);
+        documentEditorForPreviewPtr.lock()->removeChangeListener(this);
     }
 }
 
@@ -118,22 +118,22 @@ std::optional<cctn::song::QueryForFindPianoRollNote> PianoRollPreviewSurface::ge
 }
 
 //==============================================================================
-void PianoRollPreviewSurface::setDocumentForPreview(std::shared_ptr<cctn::song::SongEditorDocument> document)
+void PianoRollPreviewSurface::setDocumentForPreview(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor)
 {
-    if (!documentForPreviewPtr.expired())
+    if (!documentEditorForPreviewPtr.expired())
     {
-        if (documentForPreviewPtr.lock().get() != document.get())
+        if (documentEditorForPreviewPtr.lock().get() != documentEditor.get())
         {
-            documentForPreviewPtr.lock()->removeChangeListener(this);
-            documentForPreviewPtr.reset();
+            documentEditorForPreviewPtr.lock()->removeChangeListener(this);
+            documentEditorForPreviewPtr.reset();
         }
     }
 
-    documentForPreviewPtr = document;
+    documentEditorForPreviewPtr = documentEditor;
 
-    if (!documentForPreviewPtr.expired())
+    if (!documentEditorForPreviewPtr.expired())
     {
-        documentForPreviewPtr.lock()->addChangeListener(this);
+        documentEditorForPreviewPtr.lock()->addChangeListener(this);
     }
 
     repaint();
@@ -145,10 +145,10 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
     juce::Graphics::ScopedSaveState save_state(g);
 
     const cctn::song::SongEditorDocumentData* document_data_to_paint = nullptr;
-    if (!documentForPreviewPtr.expired() &&
-        documentForPreviewPtr.lock()->getRawDocumentData().has_value())
+    if (!documentEditorForPreviewPtr.expired() &&
+        documentEditorForPreviewPtr.lock()->getRawDocumentData().has_value())
     {
-        document_data_to_paint = documentForPreviewPtr.lock()->getRawDocumentData().value();
+        document_data_to_paint = documentEditorForPreviewPtr.lock()->getRawDocumentData().value();
     }
 
     juce::ScopedValueSetter<const cctn::song::SongEditorDocumentData*> svs(paintScopedDocumentDataPtr, document_data_to_paint);
@@ -197,9 +197,9 @@ void PianoRollPreviewSurface::resized()
 //==============================================================================
 void PianoRollPreviewSurface::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    if (!documentForPreviewPtr.expired())
+    if (!documentEditorForPreviewPtr.expired())
     {
-        if (source == documentForPreviewPtr.lock().get())
+        if (source == documentEditorForPreviewPtr.lock().get())
         {
             repaint();
         }
@@ -253,10 +253,10 @@ void PianoRollPreviewSurface::updateViewContext()
 
     // Initialize
     quantizedInputRegionInSeconds = juce::Range<double>{ 0.0f, 0.0f };
-    if (!documentForPreviewPtr.expired() &&
-        documentForPreviewPtr.lock()->getRawDocumentData().has_value())
+    if (!documentEditorForPreviewPtr.expired() &&
+        documentEditorForPreviewPtr.lock()->getRawDocumentData().has_value())
     {
-        const auto region_optional = documentForPreviewPtr.lock()->findNearestQuantizeRegion(userInputPositionInSeconds);
+        const auto region_optional = documentEditorForPreviewPtr.lock()->findNearestQuantizeRegion(userInputPositionInSeconds);
         if (region_optional.has_value())
         {
             // Get the note values
@@ -264,8 +264,8 @@ void PianoRollPreviewSurface::updateViewContext()
                 calculate_note_end_time(
                     region_optional.value().startPositionInSeconds, 
                     region_optional.value().endPositionInSeconds, 
-                    documentForPreviewPtr.lock()->getDocumentContext().currentGridInterval,
-                    documentForPreviewPtr.lock()->getDocumentContext().currentNoteLength);
+                    documentEditorForPreviewPtr.lock()->getDocumentContext().currentGridInterval,
+                    documentEditorForPreviewPtr.lock()->getDocumentContext().currentNoteLength);
 
             quantizedInputRegionInSeconds =
                 juce::Range<double>{ region_optional.value().startPositionInSeconds, note_end_position_in_seconds };

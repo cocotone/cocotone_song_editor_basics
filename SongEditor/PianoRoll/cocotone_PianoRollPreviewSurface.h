@@ -33,7 +33,7 @@ public:
     std::optional<cctn::song::QueryForFindPianoRollNote> getQueryForFindPianoRollNote(const juce::MouseEvent& mouseEvent);
 
     //==============================================================================
-    void setDocumentForPreview(std::shared_ptr<cctn::song::SongEditorDocument> document);
+    void setDocumentForPreview(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
 
     //==============================================================================
     enum class VisibleGridVerticalType
@@ -118,7 +118,7 @@ private:
     // For fast painitng.
     std::map<juce::uint8, juce::Range<float>> mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom;
 
-    std::weak_ptr<cctn::song::SongEditorDocument> documentForPreviewPtr;
+    std::weak_ptr<cctn::song::SongDocumentEditor> documentEditorForPreviewPtr;
     const cctn::song::SongEditorDocumentData* paintScopedDocumentDataPtr;
 
     // TODO: should abstract
