@@ -12,6 +12,8 @@ public:
     {
         int numerator;
         int denominator;
+
+        JUCE_LEAK_DETECTOR(TimeSignature)
     };
 
     struct MusicalTime
@@ -19,6 +21,8 @@ public:
         int bar;
         int beat;
         int tick;
+
+        JUCE_LEAK_DETECTOR(MusicalTime)
     };
 
     struct TempoMapEntry
@@ -26,12 +30,16 @@ public:
         MusicalTime time;
         TimeSignature timeSignature;
         double tempo;
+
+        JUCE_LEAK_DETECTOR(TempoMapEntry)
     };
 
     struct TempoChange
     {
         MusicalTime time;
         double newTempo;
+
+        JUCE_LEAK_DETECTOR(TempoChange)
     };
 
     struct NoteDuration
@@ -39,6 +47,8 @@ public:
         int bars;
         int beats;
         int ticks;
+
+        JUCE_LEAK_DETECTOR(NoteDuration)
     };
 
     struct Note
@@ -49,9 +59,16 @@ public:
         int noteNumber;
         int velocity;
         juce::String lyric;
+
+        JUCE_LEAK_DETECTOR(Note)
     };
 
-    SongDocument() : ticksPerQuarterNote(480) {}
+    SongDocument()
+        : ticksPerQuarterNote(480) 
+    {}
+
+    ~SongDocument()
+    {}
 
     void setMetadata(const juce::String& title, const juce::String& artist)
     {
@@ -103,6 +120,8 @@ private:
         juce::String artist;
         juce::Time created;
         juce::Time lastModified;
+
+        JUCE_LEAK_DETECTOR(Metadata)
     };
 
     Metadata metadata;
