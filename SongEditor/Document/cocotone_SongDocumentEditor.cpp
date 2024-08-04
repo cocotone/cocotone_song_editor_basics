@@ -153,7 +153,7 @@ public:
 SongDocumentEditor::SongDocumentEditor()
     : beatTimePointList(nullptr)
 {
-    documentContext = std::make_unique<cctn::song::SongDocumentEditor::DocumentContext>();
+    editorContext = std::make_unique<cctn::song::SongDocumentEditor::EditorContext>();
 
     quantizeEngine = std::make_unique<cctn::song::QuantizeEngine>();
 
@@ -229,7 +229,7 @@ void SongDocumentEditor::createNote(const cctn::song::QueryForAddPianoRollNote& 
     new_note.startPositionInSeconds = query.startTimeInSeconds;
     new_note.endPositionInSeconds = query.endTimeInSeconds;
     new_note.isSelected = true;
-    new_note.lyric = documentContext->currentNoteLyric.text;
+    new_note.lyric = editorContext->currentNoteLyric.text;
 
     if (query.snapToQuantizeGrid)
     {
@@ -249,8 +249,8 @@ void SongDocumentEditor::createNote(const cctn::song::QueryForAddPianoRollNote& 
                 calculate_note_end_time(
                     region_optional.value().startPositionInSeconds,
                     region_optional.value().endPositionInSeconds,
-                    documentContext->currentGridInterval,
-                    documentContext->currentNoteLength);
+                    editorContext->currentGridInterval,
+                    editorContext->currentNoteLength);
 
             new_note.startPositionInSeconds = region_optional.value().startPositionInSeconds;
             new_note.endPositionInSeconds = note_end_position_in_seconds;
@@ -304,7 +304,7 @@ void SongDocumentEditor::updateQuantizeRegions(const juce::AudioPlayHead::Positi
         denominator = tempo_and_time_signature_optional.value().denominator;
     }
 
-    beatTimePointList = std::make_unique<BeatTimePointList>(BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, 0.0, 600.0, documentContext->currentGridInterval));
+    beatTimePointList = std::make_unique<BeatTimePointList>(BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, 0.0, 600.0, editorContext->currentGridInterval));
 
     if (beatTimePointList.get() != nullptr)
     {

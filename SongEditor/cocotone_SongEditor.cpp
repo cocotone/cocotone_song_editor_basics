@@ -192,11 +192,11 @@ void SongEditor::registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocu
 
         pianoRollPreviewSurface->setDocumentForPreview(documentEditor);
 
-        valuePianoRollGridInterval = (int)songDocumentEditorPtr.lock()->getDocumentContext().currentGridInterval;
+        valuePianoRollGridInterval = (int)songDocumentEditorPtr.lock()->getEditorContext().currentGridInterval;
 
-        valuePianoRollInputNoteLength = (int)songDocumentEditorPtr.lock()->getDocumentContext().currentNoteLength;
+        valuePianoRollInputNoteLength = (int)songDocumentEditorPtr.lock()->getEditorContext().currentNoteLength;
 
-        valuePianoRollInputMora = songDocumentEditorPtr.lock()->getDocumentContext().currentNoteLyric.text;
+        valuePianoRollInputMora = songDocumentEditorPtr.lock()->getEditorContext().currentNoteLyric.text;
     }
 }
 
@@ -300,20 +300,20 @@ void SongEditor::valueChanged(juce::Value& value)
     else if (value.refersToSameSourceAs(valuePianoRollInputNoteLength))
     {
         comboboxInputNoteLength->setSelectedItemIndex((int)valuePianoRollInputNoteLength.getValue(), juce::dontSendNotification);
-        songDocumentEditorPtr.lock()->getDocumentContext().currentNoteLength = (cctn::song::NoteLength)(int)valuePianoRollInputNoteLength.getValue();
+        songDocumentEditorPtr.lock()->getEditorContext().currentNoteLength = (cctn::song::NoteLength)(int)valuePianoRollInputNoteLength.getValue();
     }
     else if (value.refersToSameSourceAs(valuePianoRollGridInterval))
     {
         comboboxPianoRollGridInterval->setSelectedItemIndex((int)valuePianoRollGridInterval.getValue(), juce::dontSendNotification);
         pianoRollPreviewSurface->setDrawingGridInterval((cctn::song::NoteLength)(int)valuePianoRollGridInterval.getValue());
 
-        songDocumentEditorPtr.lock()->getDocumentContext().currentGridInterval = (cctn::song::NoteLength)(int)valuePianoRollGridInterval.getValue();
+        songDocumentEditorPtr.lock()->getEditorContext().currentGridInterval = (cctn::song::NoteLength)(int)valuePianoRollGridInterval.getValue();
     }
     else if (value.refersToSameSourceAs(valuePianoRollInputMora))
     {
         comboboxInputMora->setText(valuePianoRollInputMora.getValue(), juce::dontSendNotification);
 
-        songDocumentEditorPtr.lock()->getDocumentContext().currentNoteLyric.text = valuePianoRollInputMora.getValue();
+        songDocumentEditorPtr.lock()->getEditorContext().currentNoteLyric.text = valuePianoRollInputMora.getValue();
     }
 }
 

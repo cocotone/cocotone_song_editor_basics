@@ -46,7 +46,7 @@ public:
     std::optional<const cctn::song::SongEditorDocumentData*> getRawDocumentData() const;
 
     //==============================================================================
-    class DocumentContext
+    class EditorContext
     {
     public:
         cctn::song::NoteLength currentGridInterval{ cctn::song::NoteLength::Quarter };
@@ -54,16 +54,16 @@ public:
         cctn::song::NoteLyric currentNoteLyric{ juce::CharPointer_UTF8("\xe3\x83\xa9") }; // ra
 
     private:
-        JUCE_LEAK_DETECTOR(DocumentContext)
+        JUCE_LEAK_DETECTOR(EditorContext)
     };
-    DocumentContext& getDocumentContext() const { return *documentContext.get(); };
+    EditorContext& getEditorContext() const { return *editorContext.get(); };
 
 private:
     //==============================================================================
     std::unique_ptr<cctn::song::SongEditorDocumentData> documentData;
     std::unique_ptr<cctn::song::QuantizeEngine> quantizeEngine;
     std::unique_ptr<cctn::song::BeatTimePointList> beatTimePointList;
-    std::unique_ptr<DocumentContext> documentContext;
+    std::unique_ptr<EditorContext> editorContext;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SongDocumentEditor)
 };
