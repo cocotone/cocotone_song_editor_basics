@@ -15,8 +15,14 @@ public:
     ~SongDocumentEditor() override;
 
     //==============================================================================
+    void attachDocument(std::shared_ptr<cctn::song::SongDocument> document);
+    void detachDocument();
+    juce::String debugDumpDocument() const;
+
+    //==============================================================================
     // voicevox specified format
-    juce::var createScoreJson() const;
+    juce::var createScoreJson_outdated() const;
+    juce::String createScoreJsonString_outdated() const;
     juce::String createScoreJsonString() const;
 
     //==============================================================================
@@ -60,6 +66,7 @@ public:
 
 private:
     //==============================================================================
+    std::shared_ptr<cctn::song::SongDocument> documentToEdit;
     std::unique_ptr<cctn::song::SongEditorDocumentData> documentData;
     std::unique_ptr<cctn::song::QuantizeEngine> quantizeEngine;
     std::unique_ptr<cctn::song::BeatTimePointList> beatTimePointList;

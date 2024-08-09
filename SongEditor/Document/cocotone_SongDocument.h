@@ -229,16 +229,27 @@ public:
     // Convert bar to tick
     int64_t barToTick(const MusicalTime& musicalTime) const
     {
-        int64_t result = 0;
+        if (musicalTime.bar < 1 || musicalTime.beat < 1 || musicalTime.tick < 0)
+        {
+            // Invalid musical time
+            jassertfalse;
+            return 0;
+        }
+
+        int64_t tick = 0;
         int currentBar = 1;
         int currentBeat = 1;
-        int currentTick = 0;
+        int currentNumerator = 4;
+        int currentDenominator = 4;
+        int ticksPerQuarterNote = getTicksPerQuarterNote();
 
         for (const auto& event : tempoTrack.getEvents())
         {
             if (currentBar > musicalTime.bar ||
                 (currentBar == musicalTime.bar && currentBeat > musicalTime.beat))
+            {
                 break;
+            }
 
             if (event.getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
                 event.getEventType() == TempoEvent::TempoEventType::kBoth)
@@ -248,27 +259,87 @@ public:
 
                 while (currentBar < musicalTime.bar)
                 {
-                    result += ticksPerBar;
+                    tick += ticksPerBar;
                     currentBar++;
                 }
 
-                if (currentBar == musicalTime.bar)
-                {
-                    int64_t ticksPerBeat = ticksPerBar / numerator;
-                    result += (musicalTime.beat - 1) * ticksPerBeat;
-                    result += musicalTime.tick;
-                    return result;
-                }
+                currentNumerator = numerator;
+                currentDenominator = denominator;
             }
         }
 
-        // If no time signature change found or if the bar is beyond all changes, assume 4/4
-        int64_t ticksPerBar = 4 * ticksPerQuarterNote;
-        result += (musicalTime.bar - currentBar) * ticksPerBar;
-        result += (musicalTime.beat - 1) * ticksPerQuarterNote;
-        result += musicalTime.tick;
+        // Add ticks for remaining beats and ticks
+        int64_t ticksPerBeat = (int64_t)currentNumerator * ticksPerQuarterNote * 4 / (currentDenominator * currentNumerator);
+        tick += (int64_t)(musicalTime.beat - 1) * ticksPerBeat;
+        tick += musicalTime.tick;
 
-        return result;
+        return tick;
+    }
+
+    //==============================================================================
+    std::string dumpToString() const
+    {
+        std::ostringstream oss;
+        oss << std::fixed << std::setprecision(2);
+
+        // Metadata
+        oss << "Song Document Dump:\n";
+        oss << "Title: " << metadata.title << "\n";
+        oss << "Artist: " << metadata.artist << "\n";
+        oss << "Created: " << metadata.created.toISO8601(true) << "\n";
+        oss << "Last Modified: " << metadata.lastModified.toISO8601(true) << "\n";
+        oss << "Ticks Per Quarter Note: " << ticksPerQuarterNote << "\n\n";
+
+        // Tempo Track
+        oss << "Tempo Track:\n";
+        for (const auto& event : tempoTrack.getEvents())
+        {
+            MusicalTime mt = tickToBar(event.getTick());
+            oss << "  Bar " << mt.bar << ", Beat " << mt.beat << ", Tick " << mt.tick << " (Tick " << event.getTick() << "):\n";
+
+            switch (event.getEventType())
+            {
+            case TempoEvent::TempoEventType::kTempo:
+                oss << "    Tempo Change: " << event.getTempo() << " BPM\n";
+                break;
+            case TempoEvent::TempoEventType::kTimeSignature:
+            {
+                auto [numerator, denominator] = event.getTimeSignature();
+                oss << "    Time Signature Change: " << numerator << "/" << denominator << "\n";
+            }
+            break;
+            case TempoEvent::TempoEventType::kBoth:
+                oss << "    Tempo Change: " << event.getTempo() << " BPM\n";
+                {
+                    auto [numerator, denominator] = event.getTimeSignature();
+                    oss << "    Time Signature Change: " << numerator << "/" << denominator << "\n";
+                }
+                break;
+            }
+        }
+        oss << "\n";
+
+        // Notes
+        oss << "Notes:\n";
+        for (const auto& note : notes)
+        {
+            oss << "  Note ID " << note.id << ":\n";
+            oss << "    Start: Bar " << note.startTimeInMusicalTime.bar
+                << ", Beat " << note.startTimeInMusicalTime.beat
+                << ", Tick " << note.startTimeInMusicalTime.tick << "\n";
+            oss << "    Duration: "
+                << note.duration.bars << " bars, "
+                << note.duration.beats << " beats, "
+                << note.duration.ticks << " ticks\n";
+            oss << "    Note Number: " << note.noteNumber << "\n";
+            oss << "    Velocity: " << note.velocity << "\n";
+            oss << "    Lyric: " << note.lyric << "\n";
+
+            double startTime = tickToAbsoluteTime(barToTick(note.startTimeInMusicalTime));
+            oss << "    Absolute Start Time: " << startTime << " seconds\n";
+        }
+
+        return oss.str();
     }
 
 private:
@@ -291,6 +362,93 @@ private:
 
     JUCE_LEAK_DETECTOR(SongDocument)
 };
+
+//==============================================================================
+static juce::var songDocumentToJson(const cctn::song::SongDocument& doc)
+{
+    juce::DynamicObject* jsonDoc = new juce::DynamicObject();
+
+    // Metadata
+    juce::DynamicObject* metadata = new juce::DynamicObject();
+    metadata->setProperty("title", doc.getTitle());
+    metadata->setProperty("artist", doc.getArtist());
+    metadata->setProperty("created", doc.getCreationTime().toISO8601(true));
+    metadata->setProperty("lastModified", doc.getLastModifiedTime().toISO8601(true));
+    jsonDoc->setProperty("metadata", metadata);
+
+    // Ticks per quarter note
+    jsonDoc->setProperty("ticksPerQuarterNote", doc.getTicksPerQuarterNote());
+
+    // Tempo Track
+    juce::Array<juce::var> tempoTrack;
+    for (const auto& event : doc.getTempoTrack().getEvents())
+    {
+        juce::DynamicObject* tempoEvent = new juce::DynamicObject();
+        tempoEvent->setProperty("tick", event.getTick());
+
+        switch (event.getEventType())
+        {
+        case cctn::song::SongDocument::TempoEvent::TempoEventType::kTempo:
+            tempoEvent->setProperty("type", "kTempo");
+            tempoEvent->setProperty("tempo", event.getTempo());
+            break;
+        case cctn::song::SongDocument::TempoEvent::TempoEventType::kTimeSignature:
+            tempoEvent->setProperty("type", "kTimeSignature");
+            {
+                auto [numerator, denominator] = event.getTimeSignature();
+                juce::DynamicObject* timeSignature = new juce::DynamicObject();
+                timeSignature->setProperty("numerator", numerator);
+                timeSignature->setProperty("denominator", denominator);
+                tempoEvent->setProperty("timeSignature", timeSignature);
+            }
+            break;
+        case cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth:
+            tempoEvent->setProperty("type", "kBoth");
+            tempoEvent->setProperty("tempo", event.getTempo());
+            {
+                auto [numerator, denominator] = event.getTimeSignature();
+                juce::DynamicObject* timeSignature = new juce::DynamicObject();
+                timeSignature->setProperty("numerator", numerator);
+                timeSignature->setProperty("denominator", denominator);
+                tempoEvent->setProperty("timeSignature", timeSignature);
+            }
+            break;
+        }
+
+        tempoTrack.add(tempoEvent);
+    }
+    jsonDoc->setProperty("tempoTrack", tempoTrack);
+
+    // Notes
+    juce::Array<juce::var> notes;
+    for (const auto& note : doc.getNotes())
+    {
+        juce::DynamicObject* jsonNote = new juce::DynamicObject();
+        jsonNote->setProperty("id", note.id);
+
+        juce::DynamicObject* startTime = new juce::DynamicObject();
+        startTime->setProperty("bar", note.startTimeInMusicalTime.bar);
+        startTime->setProperty("beat", note.startTimeInMusicalTime.beat);
+        startTime->setProperty("tick", note.startTimeInMusicalTime.tick);
+        jsonNote->setProperty("startTimeInMusicalTime", startTime);
+
+        juce::DynamicObject* duration = new juce::DynamicObject();
+        duration->setProperty("bars", note.duration.bars);
+        duration->setProperty("beats", note.duration.beats);
+        duration->setProperty("ticks", note.duration.ticks);
+        jsonNote->setProperty("duration", duration);
+
+        jsonNote->setProperty("noteNumber", note.noteNumber);
+        jsonNote->setProperty("velocity", note.velocity);
+        jsonNote->setProperty("lyric", note.lyric);
+
+        notes.add(jsonNote);
+    }
+    jsonDoc->setProperty("notes", notes);
+
+    return jsonDoc;
+}
+
 
 }  // namespace song
 }  // namespace cctn

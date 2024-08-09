@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "title": "\u30b5\u30f3\u30d7\u30eb \u30bd\u30f3\u30b0",
+    "artist": "\u30b5\u30f3\u30d7\u30eb \u30a2\u30fc\u30c6\u30a3\u30b9\u30c8",
+    "created": "2023-05-20T10:30:00Z",
+    "lastModified": "2023-05-20T10:30:00Z"
+  },
+  "ticksPerQuarterNote": 480,
+  "tempoTrack": [
+    {
+      "tick": 0,
+      "type": "kBoth",
+      "tempo": 120.0,
+      "timeSignature": {
+        "numerator": 4,
+        "denominator": 4
+      }
+    },
+    {
+      "tick": 7680,
+      "type": "kTimeSignature",
+      "timeSignature": {
+        "numerator": 3,
+        "denominator": 4
+      }
+    },
+    {
+      "tick": 5760,
+      "type": "kTempo",
+      "tempo": 140.0
+    },
+    {
+      "tick": 13440,
+      "type": "kTempo",
+      "tempo": 100.0
+    },
+    {
+      "tick": 24960,
+      "type": "kBoth",
+      "tempo": 94.0,
+      "timeSignature": {
+        "numerator": 8,
+        "denominator": 8
+      }
+    }
+  ],
+  "notes": [
+    {
+      "id": 1,
+      "startTimeInMusicalTime": {
+        "bar": 1,
+        "beat": 1,
+        "tick": 0
+      },
+      "duration": {
+        "bars": 0,
+        "beats": 1,
+        "ticks": 0
+      },
+      "noteNumber": 60,
+      "velocity": 100,
+      "lyric": "\u30c9"
+    },
+    {
+      "id": 2,
+      "startTimeInMusicalTime": {
+        "bar": 1,
+        "beat": 2,
+        "tick": 0
+      },
+      "duration": {
+        "bars": 0,
+        "beats": 1,
+        "ticks": 0
+      },
+      "noteNumber": 62,
+      "velocity": 95,
+      "lyric": "\u30ec"
+    }
+  ]
+}
