@@ -20,12 +20,6 @@ public:
     juce::String debugDumpDocument() const;
 
     //==============================================================================
-    // voicevox specified format
-    juce::var createScoreJson_outdated() const;
-    juce::String createScoreJsonString_outdated() const;
-    juce::String createScoreJsonString() const;
-
-    //==============================================================================
     void serialize() const;
     void deserialize();
 
@@ -42,11 +36,6 @@ public:
     //==============================================================================
     void updateQuantizeRegions(const juce::AudioPlayHead::PositionInfo& positionInfo);
     std::optional<cctn::song::QuantizeEngine::Region> findNearestQuantizeRegion(double timePositionInSeconds) const;
-
-    //==============================================================================
-    static double calculateDocumentDuration(const cctn::song::SongEditorDocumentData& data, double minimumDuration = 0.05);
-    static cctn::song::SongEditorNoteExtended createSilenceNote(double startPositionInSeconds, double endPositionInSeconds);
-    static cctn::song::SongEditorDocumentData makeSilenceFilledScore(const cctn::song::SongEditorDocumentData& data, double documentDuration);
 
     //==============================================================================
     std::optional<const cctn::song::SongEditorDocumentData*> getRawDocumentData() const;
@@ -71,6 +60,19 @@ private:
     std::unique_ptr<cctn::song::QuantizeEngine> quantizeEngine;
     std::unique_ptr<cctn::song::BeatTimePointList> beatTimePointList;
     std::unique_ptr<EditorContext> editorContext;
+
+#if 0
+    //==============================================================================
+    // voicevox specified format
+    juce::var createScoreJson_outdated() const;
+    juce::String createScoreJsonString_outdated() const;
+    juce::String createScoreJsonString() const;
+
+    //==============================================================================
+    static double calculateDocumentDuration(const cctn::song::SongEditorDocumentData& data, double minimumDuration = 0.05);
+    static cctn::song::SongEditorNoteExtended createSilenceNote(double startPositionInSeconds, double endPositionInSeconds);
+    static cctn::song::SongEditorDocumentData makeSilenceFilledScore(const cctn::song::SongEditorDocumentData& data, double documentDuration);
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SongDocumentEditor)
 };

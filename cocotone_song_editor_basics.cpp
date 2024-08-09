@@ -23,5 +23,6 @@
 #include "SongEditor/Transport/cocotone_TransportEmulator.cpp"
 #include "SongEditor/Quantize/cocotone_QuantizeEngine.cpp"
 #include "SongEditor/Document/cocotone_SongDocumentEditor.cpp"
+#include "SongEditor/Document/cocotone_SongDocumentTranspiler.cpp"
 #include "SongEditor/cocotone_SongEditorCommand.cpp"
 #include "SongEditor/cocotone_SongEditor.cpp"

@@ -39,6 +39,7 @@
 #include "SongEditor/Transport/cocotone_TransportEmulator.h"
 
 #include "SongEditor/Document/cocotone_SongDocument.h"
+#include "SongEditor/Document/cocotone_SongDocumentTranspiler.h"
 
 #include "SongEditor/Quantize/cocotone_QuantizeEngine.h"
 #include "SongEditor/Document/cocotone_SongDocumentEditor.h"
