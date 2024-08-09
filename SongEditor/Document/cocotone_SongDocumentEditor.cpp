@@ -384,8 +384,6 @@ juce::String SongDocumentEditor::createScoreJsonString() const
 
     juce::Logger::outputDebugString(documentToEdit->dumpToString());
 
-    juce::Logger::outputDebugString(juce::JSON::toString(cctn::song::createScoreJsonFromSongDocument(*documentToEdit.get())));
-
     return juce::JSON::toString(cctn::song::createScoreJsonFromSongDocument(*documentToEdit.get()));
 }
 
