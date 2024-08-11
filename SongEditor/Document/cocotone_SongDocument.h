@@ -224,7 +224,7 @@ public:
         double endAbsoluteTime = calculateAbsoluteTime(doc, endTime);
 
         // Return the difference
-        return endAbsoluteTime - startAbsoluteTime;
+        return endAbsoluteTime;
     }
 
     // Convert tick to absolute time
