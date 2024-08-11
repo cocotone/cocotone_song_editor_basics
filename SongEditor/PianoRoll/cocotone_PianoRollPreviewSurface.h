@@ -93,7 +93,10 @@ private:
 
         JUCE_LEAK_DETECTOR(NoteDrawInfo)
     };
+#if 0
     static NoteDrawInfo createNoteDrawInfo(const cctn::song::SongEditorNoteExtended& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight);
+#endif
+    static NoteDrawInfo createNoteDrawInfo(const cctn::song::SongDocument& document, const cctn::song::SongDocument::Note& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight);
 
     //==============================================================================
     // TODO: Move state value.
@@ -119,7 +122,7 @@ private:
     std::map<juce::uint8, juce::Range<float>> mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom;
 
     std::weak_ptr<cctn::song::SongDocumentEditor> documentEditorForPreviewPtr;
-    const cctn::song::SongEditorDocumentData* paintScopedDocumentDataPtr;
+    const cctn::song::SongDocument* scopedSongDocumentPtrToPaint;
 
     // TODO: should abstract
     juce::AudioPlayHead::PositionInfo currentPositionInfo;

@@ -1,4 +1,3 @@
-#include "cocotone_SongDocumentEditor.h"
 namespace cctn
 {
 namespace song
@@ -12,7 +11,9 @@ SongDocumentEditor::SongDocumentEditor()
 
     quantizeEngine = std::make_unique<cctn::song::QuantizeEngine>();
 
+#if 0
     documentData = std::make_unique<cctn::song::SongEditorDocumentData>();
+#endif
 }
 
 SongDocumentEditor::~SongDocumentEditor()
@@ -60,6 +61,135 @@ void SongDocumentEditor::deserialize()
 }
 
 //==============================================================================
+std::optional<cctn::song::SongDocument::Note> SongDocumentEditor::findNote(const cctn::song::QueryForFindPianoRollNote& query)
+{
+    if (documentToEdit.get() != nullptr)
+    {
+        return std::nullopt;
+    }
+
+#if 0
+    for (auto& note : (*documentToEdit).getNotes())
+    {
+        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(query.timeInSeconds))
+        {
+            return note;
+        }
+    }
+#endif
+
+    return std::nullopt;
+}
+
+void SongDocumentEditor::selectNote(const cctn::song::QueryForFindPianoRollNote& query)
+{
+    if (documentToEdit.get() != nullptr)
+    {
+        return;
+    }
+
+#if 0
+    for (auto& note : (*documentToEdit).getNotes())
+    {
+        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(query.timeInSeconds) &&
+            note.noteNumber == query.noteNumber)
+        {
+            note.isSelected = true;
+        }
+        else
+        {
+            note.isSelected = false;
+        }
+    }
+#endif
+
+    sendChangeMessage();
+}
+
+void SongDocumentEditor::createNote(const cctn::song::QueryForAddPianoRollNote& query)
+{
+    if (documentToEdit.get() != nullptr)
+    {
+        return;
+    }
+
+    cctn::song::SongDocument::Note new_note;
+
+#if 0
+    new_note.noteNumber = query.noteNumber;
+    new_note.startPositionInSeconds = query.startTimeInSeconds;
+    new_note.endPositionInSeconds = query.endTimeInSeconds;
+    new_note.isSelected = true;
+    new_note.lyric = editorContext->currentNoteLyric.text;
+
+    if (query.snapToQuantizeGrid)
+    {
+        const auto quantize_region_optional = quantizeEngine->findNearestQuantizeRegion(query.startTimeInSeconds);
+        if (quantize_region_optional.has_value())
+        {
+            new_note.startPositionInSeconds = quantize_region_optional.value().startPositionInSeconds;
+            new_note.endPositionInSeconds = quantize_region_optional.value().endPositionInSeconds;
+        }
+
+        // TODO: support offset
+        const auto region_optional = quantizeEngine->findNearestQuantizeRegion(query.startTimeInSeconds);
+        if (region_optional.has_value())
+        {
+            // Get the note values
+            const auto note_end_position_in_seconds =
+                calculate_note_end_time(
+                    region_optional.value().startPositionInSeconds,
+                    region_optional.value().endPositionInSeconds,
+                    editorContext->currentGridInterval,
+                    editorContext->currentNoteLength);
+
+            new_note.startPositionInSeconds = region_optional.value().startPositionInSeconds;
+            new_note.endPositionInSeconds = note_end_position_in_seconds;
+        }
+    }
+
+    for (auto& note : (*documentData).notes)
+    {
+        if (juce::Range<double>(new_note.startPositionInSeconds, new_note.endPositionInSeconds).contains(note.startPositionInSeconds))
+        {
+            new_note.endPositionInSeconds = note.startPositionInSeconds;
+        }
+    }
+
+    documentData->notes.add(new_note);
+#endif
+
+    sendChangeMessage();
+}
+
+void SongDocumentEditor::deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query)
+{
+    if (documentToEdit.get() != nullptr)
+    {
+        return;
+    }
+
+    cctn::song::SongDocument::Note* note_to_delete = nullptr;
+
+#if 0
+    for (auto& note : (*documentToEdit).getNotes())
+    {
+        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(query.timeInSeconds))
+        {
+            note_to_delete = &note;
+        }
+    }
+
+    if (note_to_delete != nullptr)
+    {
+        documentToEdit->getNotes().remove(note_to_delete);
+    }
+#endif
+
+    sendChangeMessage();
+}
+
+#if 0
 std::optional<cctn::song::SongEditorNoteExtended> SongDocumentEditor::findNote(const cctn::song::QueryForFindPianoRollNote& query)
 {
     for (auto& note : (*documentData).notes)
@@ -159,6 +289,7 @@ void SongDocumentEditor::deleteNoteSingle(const cctn::song::QueryForFindPianoRol
 
     sendChangeMessage();
 }
+#endif
 
 void SongDocumentEditor::updateQuantizeRegions(const juce::AudioPlayHead::PositionInfo& positionInfo)
 {
@@ -187,6 +318,7 @@ std::optional<QuantizeEngine::Region> SongDocumentEditor::findNearestQuantizeReg
     return quantizeEngine->findNearestQuantizeRegion(timePositionInSeconds);
 }
 
+#if 0
 //==============================================================================
 std::optional<const cctn::song::SongEditorDocumentData*> SongDocumentEditor::getRawDocumentData() const
 {
@@ -199,7 +331,6 @@ std::optional<const cctn::song::SongEditorDocumentData*> SongDocumentEditor::get
 }
 
 //==============================================================================
-#if 0
 double SongDocumentEditor::calculateDocumentDuration(const cctn::song::SongEditorDocumentData& data, double minimumDuration)
 {
     if (data.notes.isEmpty())

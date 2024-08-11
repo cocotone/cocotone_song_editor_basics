@@ -13,7 +13,7 @@ PianoRollPreviewSurface::PianoRollPreviewSurface(const PianoRollKeyboard& pianoR
     , userInputPositionInNoteNumber(-1)
     , quantizedInputRegionInSeconds(juce::Range<double>{0.0, 0.0})
     , isInputPositionInsertable(false)
-    , paintScopedDocumentDataPtr(nullptr)
+    , scopedSongDocumentPtrToPaint(nullptr)
     , visibleGridVerticalLineType(juce::var((int)VisibleGridVerticalType::kTimeSignature))
 {
     numVisibleWhiteAndBlackKeys = 12 * numVisibleOctaves;
@@ -144,6 +144,7 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
+#if 0
     const cctn::song::SongEditorDocumentData* document_data_to_paint = nullptr;
     if (!documentEditorForPreviewPtr.expired() &&
         documentEditorForPreviewPtr.lock()->getRawDocumentData().has_value())
@@ -152,6 +153,16 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
     }
 
     juce::ScopedValueSetter<const cctn::song::SongEditorDocumentData*> svs(paintScopedDocumentDataPtr, document_data_to_paint);
+#endif
+
+    const cctn::song::SongDocument* document_to_paint = nullptr;
+    if (!documentEditorForPreviewPtr.expired() &&
+        documentEditorForPreviewPtr.lock()->getCurrentDocument().has_value())
+    {
+        document_to_paint = documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
+    }
+
+    juce::ScopedValueSetter<const cctn::song::SongDocument*> svs(scopedSongDocumentPtrToPaint, document_to_paint);
 
     updateViewContext();
 
@@ -233,28 +244,31 @@ void PianoRollPreviewSurface::updateViewContext()
 {
     JUCE_ASSERT_MESSAGE_MANAGER_EXISTS;
 
-    if (paintScopedDocumentDataPtr == nullptr)
+    if (scopedSongDocumentPtrToPaint == nullptr)
     {
         return;
     }
 
-    const auto& notes = paintScopedDocumentDataPtr->notes;
+    const auto& notes = scopedSongDocumentPtrToPaint->getNotes();
 
-    // Initialize
+    // Update input position is insertable or not.
     isInputPositionInsertable = true;
     for (const auto& note : notes)
     {
-        if (juce::Range<float>(note.startPositionInSeconds, note.endPositionInSeconds).contains(userInputPositionInSeconds))
+        const double start_position_in_seconds = scopedSongDocumentPtrToPaint->calculateAbsoluteTime(*scopedSongDocumentPtrToPaint, note.startTimeInMusicalTime);
+        const double end_position_in_seconds = scopedSongDocumentPtrToPaint->calculateAbsoluteTimeForNoteEnd(*scopedSongDocumentPtrToPaint, note.startTimeInMusicalTime, note.duration);
+
+        if (juce::Range<float>(start_position_in_seconds, end_position_in_seconds).contains(userInputPositionInSeconds))
         {
             isInputPositionInsertable = false;
             break;
         }
     }
 
-    // Initialize
+    // Update input region in seconds
     quantizedInputRegionInSeconds = juce::Range<double>{ 0.0f, 0.0f };
     if (!documentEditorForPreviewPtr.expired() &&
-        documentEditorForPreviewPtr.lock()->getRawDocumentData().has_value())
+        documentEditorForPreviewPtr.lock()->getCurrentDocument().has_value())
     {
         const auto region_optional = documentEditorForPreviewPtr.lock()->findNearestQuantizeRegion(userInputPositionInSeconds);
         if (region_optional.has_value())
@@ -401,16 +415,16 @@ void PianoRollPreviewSurface::drawCurrentPreviewData(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
-    if (paintScopedDocumentDataPtr == nullptr)
+    if (scopedSongDocumentPtrToPaint == nullptr)
     {
         return;
     }
 
-    const auto& notes = paintScopedDocumentDataPtr->notes;
+    const auto& notes = scopedSongDocumentPtrToPaint->getNotes();
 
     for (const auto& note : notes)
     {
-        const auto note_draw_info = createNoteDrawInfo(note, rangeVisibleTimeInSeconds, 0, getWidth());
+        const auto note_draw_info = createNoteDrawInfo(*scopedSongDocumentPtrToPaint, note, rangeVisibleTimeInSeconds, 0, getWidth());
         
         juce::Range<float> key_position_range = juce::Range<float>{ 0.0f, 0.0f };
         if (mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom.count(note_draw_info.noteNumber) > 0)
@@ -676,6 +690,7 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const 
     return positions;
 }
 
+#if 0
 PianoRollPreviewSurface::NoteDrawInfo 
 PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongEditorNoteExtended& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight)
 {
@@ -693,6 +708,31 @@ PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongEditorNoteExte
     result.lyric = note.lyric;
     result.noteNumber = note.noteNumber;
     result.isSelected = note.isSelected;
+
+    return result;
+}
+#endif
+
+PianoRollPreviewSurface::NoteDrawInfo
+PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongDocument& document, const cctn::song::SongDocument::Note& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight)
+{
+    NoteDrawInfo result;
+
+    const double start_position_in_seconds = document.calculateAbsoluteTime(document, note.startTimeInMusicalTime);
+    const double end_position_in_seconds = document.calculateAbsoluteTimeForNoteEnd(document, note.startTimeInMusicalTime, note.duration);
+
+    // Convert time to position X.
+    const double rect_left_x =
+        juce::jmap<double>(start_position_in_seconds, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), positionLeft, positionRight);
+
+    const double rect_right_x =
+        juce::jmap<double>(end_position_in_seconds, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), positionLeft, positionRight);
+
+    result.positionLeftX = rect_left_x;
+    result.positionRightX = rect_right_x;
+    result.lyric = note.lyric;
+    result.noteNumber = note.noteNumber;
+    result.isSelected = false;  // TODO: add support
 
     return result;
 }

@@ -44,7 +44,7 @@ SongEditor::SongEditor()
 
     pianoRollScrollBarHorizontal = std::make_unique<juce::ScrollBar>(false);
     pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, 600.0}, juce::dontSendNotification);
-    pianoRollScrollBarHorizontal->setCurrentRange(juce::Range<double>{0.0, 6.0}, juce::dontSendNotification);
+    pianoRollScrollBarHorizontal->setCurrentRange(juce::Range<double>{0.0, 30.0}, juce::dontSendNotification);
     addAndMakeVisible(pianoRollScrollBarHorizontal.get());
 
     pianoRollTimeRuler = std::make_unique<PianoRollTimeRuler>();
@@ -134,10 +134,10 @@ SongEditor::SongEditor()
     // Set initial state.
     valuePianoRollBottomKeyNumber.setValue(55);
 
-    pianoRollPreviewSurface->setVisibleRangeTimeInSeconds(juce::Range<double>{0.0, 6.0});
+    pianoRollPreviewSurface->setVisibleRangeTimeInSeconds(juce::Range<double>{0.0, 30.0});
     pianoRollPreviewSurface->setGridVerticalLineIntervaleInSeconds(1.0);
 
-    pianoRollTimeRuler->setVisibleRangeTimeInSeconds(juce::Range<double>{0.0, 6.0});
+    pianoRollTimeRuler->setVisibleRangeTimeInSeconds(juce::Range<double>{0.0, 30.0});
     pianoRollTimeRuler->setGridVerticalLineIntervaleInSeconds(0.500);
 
     // Trigger Initial Update.

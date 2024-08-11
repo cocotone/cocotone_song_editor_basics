@@ -25,7 +25,7 @@ public:
     void deserialize();
 
     //==============================================================================
-    std::optional<cctn::song::SongEditorNoteExtended> findNote(const cctn::song::QueryForFindPianoRollNote& query);
+    std::optional<cctn::song::SongDocument::Note> findNote(const cctn::song::QueryForFindPianoRollNote& query);
     void selectNote(const cctn::song::QueryForFindPianoRollNote& query);
 
     // CRUD operation
@@ -37,9 +37,6 @@ public:
     //==============================================================================
     void updateQuantizeRegions(const juce::AudioPlayHead::PositionInfo& positionInfo);
     std::optional<cctn::song::QuantizeEngine::Region> findNearestQuantizeRegion(double timePositionInSeconds) const;
-
-    //==============================================================================
-    std::optional<const cctn::song::SongEditorDocumentData*> getRawDocumentData() const;
 
     //==============================================================================
     class EditorContext
@@ -57,12 +54,16 @@ public:
 private:
     //==============================================================================
     std::shared_ptr<cctn::song::SongDocument> documentToEdit;
-    std::unique_ptr<cctn::song::SongEditorDocumentData> documentData;
     std::unique_ptr<cctn::song::QuantizeEngine> quantizeEngine;
     std::unique_ptr<cctn::song::BeatTimePointList> beatTimePointList;
     std::unique_ptr<EditorContext> editorContext;
 
 #if 0
+    //==============================================================================
+    std::optional<cctn::song::SongEditorNoteExtended> findNote(const cctn::song::QueryForFindPianoRollNote& query);
+    std::optional<const cctn::song::SongEditorDocumentData*> getRawDocumentData() const;
+    std::unique_ptr<cctn::song::SongEditorDocumentData> documentData;
+
     //==============================================================================
     // voicevox specified format
     juce::var createScoreJson_outdated() const;

@@ -77,7 +77,8 @@ struct NoteLyric
     JUCE_LEAK_DETECTOR(NoteLyric)
 };
 
-//==============================================================================
+#if 0
+==============================================================================
 struct SongEditorNoteBasic
 {
     double startPositionInSeconds;
@@ -105,6 +106,7 @@ struct SongEditorDocumentData
 
     JUCE_LEAK_DETECTOR(SongEditorDocumentData)
 };
+#endif
 
 //==============================================================================
 struct QueryForFindPianoRollNote
