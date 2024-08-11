@@ -8,7 +8,7 @@ namespace song
 
 namespace
 {
-constexpr int kNumVisibleOctaves = 1;
+constexpr int kNumVisibleOctaves = 2;
 }
 
 //==============================================================================
