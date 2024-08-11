@@ -17,6 +17,7 @@ public:
     //==============================================================================
     void attachDocument(std::shared_ptr<cctn::song::SongDocument> document);
     void detachDocument();
+    std::optional<const cctn::song::SongDocument*> getCurrentDocument() const;
     juce::String debugDumpDocument() const;
 
     //==============================================================================

@@ -30,6 +30,16 @@ void SongDocumentEditor::detachDocument()
     documentToEdit.reset();
 }
 
+std::optional<const cctn::song::SongDocument*> SongDocumentEditor::getCurrentDocument() const
+{
+    if (documentToEdit.get() != nullptr)
+    {
+        return documentToEdit.get();
+    }
+
+    return std::nullopt;
+}
+
 juce::String SongDocumentEditor::debugDumpDocument() const
 {
     if (documentToEdit.get() == nullptr)
