@@ -255,9 +255,16 @@ void PianoRollPreviewSurface::updateViewContext()
     isInputPositionInsertable = true;
     for (const auto& note : notes)
     {
-        
-        const double start_position_in_seconds = cctn::song::SongDocument::Calculator::calculateAbsoluteTime(*scopedSongDocumentPtrToPaint, note.startTimeInMusicalTime);
-        const double end_position_in_seconds = cctn::song::SongDocument::Calculator::calculateAbsoluteTimeForNoteEnd(*scopedSongDocumentPtrToPaint, note.startTimeInMusicalTime, note.duration);
+        const cctn::song::SongDocument& document = *scopedSongDocumentPtrToPaint;
+
+        const auto musical_time_note_on = note.startTimeInMusicalTime;
+        const int64_t tickOnPosition = cctn::song::SongDocument::Calculator::barToTick(document, musical_time_note_on);
+
+        const auto musical_time_note_off = cctn::song::SongDocument::Calculator::calculateNoteOffPosition(document, note);
+        const int64_t tickOffPosition = cctn::song::SongDocument::Calculator::barToTick(document, musical_time_note_off);
+
+        const double start_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, tickOnPosition);
+        const double end_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, tickOffPosition);
 
         if (juce::Range<float>(start_position_in_seconds, end_position_in_seconds).contains(userInputPositionInSeconds))
         {
@@ -719,8 +726,14 @@ PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongDocument& docu
 {
     NoteDrawInfo result;
     
-    const double start_position_in_seconds = cctn::song::SongDocument::Calculator::calculateAbsoluteTime(document, note.startTimeInMusicalTime);
-    const double end_position_in_seconds = cctn::song::SongDocument::Calculator::calculateAbsoluteTimeForNoteEnd(document, note.startTimeInMusicalTime, note.duration);
+    const auto musical_time_note_on = note.startTimeInMusicalTime;
+    const int64_t tickOnPosition = cctn::song::SongDocument::Calculator::barToTick(document, musical_time_note_on);
+
+    const auto musical_time_note_off = cctn::song::SongDocument::Calculator::calculateNoteOffPosition(document, note);
+    const int64_t tickOffPosition = cctn::song::SongDocument::Calculator::barToTick(document, musical_time_note_off);
+
+    const double start_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, tickOnPosition);
+    const double end_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, tickOffPosition);
 
     // Convert time to position X.
     const double rect_left_x =

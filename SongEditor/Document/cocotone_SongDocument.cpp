@@ -1,4 +1,3 @@
-#include "cocotone_SongDocument.h"
 namespace cctn
 {
 namespace song
@@ -92,19 +91,26 @@ std::string SongDocument::dumpToString() const
         oss << "    Velocity: " << note.velocity << "\n";
         oss << "    Lyric: " << note.lyric << "\n";
 
-        int64_t tickPosition = Calculator::barToTick(*this, note.startTimeInMusicalTime);
-        oss << "    Absolute Tick Position: " << tickPosition << " seconds\n";
+        const auto musical_time_note_on = note.startTimeInMusicalTime;
+        int64_t tickOnPosition = Calculator::barToTick(*this, musical_time_note_on);
+        oss << "    Absolute Tick On Position: " << tickOnPosition << " ticks\n";
+
+        const auto musical_time_note_off = cctn::song::SongDocument::Calculator::calculateNoteOffPosition(*this, note);
+        int64_t tickOffPosition = Calculator::barToTick(*this, musical_time_note_off);
+        oss << "    Absolute Tick Off Position: " << tickOffPosition << " ticks\n";
 
         double startTime = Calculator::tickToAbsoluteTime(*this, Calculator::barToTick(*this, note.startTimeInMusicalTime));
         oss << "    Absolute Start Time: " << startTime << " seconds\n";
 
-        double endTime = Calculator::calculateAbsoluteTimeForNoteEnd(*this, note.startTimeInMusicalTime, note.duration);
+        double endTime = Calculator::tickToAbsoluteTime(*this, Calculator::barToTick(*this, musical_time_note_off));
         oss << "    Absolute End Time: " << endTime << " seconds\n";
     }
 
     return oss.str();
 }
 
+//==============================================================================
+// SongDocument::Calculator
 //==============================================================================
 juce::var SongDocument::toJson() const
 {
@@ -187,7 +193,8 @@ juce::var SongDocument::toJson() const
         jsonNote->setProperty("absoluteTickOn", cctn::song::SongDocument::Calculator::barToTick(*this, note.startTimeInMusicalTime));
 
         // Add absolute tick position for note off
-        jsonNote->setProperty("absoluteTickOff", cctn::song::SongDocument::Calculator::barToTick(*this, note.startTimeInMusicalTime + note.duration.bars) + 480);
+        const auto musical_time_note_off = cctn::song::SongDocument::Calculator::calculateNoteOffPosition(*this, note);
+        jsonNote->setProperty("absoluteTickOff", cctn::song::SongDocument::Calculator::barToTick(*this, musical_time_note_off));
 
         jsonNote->setProperty("noteNumber", note.noteNumber);
         jsonNote->setProperty("velocity", note.velocity);
@@ -201,121 +208,88 @@ juce::var SongDocument::toJson() const
 }
 
 //==============================================================================
-double SongDocument::Calculator::calculateAbsoluteTime(const cctn::song::SongDocument& document, const cctn::song::SongDocument::MusicalTime& time)
+int64_t SongDocument::Calculator::barToTick(const cctn::song::SongDocument& document, const MusicalTime& musicalTime)
 {
-    double absoluteTime = 0.0;
-    int64_t currentTick = 0;
-    double currentTempo = 120.0; // Default tempo
-    int currentNumerator = 4, currentDenominator = 4; // Assume 4/4 time signature as default
-
-    for (const auto& event : document.getTempoTrack().getEvents())
+    if (musicalTime.bar < 1 || musicalTime.beat < 1 || musicalTime.tick < 0)
     {
-        int64_t targetTick = barToTick(document, time);
-        if (event.getTick() > targetTick)
+        // Invalid musical time
+        jassertfalse;
+        return 0;
+    }
+
+    int64_t accumulatedTicks = 0;
+    int currentBar = 1;
+    int currentBeat = 1;
+    int currentNumerator = 4;
+    int currentDenominator = 4;
+    int ticksPerQuarterNote = document.getTicksPerQuarterNote();
+
+    const auto& events = document.getTempoTrack().getEvents();
+    auto eventIt = events.begin();
+
+    while (eventIt != events.end() &&
+        (currentBar < musicalTime.bar ||
+            (currentBar == musicalTime.bar && currentBeat <= musicalTime.beat)))
+    {
+        const auto& event = *eventIt;
+
+        // Calculate ticks up to this event or musicalTime, whichever comes first
+        int64_t ticksToNextPoint = event.getTick() - accumulatedTicks;
+        int64_t ticksPerBar = currentNumerator * ticksPerQuarterNote * 4 / currentDenominator;
+        int64_t ticksPerBeat = ticksPerBar / currentNumerator;
+
+        while (currentBar < musicalTime.bar && ticksToNextPoint >= ticksPerBar)
         {
-            // Goal time reached
-            double tickDuration = 60.0 / (currentTempo * document.ticksPerQuarterNote);
-            absoluteTime += (targetTick - currentTick) * tickDuration;
-            return absoluteTime;
+            accumulatedTicks += ticksPerBar;
+            ticksToNextPoint -= ticksPerBar;
+            currentBar++;
         }
 
-        // Calculate the time until this event
-        double tickDuration = 60.0 / (currentTempo * document.ticksPerQuarterNote);
-        absoluteTime += (event.getTick() - currentTick) * tickDuration;
-
-        // Update the current position and tempo
-        currentTick = event.getTick();
-        if (event.getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kTempo ||
-            event.getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth)
+        while ((currentBar < musicalTime.bar ||
+            (currentBar == musicalTime.bar && currentBeat < musicalTime.beat))
+            && ticksToNextPoint >= ticksPerBeat)
         {
-            currentTempo = event.getTempo();
+            accumulatedTicks += ticksPerBeat;
+            ticksToNextPoint -= ticksPerBeat;
+            currentBeat++;
+            if (currentBeat > currentNumerator)
+            {
+                currentBar++;
+                currentBeat = 1;
+            }
         }
-        if (event.getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kTimeSignature ||
-            event.getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth)
+
+        // If we've reached musicalTime, add remaining ticks and exit
+        if (currentBar == musicalTime.bar && currentBeat == musicalTime.beat)
+        {
+            accumulatedTicks += musicalTime.tick;
+            return accumulatedTicks;
+        }
+
+        // Otherwise, add ticks to this event and update time signature
+        accumulatedTicks += ticksToNextPoint;
+
+        if (event.getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
+            event.getEventType() == TempoEvent::TempoEventType::kBoth)
         {
             auto [numerator, denominator] = event.getTimeSignature();
             currentNumerator = numerator;
             currentDenominator = denominator;
         }
+
+        ++eventIt;
     }
 
-    // Calculate the time since the last event
-    int64_t targetTick = barToTick(document, time);
-    double tickDuration = 60.0 / (currentTempo * document.ticksPerQuarterNote);
-    absoluteTime += (targetTick - currentTick) * tickDuration;
+    // If we've exited the loop, it means we've passed all events
+    // Calculate remaining ticks to musicalTime
+    int64_t ticksPerBar = currentNumerator * ticksPerQuarterNote * 4 / currentDenominator;
+    int64_t ticksPerBeat = ticksPerBar / currentNumerator;
 
-    return absoluteTime;
-}
+    accumulatedTicks += (musicalTime.bar - currentBar) * ticksPerBar;
+    accumulatedTicks += (musicalTime.beat - currentBeat) * ticksPerBeat;
+    accumulatedTicks += musicalTime.tick;
 
-double SongDocument::Calculator::calculateAbsoluteTimeForNoteEnd(const cctn::song::SongDocument& document, const cctn::song::SongDocument::MusicalTime& startTime, const cctn::song::SongDocument::NoteDuration& duration)
-{
-    // Calculate end time
-    cctn::song::SongDocument::MusicalTime endTime;
-    endTime.bar = startTime.bar + duration.bars;
-    endTime.beat = startTime.beat + duration.beats;
-    endTime.tick = startTime.tick + duration.ticks;
-
-    // Normalize end time
-    int ticksPerBeat = document.ticksPerQuarterNote;
-    int beatsPerBar = 4; // Assume 4/4 time signature as default
-
-    // Adjust for overflow in ticks
-    if (endTime.tick >= ticksPerBeat)
-    {
-        endTime.beat += endTime.tick / ticksPerBeat;
-        endTime.tick %= ticksPerBeat;
-    }
-
-    // Adjust for overflow in beats
-    // This part might need to be adjusted based on how your SongDocument handles time signatures
-    if (endTime.beat > beatsPerBar)
-    {
-        endTime.bar += (endTime.beat - 1) / beatsPerBar;
-        endTime.beat = ((endTime.beat - 1) % beatsPerBar) + 1;
-    }
-
-    // Calculate absolute times for start and end
-    double startAbsoluteTime = calculateAbsoluteTime(document, startTime);
-    double endAbsoluteTime = calculateAbsoluteTime(document, endTime);
-
-    // Return the difference
-    return startAbsoluteTime + 0.05;
-}
-
-double SongDocument::Calculator::tickToAbsoluteTime(const cctn::song::SongDocument& document, int64_t targetTick)
-{
-    double absoluteTime = 0.0;
-    int64_t currentTick = 0;
-    double currentTempo = 120.0; // Default tempo
-
-    for (const auto& event : document.tempoTrack.getEvents())
-    {
-        if (event.getTick() >= targetTick)
-        {
-            // Calculate time for remaining ticks at current tempo
-            double secondsPerTick = 60.0 / (currentTempo * document.ticksPerQuarterNote);
-            absoluteTime += (targetTick - currentTick) * secondsPerTick;
-            return absoluteTime;
-        }
-
-        if (event.getEventType() == TempoEvent::TempoEventType::kTempo ||
-            event.getEventType() == TempoEvent::TempoEventType::kBoth)
-        {
-            // Calculate time up to this tempo change
-            double secondsPerTick = 60.0 / (currentTempo * document.ticksPerQuarterNote);
-            absoluteTime += (event.getTick() - currentTick) * secondsPerTick;
-
-            // Update current position and tempo
-            currentTick = event.getTick();
-            currentTempo = event.getTempo();
-        }
-    }
-
-    // If target tick is beyond all tempo changes
-    double secondsPerTick = 60.0 / (currentTempo * document.ticksPerQuarterNote);
-    absoluteTime += (targetTick - currentTick) * secondsPerTick;
-
-    return absoluteTime;
+    return accumulatedTicks;
 }
 
 SongDocument::MusicalTime SongDocument::Calculator::tickToBar(const cctn::song::SongDocument& document, int64_t targetTick)
@@ -409,88 +383,88 @@ SongDocument::MusicalTime SongDocument::Calculator::tickToBar(const cctn::song::
     return result;
 }
 
-int64_t SongDocument::Calculator::barToTick(const cctn::song::SongDocument& document, const MusicalTime& musicalTime)
+double SongDocument::Calculator::tickToAbsoluteTime(const cctn::song::SongDocument& document, int64_t targetTick)
 {
-    if (musicalTime.bar < 1 || musicalTime.beat < 1 || musicalTime.tick < 0)
+    double absoluteTime = 0.0;
+    int64_t currentTick = 0;
+    double currentTempo = 120.0; // Default tempo
+
+    for (const auto& event : document.tempoTrack.getEvents())
     {
-        // Invalid musical time
-        jassertfalse;
-        return 0;
-    }
-
-    int64_t accumulatedTicks = 0;
-    int currentBar = 1;
-    int currentBeat = 1;
-    int currentNumerator = 4;
-    int currentDenominator = 4;
-    int ticksPerQuarterNote = document.getTicksPerQuarterNote();
-
-    const auto& events = document.getTempoTrack().getEvents();
-    auto eventIt = events.begin();
-
-    while (eventIt != events.end() &&
-        (currentBar < musicalTime.bar ||
-            (currentBar == musicalTime.bar && currentBeat <= musicalTime.beat)))
-    {
-        const auto& event = *eventIt;
-
-        // Calculate ticks up to this event or musicalTime, whichever comes first
-        int64_t ticksToNextPoint = event.getTick() - accumulatedTicks;
-        int64_t ticksPerBar = currentNumerator * ticksPerQuarterNote * 4 / currentDenominator;
-        int64_t ticksPerBeat = ticksPerBar / currentNumerator;
-
-        while (currentBar < musicalTime.bar && ticksToNextPoint >= ticksPerBar)
+        if (event.getTick() >= targetTick)
         {
-            accumulatedTicks += ticksPerBar;
-            ticksToNextPoint -= ticksPerBar;
-            currentBar++;
+            // Calculate time for remaining ticks at current tempo
+            double secondsPerTick = 60.0 / (currentTempo * document.ticksPerQuarterNote);
+            absoluteTime += (targetTick - currentTick) * secondsPerTick;
+            return absoluteTime;
         }
 
-        while ((currentBar < musicalTime.bar ||
-            (currentBar == musicalTime.bar && currentBeat < musicalTime.beat))
-            && ticksToNextPoint >= ticksPerBeat)
-        {
-            accumulatedTicks += ticksPerBeat;
-            ticksToNextPoint -= ticksPerBeat;
-            currentBeat++;
-            if (currentBeat > currentNumerator)
-            {
-                currentBar++;
-                currentBeat = 1;
-            }
-        }
-
-        // If we've reached musicalTime, add remaining ticks and exit
-        if (currentBar == musicalTime.bar && currentBeat == musicalTime.beat)
-        {
-            accumulatedTicks += musicalTime.tick;
-            return accumulatedTicks;
-        }
-
-        // Otherwise, add ticks to this event and update time signature
-        accumulatedTicks += ticksToNextPoint;
-
-        if (event.getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
+        if (event.getEventType() == TempoEvent::TempoEventType::kTempo ||
             event.getEventType() == TempoEvent::TempoEventType::kBoth)
         {
-            auto [numerator, denominator] = event.getTimeSignature();
+            // Calculate time up to this tempo change
+            double secondsPerTick = 60.0 / (currentTempo * document.ticksPerQuarterNote);
+            absoluteTime += (event.getTick() - currentTick) * secondsPerTick;
+
+            // Update current position and tempo
+            currentTick = event.getTick();
+            currentTempo = event.getTempo();
+        }
+    }
+
+    // If target tick is beyond all tempo changes
+    double secondsPerTick = 60.0 / (currentTempo * document.ticksPerQuarterNote);
+    absoluteTime += (targetTick - currentTick) * secondsPerTick;
+
+    return absoluteTime;
+}
+
+//==============================================================================
+SongDocument::MusicalTime SongDocument::Calculator::calculateNoteOffPosition(const SongDocument& document, const Note& note)
+{
+    // Calculate the tick position for the start of the note
+    int64_t tickOnPosition = barToTick(document, note.startTimeInMusicalTime);
+
+    // Find the tempo and time signature at the note start position
+    const auto& events = document.getTempoTrack().getEvents();
+    auto eventIt = std::lower_bound(events.begin(), events.end(), tickOnPosition,
+        [](const TempoEvent& event, int64_t tick) {
+            return event.getTick() <= tick;
+        });
+
+    double currentTempo = 120.0; // Default tempo
+    int currentNumerator = 4;
+    int currentDenominator = 4;
+
+    // If we found an event before or at the start position, update tempo and time signature
+    if (eventIt != events.begin()) {
+        --eventIt;
+        if (eventIt->getEventType() == TempoEvent::TempoEventType::kTempo ||
+            eventIt->getEventType() == TempoEvent::TempoEventType::kBoth) {
+            currentTempo = eventIt->getTempo();
+        }
+        if (eventIt->getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
+            eventIt->getEventType() == TempoEvent::TempoEventType::kBoth) {
+            auto [numerator, denominator] = eventIt->getTimeSignature();
             currentNumerator = numerator;
             currentDenominator = denominator;
         }
-
-        ++eventIt;
     }
 
-    // If we've exited the loop, it means we've passed all events
-    // Calculate remaining ticks to musicalTime
-    int64_t ticksPerBar = currentNumerator * ticksPerQuarterNote * 4 / currentDenominator;
-    int64_t ticksPerBeat = ticksPerBar / currentNumerator;
+    // Calculate duration in ticks
+    int ticksPerQuarterNote = document.getTicksPerQuarterNote();
+    int64_t durationInTicks = 0;
+    durationInTicks += note.duration.bars * currentNumerator * ticksPerQuarterNote * 4 / currentDenominator;
+    durationInTicks += note.duration.beats * ticksPerQuarterNote * 4 / currentDenominator;
+    durationInTicks += note.duration.ticks;
 
-    accumulatedTicks += (musicalTime.bar - currentBar) * ticksPerBar;
-    accumulatedTicks += (musicalTime.beat - currentBeat) * ticksPerBeat;
-    accumulatedTicks += musicalTime.tick;
+    // Calculate the tick-off position
+    int64_t tickOffPosition = tickOnPosition + durationInTicks;
 
-    return accumulatedTicks;
+    // Convert tick-off position back to MusicalTime
+    MusicalTime noteOffMusicalTime = tickToBar(document, tickOffPosition);
+
+    return noteOffMusicalTime;
 }
 
 }  // namespace song

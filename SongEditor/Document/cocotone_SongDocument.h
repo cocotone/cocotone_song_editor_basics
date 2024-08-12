@@ -149,18 +149,13 @@ public:
     public:
         //==============================================================================
         // Convert tick to absolute time
-        static double calculateAbsoluteTime(const cctn::song::SongDocument& document, const cctn::song::SongDocument::MusicalTime& musicalTime);
-
-        // New overload for calculating with adding note duration
-        static double calculateAbsoluteTimeForNoteEnd(const cctn::song::SongDocument& document, const cctn::song::SongDocument::MusicalTime& startTime, const cctn::song::SongDocument::NoteDuration& duration);
-
-        // Convert tick to absolute time
+        static int64_t barToTick(const cctn::song::SongDocument& document, const cctn::song::SongDocument::MusicalTime& musicalTime);
+        static MusicalTime tickToBar(const cctn::song::SongDocument& document, int64_t targetTick);
         static double tickToAbsoluteTime(const cctn::song::SongDocument& document, int64_t targetTick);
 
-        static MusicalTime tickToBar(const cctn::song::SongDocument& document, int64_t targetTick);
-
-        static int64_t barToTick(const cctn::song::SongDocument& document, const MusicalTime& musicalTime);
-
+        //==============================================================================
+        static MusicalTime calculateNoteOffPosition(const SongDocument& document, const Note& note);
+        
     private:
         //==============================================================================
         Calculator() = delete;
