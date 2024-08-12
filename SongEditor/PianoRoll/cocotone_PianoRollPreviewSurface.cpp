@@ -255,8 +255,9 @@ void PianoRollPreviewSurface::updateViewContext()
     isInputPositionInsertable = true;
     for (const auto& note : notes)
     {
-        const double start_position_in_seconds = scopedSongDocumentPtrToPaint->calculateAbsoluteTime(*scopedSongDocumentPtrToPaint, note.startTimeInMusicalTime);
-        const double end_position_in_seconds = scopedSongDocumentPtrToPaint->calculateAbsoluteTimeForNoteEnd(*scopedSongDocumentPtrToPaint, note.startTimeInMusicalTime, note.duration);
+        
+        const double start_position_in_seconds = cctn::song::SongDocument::Calculator::calculateAbsoluteTime(*scopedSongDocumentPtrToPaint, note.startTimeInMusicalTime);
+        const double end_position_in_seconds = cctn::song::SongDocument::Calculator::calculateAbsoluteTimeForNoteEnd(*scopedSongDocumentPtrToPaint, note.startTimeInMusicalTime, note.duration);
 
         if (juce::Range<float>(start_position_in_seconds, end_position_in_seconds).contains(userInputPositionInSeconds))
         {
@@ -717,9 +718,9 @@ PianoRollPreviewSurface::NoteDrawInfo
 PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongDocument& document, const cctn::song::SongDocument::Note& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight)
 {
     NoteDrawInfo result;
-
-    const double start_position_in_seconds = document.calculateAbsoluteTime(document, note.startTimeInMusicalTime);
-    const double end_position_in_seconds = document.calculateAbsoluteTimeForNoteEnd(document, note.startTimeInMusicalTime, note.duration);
+    
+    const double start_position_in_seconds = cctn::song::SongDocument::Calculator::calculateAbsoluteTime(document, note.startTimeInMusicalTime);
+    const double end_position_in_seconds = cctn::song::SongDocument::Calculator::calculateAbsoluteTimeForNoteEnd(document, note.startTimeInMusicalTime, note.duration);
 
     // Convert time to position X.
     const double rect_left_x =

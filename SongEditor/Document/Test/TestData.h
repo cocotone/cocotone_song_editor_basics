@@ -58,8 +58,8 @@ static SongDocument createTestSongDocument()
     // ticks per bar: 1920
     ticks_per_bar = 1920;
 
-    // Bar 14: Change to 4/4 time signature and 94 BPM
-    ticks_accumulated += ticks_per_bar * 1;
+    // Bar 15: Change to 4/4 time signature and 160 BPM
+    ticks_accumulated += ticks_per_bar * 2;
     doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 160, 4, 4);
 
     // Helper function to create a note
@@ -117,10 +117,10 @@ static SongDocument createTestSongDocument()
 
         createNote(25, 14, 1, 0, 0, 8, 0, 77, 100, juce::CharPointer_UTF8("\xe3\x83\x95\xe3\x82\xa1")),
 
-        createNote(26, 15, 1, 0, 0, 4, 0, 76, 95, juce::CharPointer_UTF8("\xe3\x83\x9f")),
-        createNote(27, 15, 5, 0, 0, 4, 0, 74, 98, juce::CharPointer_UTF8("\xe3\x83\xac")),
+        createNote(26, 15, 1, 0, 0, 2, 0, 76, 95, juce::CharPointer_UTF8("\xe3\x83\x9f")),
+        createNote(27, 15, 3, 0, 0, 2, 0, 74, 98, juce::CharPointer_UTF8("\xe3\x83\xac")),
 
-        createNote(28, 16, 1, 0, 0, 8, 0, 72, 100, juce::CharPointer_UTF8("\xe3\x83\x89"))
+        createNote(28, 16, 1, 0, 2, 0, 0, 72, 100, juce::CharPointer_UTF8("\xe3\x83\x89"))
     };
 
     // Add all notes to the document
