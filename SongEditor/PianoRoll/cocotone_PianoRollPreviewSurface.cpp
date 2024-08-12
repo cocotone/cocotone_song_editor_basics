@@ -273,6 +273,8 @@ void PianoRollPreviewSurface::updateViewContext()
         }
     }
 
+    currentBeatTimePointList = documentEditorForPreviewPtr.lock()->getEditorContext().currentBeatTimePointList;
+
     // Update input region in seconds
     quantizedInputRegionInSeconds = juce::Range<double>{ 0.0f, 0.0f };
     if (!documentEditorForPreviewPtr.expired() &&
@@ -402,8 +404,15 @@ void PianoRollPreviewSurface::drawGridVerticalLinesInTimeSignatureDomain(juce::G
         denominator = tempo_and_time_signature_optional.value().denominator;
     }
 
+    if (scopedSongDocumentPtrToPaint == nullptr)
+    {
+        return;
+    }
+
     // NOTE: This procedure will fit to feature of tempo map track.
-    const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd(), (cctn::song::NoteLength)(int)drawingGirdVerticalInterval.getValue());
+    //const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd(), (cctn::song::NoteLength)(int)drawingGirdVerticalInterval.getValue());
+    //const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(*scopedSongDocumentPtrToPaint, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd(), (cctn::song::NoteLength)(int)drawingGirdVerticalInterval.getValue());
+    const auto& precise_beat_and_time_array = currentBeatTimePointList;
 
     const auto vertical_line_positions = createVerticalLinePositionsInTimeSignatureDomain(rangeVisibleTimeInSeconds, precise_beat_and_time_array, getWidth());
 

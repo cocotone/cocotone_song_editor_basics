@@ -45,17 +45,19 @@ public:
         cctn::song::NoteLength currentGridInterval{ cctn::song::NoteLength::Quarter };
         cctn::song::NoteLength currentNoteLength{ cctn::song::NoteLength::Quarter };
         cctn::song::NoteLyric currentNoteLyric{ juce::CharPointer_UTF8("\xe3\x83\xa9") }; // ra
+        cctn::song::BeatTimePointList currentBeatTimePointList {};
 
     private:
         JUCE_LEAK_DETECTOR(EditorContext)
     };
+    void updateEditorContext();
     EditorContext& getEditorContext() const { return *editorContext.get(); };
 
 private:
     //==============================================================================
     std::shared_ptr<cctn::song::SongDocument> documentToEdit;
     std::unique_ptr<cctn::song::QuantizeEngine> quantizeEngine;
-    std::unique_ptr<cctn::song::BeatTimePointList> beatTimePointList;
+    //std::unique_ptr<cctn::song::BeatTimePointList> beatTimePointList;
     std::unique_ptr<EditorContext> editorContext;
 
 #if 0

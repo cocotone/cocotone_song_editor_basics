@@ -87,7 +87,6 @@ public:
 
         return beat_time_array;
     }
-#endif
 
     //==============================================================================
     // This function returns quantize friendly beat positions.
@@ -153,6 +152,93 @@ public:
             if (std::fmod(currentBeat, beatsPerBar) < 1e-10)
             {
                 // Ensure we're on an exact bar
+                currentBeat = std::round(currentBeat);
+            }
+        }
+
+        return beatPoints;
+    }
+#endif
+    static BeatTimePointList extractPreciseBeatPoints(const cctn::song::SongDocument& document, double startInSeconds, double endInSeconds, NoteLength noteLength)
+    {
+        BeatTimePointList beatPoints;
+        const auto& tempoTrack = document.getTempoTrack();
+        const auto& events = tempoTrack.getEvents();
+        int ticksPerQuarterNote = document.getTicksPerQuarterNote();
+
+        double currentTime = 0.0;
+        double currentBeat = 0.0;
+        double currentTempo = 120.0; // Default tempo
+        int currentNumerator = 4;
+        int currentDenominator = 4;
+
+        auto eventIt = events.begin();
+
+        // Find the first event that affects our start time
+        while (eventIt != events.end() && cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, eventIt->getTick()) <= startInSeconds)
+        {
+            if (eventIt->getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kTempo ||
+                eventIt->getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth)
+            {
+                currentTempo = eventIt->getTempo();
+            }
+            if (eventIt->getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kTimeSignature ||
+                eventIt->getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth)
+            {
+                auto [numerator, denominator] = eventIt->getTimeSignature();
+                currentNumerator = numerator;
+                currentDenominator = denominator;
+            }
+            currentTime = cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, eventIt->getTick());
+            currentBeat = static_cast<double>(eventIt->getTick()) / ticksPerQuarterNote;
+            ++eventIt;
+        }
+
+        double noteLengthsPerQuarterNote = cctn::song::getNoteLengthsPerQuarterNote(noteLength);
+        double secondsPerQuarterNote = 60.0 / currentTempo;
+        double secondsPerNoteLength = secondsPerQuarterNote / noteLengthsPerQuarterNote;
+
+        // Adjust currentBeat and currentTime to the first beat after or at the start time
+        while (currentTime < startInSeconds)
+        {
+            currentBeat += 1.0 / noteLengthsPerQuarterNote;
+            currentTime += secondsPerNoteLength;
+        }
+
+        while (currentTime <= endInSeconds)
+        {
+            if (currentTime >= startInSeconds)
+            {
+                beatPoints.emplace_back(currentBeat, currentTime, noteLength);
+            }
+
+            currentBeat += 1.0 / noteLengthsPerQuarterNote;
+            currentTime += secondsPerNoteLength;
+
+            // Check if we've reached the next tempo or time signature change
+            if (eventIt != events.end() && currentTime >= cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, eventIt->getTick()))
+            {
+                if (eventIt->getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kTempo ||
+                    eventIt->getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth)
+                {
+                    currentTempo = eventIt->getTempo();
+                    secondsPerQuarterNote = 60.0 / currentTempo;
+                    secondsPerNoteLength = secondsPerQuarterNote / noteLengthsPerQuarterNote;
+                }
+                if (eventIt->getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kTimeSignature ||
+                    eventIt->getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth)
+                {
+                    auto [numerator, denominator] = eventIt->getTimeSignature();
+                    currentNumerator = numerator;
+                    currentDenominator = denominator;
+                }
+                ++eventIt;
+            }
+
+            // Adjust for bar boundaries if needed
+            double beatsPerBar = static_cast<double>(currentNumerator) * 4.0 / currentDenominator;
+            if (std::fmod(currentBeat, beatsPerBar) < 1e-10)
+            {
                 currentBeat = std::round(currentBeat);
             }
         }

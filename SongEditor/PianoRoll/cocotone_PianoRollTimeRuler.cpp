@@ -1,3 +1,4 @@
+#include "cocotone_PianoRollTimeRuler.h"
 namespace cctn
 {
 namespace song
@@ -50,6 +51,28 @@ void PianoRollTimeRuler::setCurrentPositionInfo(const juce::AudioPlayHead::Posit
 }
 
 //==============================================================================
+void PianoRollTimeRuler::setDocumentForPreview(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor)
+{
+    if (!documentEditorForPreviewPtr.expired())
+    {
+        if (documentEditorForPreviewPtr.lock().get() != documentEditor.get())
+        {
+            documentEditorForPreviewPtr.lock()->removeChangeListener(this);
+            documentEditorForPreviewPtr.reset();
+        }
+    }
+
+    documentEditorForPreviewPtr = documentEditor;
+
+    if (!documentEditorForPreviewPtr.expired())
+    {
+        documentEditorForPreviewPtr.lock()->addChangeListener(this);
+    }
+
+    repaint();
+}
+
+//==============================================================================
 void PianoRollTimeRuler::setLayoutSource(const LayoutSource& layoutSource)
 {
     currentLayoutSource = layoutSource;
@@ -67,6 +90,17 @@ void PianoRollTimeRuler::updateLayout()
 void PianoRollTimeRuler::paint(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
+
+    const cctn::song::SongDocument* document_to_paint = nullptr;
+    if (!documentEditorForPreviewPtr.expired() &&
+        documentEditorForPreviewPtr.lock()->getCurrentDocument().has_value())
+    {
+        document_to_paint = documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
+    }
+
+    juce::ScopedValueSetter<const cctn::song::SongDocument*> svs(scopedSongDocumentPtrToPaint, document_to_paint);
+
+    updateViewContext();
 
     g.fillAll(kColourWallpaper);
 
@@ -124,6 +158,31 @@ void PianoRollTimeRuler::resized()
 }
 
 //==============================================================================
+void PianoRollTimeRuler::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (!documentEditorForPreviewPtr.expired())
+    {
+        if (source == documentEditorForPreviewPtr.lock().get())
+        {
+            repaint();
+        }
+    }
+}
+
+//==============================================================================
+void PianoRollTimeRuler::updateViewContext()
+{
+    JUCE_ASSERT_MESSAGE_MANAGER_EXISTS;
+
+    if (scopedSongDocumentPtrToPaint == nullptr)
+    {
+        return;
+    }
+
+    currentBeatTimePointList = documentEditorForPreviewPtr.lock()->getEditorContext().currentBeatTimePointList;
+}
+
+//==============================================================================
 void PianoRollTimeRuler::drawTimeRulerVerticalLines(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
@@ -161,7 +220,8 @@ void PianoRollTimeRuler::drawBeatRulerVerticalLines(juce::Graphics& g)
 
 
     // NOTE: This procedure will fit to feature of tempo map track.
-    const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd());
+    //const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd());
+    const auto precise_beat_and_time_array = currentBeatTimePointList;
 
     // Set clipping mask
     g.reduceClipRegion(rectBeatRulerArea);
