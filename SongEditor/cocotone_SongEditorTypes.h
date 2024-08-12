@@ -186,20 +186,20 @@ public:
         : beat(b)
         , timeInSeconds(t)
     {}
+    
+    ~BeatTimePoint() = default;
 
     // Copy
-    BeatTimePoint(const BeatTimePoint& other)
-        : beat(other.beat)
-        , timeInSeconds(other.timeInSeconds)
-        , noteLength(other.noteLength)
-    {}
+    BeatTimePoint(const BeatTimePoint&) = default;
 
     // Move
-    BeatTimePoint(BeatTimePoint&& other) noexcept
-        : beat(std::exchange(other.beat, 0.0))
-        , timeInSeconds(std::exchange(other.timeInSeconds, 0.0))
-        , noteLength(std::exchange(other.noteLength, NoteLength::Quarter))
-    {}
+    BeatTimePoint(BeatTimePoint&&) noexcept = default;
+
+    // Copy assign operator
+    BeatTimePoint& operator=(const BeatTimePoint&) = default;
+
+    // Move assign operator
+    BeatTimePoint& operator=(BeatTimePoint&&) noexcept = default;
 
     //==============================================================================
     TimeSignature toTimeSignature(int beatsPerBar, int ticksPerBeat = 960) const
