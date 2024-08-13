@@ -21,6 +21,8 @@ void SongDocumentEditor::attachDocument(std::shared_ptr<cctn::song::SongDocument
     documentToEdit = document;
 
     updateEditorContext();
+
+    sendChangeMessage();
 }
 
 void SongDocumentEditor::detachDocument()
@@ -28,6 +30,8 @@ void SongDocumentEditor::detachDocument()
     documentToEdit.reset();
 
     updateEditorContext();
+
+    sendChangeMessage();
 }
 
 std::optional<const cctn::song::SongDocument*> SongDocumentEditor::getCurrentDocument() const
