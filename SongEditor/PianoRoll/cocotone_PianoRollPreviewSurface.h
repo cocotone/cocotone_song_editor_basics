@@ -33,7 +33,7 @@ public:
     std::optional<cctn::song::QueryForFindPianoRollNote> getQueryForFindPianoRollNote(const juce::MouseEvent& mouseEvent);
 
     //==============================================================================
-    void setDocumentForPreview(std::shared_ptr<cctn::song::SongEditorDocument> document);
+    void setDocumentForPreview(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
 
     //==============================================================================
     enum class VisibleGridVerticalType
@@ -81,19 +81,20 @@ private:
         JUCE_LEAK_DETECTOR(PositionWithTimeInfo)
     };
     static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSecondsDomain(const juce::Range<double> visibleRangeSeconds, double timeStepInSeconds, int width);
-    static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const BeatTimePointList& beatTimePoints, int width);
+    static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const cctn::song::SongDocument::BeatTimePoints& beatTimePoints, int width);
     
+    //==============================================================================
     struct NoteDrawInfo
     {
         int positionLeftX{ 0 };
         int positionRightX{ 0 };
+        int noteId { 0 };
         int noteNumber{ 0 };
         juce::String lyric{ "" };
-        bool isSelected{ false };
 
         JUCE_LEAK_DETECTOR(NoteDrawInfo)
     };
-    static NoteDrawInfo createNoteDrawInfo(const cctn::song::SongEditorNoteExtended& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight);
+    static NoteDrawInfo createNoteDrawInfo(const cctn::song::SongDocument& document, const cctn::song::SongDocument::Note& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight);
 
     //==============================================================================
     // TODO: Move state value.
@@ -106,6 +107,7 @@ private:
     double userInputPositionInSeconds;
     int userInputPositionInNoteNumber;
     bool isInputPositionInsertable;
+    int selectedNoteId;
     juce::Point<int> lastMousePosition;
     juce::Range<double> quantizedInputRegionInSeconds;
 
@@ -118,8 +120,9 @@ private:
     // For fast painitng.
     std::map<juce::uint8, juce::Range<float>> mapVisibleKeyNoteNumberToVerticalPositionRangeAsVerticalTopToBottom;
 
-    std::weak_ptr<cctn::song::SongEditorDocument> documentForPreviewPtr;
-    const cctn::song::SongEditorDocumentData* paintScopedDocumentDataPtr;
+    std::weak_ptr<cctn::song::SongDocumentEditor> documentEditorForPreviewPtr;
+    const cctn::song::SongDocument* scopedSongDocumentPtrToPaint;
+    cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
 
     // TODO: should abstract
     juce::AudioPlayHead::PositionInfo currentPositionInfo;

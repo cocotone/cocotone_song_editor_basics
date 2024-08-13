@@ -50,6 +50,28 @@ void PianoRollTimeRuler::setCurrentPositionInfo(const juce::AudioPlayHead::Posit
 }
 
 //==============================================================================
+void PianoRollTimeRuler::setDocumentForPreview(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor)
+{
+    if (!documentEditorForPreviewPtr.expired())
+    {
+        if (documentEditorForPreviewPtr.lock().get() != documentEditor.get())
+        {
+            documentEditorForPreviewPtr.lock()->removeChangeListener(this);
+            documentEditorForPreviewPtr.reset();
+        }
+    }
+
+    documentEditorForPreviewPtr = documentEditor;
+
+    if (!documentEditorForPreviewPtr.expired())
+    {
+        documentEditorForPreviewPtr.lock()->addChangeListener(this);
+    }
+
+    repaint();
+}
+
+//==============================================================================
 void PianoRollTimeRuler::setLayoutSource(const LayoutSource& layoutSource)
 {
     currentLayoutSource = layoutSource;
@@ -67,6 +89,17 @@ void PianoRollTimeRuler::updateLayout()
 void PianoRollTimeRuler::paint(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
+
+    const cctn::song::SongDocument* document_to_paint = nullptr;
+    if (!documentEditorForPreviewPtr.expired() &&
+        documentEditorForPreviewPtr.lock()->getCurrentDocument().has_value())
+    {
+        document_to_paint = documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
+    }
+
+    juce::ScopedValueSetter<const cctn::song::SongDocument*> svs(scopedSongDocumentPtrToPaint, document_to_paint);
+
+    updateViewContext();
 
     g.fillAll(kColourWallpaper);
 
@@ -124,6 +157,31 @@ void PianoRollTimeRuler::resized()
 }
 
 //==============================================================================
+void PianoRollTimeRuler::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (!documentEditorForPreviewPtr.expired())
+    {
+        if (source == documentEditorForPreviewPtr.lock().get())
+        {
+            repaint();
+        }
+    }
+}
+
+//==============================================================================
+void PianoRollTimeRuler::updateViewContext()
+{
+    JUCE_ASSERT_MESSAGE_MANAGER_EXISTS;
+
+    if (scopedSongDocumentPtrToPaint == nullptr)
+    {
+        return;
+    }
+
+    currentBeatTimePoints = documentEditorForPreviewPtr.lock()->getEditorContext().currentBeatTimePoints;
+}
+
+//==============================================================================
 void PianoRollTimeRuler::drawTimeRulerVerticalLines(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
@@ -147,38 +205,31 @@ void PianoRollTimeRuler::drawBeatRulerVerticalLines(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
-    double bpm = 120.0;
-    int numerator = 4;
-    int denominator = 4;
-
-    const auto tempo_and_time_signature_optional = cctn::song::PositionInfoExtractor::extractTempoAndTimeSignature(currentPositionInfo);
-    if (tempo_and_time_signature_optional.has_value())
-    {
-        bpm = tempo_and_time_signature_optional.value().bpm;
-        numerator = tempo_and_time_signature_optional.value().numerator;
-        denominator = tempo_and_time_signature_optional.value().denominator;
-    }
-
-
-    // NOTE: This procedure will fit to feature of tempo map track.
-    const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd());
+    const auto precise_beat_and_time_array = currentBeatTimePoints;
 
     // Set clipping mask
     g.reduceClipRegion(rectBeatRulerArea);
 
     g.setFont(juce::Font(juce::Font::getDefaultMonospacedFontName(), 10, 0));
 
+    juce::String last_beat_signature = "";
     for (const auto& beat_time_point : precise_beat_and_time_array)
     {
         const auto time_in_seconds = beat_time_point.timeInSeconds;
-        beat_time_point.beat;
-        const auto signature_text = beat_time_point.getFormattedTimeSignature(numerator, false);
 
-        const auto position_x = timeToPositionX(time_in_seconds, rangeVisibleTimeInSeconds, rectBeatRulerArea.getX(), rectBeatRulerArea.getRight());
+        const auto signature_text = " " +
+            juce::String(beat_time_point.musicalTime.bar) + ":" +
+            juce::String(beat_time_point.musicalTime.beat);
 
-        g.setColour(juce::Colours::white);
-        g.drawVerticalLine(position_x, 0.0f, getHeight());
-        g.drawText(signature_text, position_x + 2, rectBeatRulerArea.getY() + 2, 60, 20, juce::Justification::centredLeft);
+        if (signature_text != last_beat_signature)
+        {
+            const auto position_x = timeToPositionX(time_in_seconds, rangeVisibleTimeInSeconds, rectBeatRulerArea.getX(), rectBeatRulerArea.getRight());
+
+            g.setColour(juce::Colours::white);
+            g.drawVerticalLine(position_x, 0.0f, getHeight());
+            g.drawText(signature_text, position_x + 2, rectBeatRulerArea.getY() + 2, 60, 20, juce::Justification::centredLeft);
+            last_beat_signature = signature_text;
+        }
     }
 }
 

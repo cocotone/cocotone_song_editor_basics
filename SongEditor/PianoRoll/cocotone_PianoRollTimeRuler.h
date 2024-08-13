@@ -8,6 +8,7 @@ namespace song
 //==============================================================================
 class PianoRollTimeRuler final
     : public juce::Component
+    , private juce::ChangeListener
 {
 public:
     //==============================================================================
@@ -21,6 +22,9 @@ public:
     //==============================================================================
     void setPlayingPositionInSeconds(double positionInSeconds);
     void setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo);
+
+    //==============================================================================
+    void setDocumentForPreview(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
 
     //==============================================================================
     struct LayoutSource
@@ -40,6 +44,12 @@ private:
     //==============================================================================
     void paint(juce::Graphics& g) override;
     void resized() override;
+
+    //==============================================================================
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+    //==============================================================================
+    void updateViewContext();
 
     //==============================================================================
     void drawTimeRulerVerticalLines(juce::Graphics& g);
@@ -71,6 +81,11 @@ private:
     juce::Rectangle<int> rectBeatRulerLabelArea;
 
     LayoutSource currentLayoutSource;
+
+    //==============================================================================
+    std::weak_ptr<cctn::song::SongDocumentEditor> documentEditorForPreviewPtr;
+    const cctn::song::SongDocument* scopedSongDocumentPtrToPaint;
+    cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
 
     // TODO: should abstract
     juce::AudioPlayHead::PositionInfo currentPositionInfo;

@@ -1,0 +1,71 @@
+{
+  "type": "object",
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "artist": { "type": "string" },
+        "created": { "type": "string", "format": "date-time" },
+        "lastModified": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "artist", "created", "lastModified"]
+    },
+    "ticksPerQuarterNote": { "type": "integer" },
+    "tempoTrack": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tick": { "type": "integer" },
+          "type": { 
+            "type": "string",
+            "enum": ["kTempo", "kTimeSignature", "kBoth"]
+          },
+          "tempo": { "type": "number" },
+          "timeSignature": {
+            "type": "object",
+            "properties": {
+              "numerator": { "type": "integer" },
+              "denominator": { "type": "integer" }
+            },
+            "required": ["numerator", "denominator"]
+          }
+        },
+        "required": ["tick", "type"]
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "startTimeInMusicalTime": {
+            "type": "object",
+            "properties": {
+              "bar": { "type": "integer" },
+              "beat": { "type": "integer" },
+              "tick": { "type": "integer" }
+            },
+            "required": ["bar", "beat", "tick"]
+          },
+          "duration": {
+            "type": "object",
+            "properties": {
+              "bars": { "type": "integer" },
+              "beats": { "type": "integer" },
+              "ticks": { "type": "integer" }
+            },
+            "required": ["bars", "beats", "ticks"]
+          },
+          "noteNumber": { "type": "integer" },
+          "velocity": { "type": "integer" },
+          "lyric": { "type": "string" }
+        },
+        "required": ["id", "startTimeInMusicalTime", "duration", "noteNumber", "velocity", "lyric"]
+      }
+    }
+  },
+  "required": ["metadata", "ticksPerQuarterNote", "tempoTrack", "notes"]
+}

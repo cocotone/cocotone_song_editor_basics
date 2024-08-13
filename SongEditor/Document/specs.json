@@ -1,0 +1,113 @@
+{
+    "songDocument": {
+      "metadata": {
+        "title": "サンプル ソング",
+        "artist": "サンプル アーティスト",
+        "created": "2024-08-04T12:00:00Z",
+        "lastModified": "2024-08-04T14:30:00Z"
+      },
+      "ticksPerQuarterNote": 480,
+      "tempoMap": [
+        {
+          "bar": 1,
+          "beat": 1,
+          "tick": 0,
+          "timeSignature": {
+            "numerator": 4,
+            "denominator": 4
+          },
+          "tempo": 120
+        },
+        {
+          "bar": 5,
+          "beat": 1,
+          "tick": 0,
+          "timeSignature": {
+            "numerator": 3,
+            "denominator": 4
+          },
+          "tempo": 120
+        }
+      ],
+      "tempoChanges": [
+        {
+          "bar": 3,
+          "beat": 1,
+          "tick": 0,
+          "newTempo": 140
+        },
+        {
+          "bar": 7,
+          "beat": 2,
+          "tick": 240,
+          "newTempo": 100
+        }
+      ],
+      "notes": [
+        {
+          "id": 1,
+          "startTime": {
+            "bar": 1,
+            "beat": 1,
+            "tick": 0
+          },
+          "duration": {
+            "bars": 0,
+            "beats": 1,
+            "ticks": 0
+          },
+          "noteNumber": 60,
+          "velocity": 100,
+          "lyric": "ド"
+        },
+        {
+          "id": 2,
+          "startTime": {
+            "bar": 1,
+            "beat": 2,
+            "tick": 0
+          },
+          "duration": {
+            "bars": 0,
+            "beats": 0,
+            "ticks": 360
+          },
+          "noteNumber": 62,
+          "velocity": 95,
+          "lyric": "レ"
+        },
+        {
+          "id": 3,
+          "startTime": {
+            "bar": 1,
+            "beat": 3,
+            "tick": 0
+          },
+          "duration": {
+            "bars": 0,
+            "beats": 0,
+            "ticks": 240
+          },
+          "noteNumber": 64,
+          "velocity": 98,
+          "lyric": "ミ"
+        },
+        {
+          "id": 4,
+          "startTime": {
+            "bar": 1,
+            "beat": 4,
+            "tick": 0
+          },
+          "duration": {
+            "bars": 0,
+            "beats": 1,
+            "ticks": 0
+          },
+          "noteNumber": 65,
+          "velocity": 90,
+          "lyric": "ファ"
+        }
+      ]
+    }
+  }

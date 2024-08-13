@@ -5,6 +5,8 @@ namespace cctn
 namespace song
 {
 
+class SongDocument;
+
 //==============================================================================
 class SongEditorOperation final
 {
@@ -14,6 +16,9 @@ public:
     ~SongEditorOperation();
 
     //==============================================================================
+    static std::unique_ptr<cctn::song::SongDocument> makeDefaultSongDocument();
+
+    //==============================================================================
     bool testNoteExist(const cctn::song::QueryForFindPianoRollNote& query);
     void selectNote(const cctn::song::QueryForFindPianoRollNote& query);
     void addNote(const cctn::song::QueryForAddPianoRollNote& query);
@@ -21,13 +26,13 @@ public:
 
 private:
     //==============================================================================
-    void attachDocument(std::shared_ptr<cctn::song::SongEditorDocument> documentToAttach);
+    void attachDocument(std::shared_ptr<cctn::song::SongDocumentEditor> documentToAttach);
     void detachDocument();
 
     friend class SongEditor;
 
     mutable std::mutex mutex;
-    std::weak_ptr<cctn::song::SongEditorDocument> attachedDocument;
+    std::weak_ptr<cctn::song::SongDocumentEditor> attachedDocument;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SongEditorOperation)
 };

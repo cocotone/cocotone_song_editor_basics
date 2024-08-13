@@ -12,6 +12,8 @@ class PianoRollPreviewSurface;
 class PianoRollInteractionSurface;
 class PianoRollEventDispatcher;
 class IPositionInfoProvider;
+class SongDocumentEditor;
+class SongEditorOperation;
 
 //==============================================================================
 class SongEditor final
@@ -31,8 +33,8 @@ public:
     void unregisterPositionInfoProvider(IPositionInfoProvider* provider);
 
     //==============================================================================
-    void registerSongEditorDocument(std::shared_ptr<cctn::song::SongEditorDocument> document);
-    void unregisterSongEditorDocument(std::shared_ptr<cctn::song::SongEditorDocument> document);
+    void registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
+    void unregisterSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
 
 private:
     //==============================================================================
@@ -52,9 +54,11 @@ private:
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
     //==============================================================================
+    static void populateComboBoxWithGridSize(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToGridSize);
     static void populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToNoteLength);
     static void populateComboBoxWithLyricMora(juce::ComboBox& comboBox, std::map<int, cctn::song::Mora>& mapIndexToMora);
 
+    //==============================================================================
     void initialUpdate();
 
     //==============================================================================
@@ -68,10 +72,10 @@ private:
     
     juce::Rectangle<int> rectInputOptions;
     
-    std::unique_ptr<juce::Label> labelPianoRollGridInterval;
-    std::unique_ptr<juce::ComboBox> comboboxPianoRollGridInterval;
-    std::map<int, cctn::song::NoteLength> mapIndexToGridInterval;
-    juce::Value valuePianoRollGridInterval;
+    std::unique_ptr<juce::Label> labelPianoRollGridSize;
+    std::unique_ptr<juce::ComboBox> comboboxPianoRollGridSize;
+    std::map<int, cctn::song::NoteLength> mapIndexToGridSize;
+    juce::Value valuePianoRollGridSize;
 
     std::unique_ptr<juce::Label> labelInputNoteLength;
     std::unique_ptr<juce::ComboBox> comboboxInputNoteLength;
@@ -85,7 +89,7 @@ private:
 
     std::unique_ptr<cctn::song::PianoRollEventDispatcher> pianoRollEventDispatcher;
 
-    std::weak_ptr<cctn::song::SongEditorDocument> songEditorDocumentPtr;
+    std::weak_ptr<cctn::song::SongDocumentEditor> songDocumentEditorPtr;
     std::shared_ptr<cctn::song::SongEditorOperation> songEditorOperation;
 
     IPositionInfoProvider* positionInfoProviderPtr;

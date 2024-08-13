@@ -1,4 +1,3 @@
-#include "cocotone_PianoRollKeyboard.h"
 namespace cctn
 {
 namespace song
