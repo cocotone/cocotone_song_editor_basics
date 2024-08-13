@@ -58,15 +58,20 @@ std::optional<cctn::song::SongDocument::Note> SongDocumentEditor::findNote(const
         return std::nullopt;
     }
 
-#if 0
     for (auto& note : (*documentToEdit).getNotes())
     {
-        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(query.timeInSeconds))
+        const auto note_on_tick = cctn::song::SongDocument::Calculator::barToTick((*documentToEdit), note.startTimeInMusicalTime);
+        const auto note_on_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime((*documentToEdit), note_on_tick);
+
+        const auto note_off_bar = cctn::song::SongDocument::Calculator::calculateNoteOffPosition((*documentToEdit), note);
+        const auto note_off_tick = cctn::song::SongDocument::Calculator::barToTick((*documentToEdit), note_off_bar);
+        const auto note_off_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime((*documentToEdit), note_off_tick);
+
+        if (juce::Range<double>(note_on_position_in_seconds, note_off_position_in_seconds).contains(query.timeInSeconds))
         {
             return note;
         }
     }
-#endif
 
     return std::nullopt;
 }
@@ -78,20 +83,25 @@ void SongDocumentEditor::selectNote(const cctn::song::QueryForFindPianoRollNote&
         return;
     }
 
-#if 0
     for (auto& note : (*documentToEdit).getNotes())
     {
-        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(query.timeInSeconds) &&
-            note.noteNumber == query.noteNumber)
+        const auto note_on_tick = cctn::song::SongDocument::Calculator::barToTick((*documentToEdit), note.startTimeInMusicalTime);
+        const auto note_on_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime((*documentToEdit), note_on_tick);
+
+        const auto note_off_bar = cctn::song::SongDocument::Calculator::calculateNoteOffPosition((*documentToEdit), note);
+        const auto note_off_tick = cctn::song::SongDocument::Calculator::barToTick((*documentToEdit), note_off_bar);
+        const auto note_off_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime((*documentToEdit), note_off_tick);
+
+        if (juce::Range<double>(note_on_position_in_seconds, note_off_position_in_seconds).contains(query.timeInSeconds))
         {
-            note.isSelected = true;
+            editorContext->currentSelectedNoteId = note.id;
+            break;
         }
         else
         {
-            note.isSelected = false;
+            editorContext->currentSelectedNoteId = -1;
         }
     }
-#endif
 
     sendChangeMessage();
 }
@@ -137,12 +147,18 @@ void SongDocumentEditor::deleteNoteSingle(const cctn::song::QueryForFindPianoRol
         return;
     }
 
-    cctn::song::SongDocument::Note* note_to_delete = nullptr;
+    const cctn::song::SongDocument::Note* note_to_delete = nullptr;
 
-#if 0
-    for (auto& note : (*documentToEdit).getNotes())
+    for (const auto& note : (*documentToEdit).getNotes())
     {
-        if (juce::Range<double>(note.startPositionInSeconds, note.endPositionInSeconds).contains(query.timeInSeconds))
+        const auto note_on_tick = cctn::song::SongDocument::Calculator::barToTick((*documentToEdit), note.startTimeInMusicalTime);
+        const auto note_on_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime((*documentToEdit), note_on_tick);
+
+        const auto note_off_bar = cctn::song::SongDocument::Calculator::calculateNoteOffPosition((*documentToEdit), note);
+        const auto note_off_tick = cctn::song::SongDocument::Calculator::barToTick((*documentToEdit), note_off_bar);
+        const auto note_off_position_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime((*documentToEdit), note_off_tick);
+
+        if (juce::Range<double>(note_on_position_in_seconds, note_off_position_in_seconds).contains(query.timeInSeconds))
         {
             note_to_delete = &note;
         }
@@ -150,13 +166,13 @@ void SongDocumentEditor::deleteNoteSingle(const cctn::song::QueryForFindPianoRol
 
     if (note_to_delete != nullptr)
     {
-        documentToEdit->getNotes().remove(note_to_delete);
+        documentToEdit->removeNote(note_to_delete);
     }
-#endif
 
     sendChangeMessage();
 }
 
+//==============================================================================
 std::optional<cctn::song::SongDocument::RegionWithBeatInfo> SongDocumentEditor::findNearestQuantizeRegion(double timePositionInSeconds) const
 {
     return quantizeEngine->findNearestQuantizeRegion(timePositionInSeconds);

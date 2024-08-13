@@ -28,9 +28,15 @@ void SongDocument::addTempoEvent(int64_t tick, TempoEvent::TempoEventType type, 
     tempoTrack.addEvent(TempoEvent(tick, type, numerator, denominator, tempo));
 }
 
+//==============================================================================
 void SongDocument::addNote(const Note& note)
 {
     notes.add(note);
+}
+
+void SongDocument::removeNote(const Note* note)
+{
+    notes.remove(note);
 }
 
 //==============================================================================
