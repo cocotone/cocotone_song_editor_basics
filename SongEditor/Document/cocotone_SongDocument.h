@@ -51,6 +51,46 @@ public:
     {
         int ticks;
 
+        // Default constructor
+        NoteDuration() : ticks(0) {}
+
+        // Constructor with ticks
+        explicit NoteDuration(int t) : ticks(t) {}
+
+        // Addition operator
+        NoteDuration operator+(const NoteDuration& other) const
+        {
+            return NoteDuration(ticks + other.ticks);
+        }
+
+        // Compound addition operator
+        NoteDuration& operator+=(const NoteDuration& other)
+        {
+            ticks += other.ticks;
+            return *this;
+        }
+
+        // Subtraction operator
+        NoteDuration operator-(const NoteDuration& other) const
+        {
+            // Assert if the result would be negative
+            jassert(ticks >= other.ticks && "Subtraction would result in negative duration");
+
+            // Return 0 if the result would be negative, otherwise return the difference
+            return NoteDuration(std::max(0, ticks - other.ticks));
+        }
+
+        // Compound subtraction operator
+        NoteDuration& operator-=(const NoteDuration& other)
+        {
+            // Assert if the result would be negative
+            jassert(ticks >= other.ticks && "Subtraction would result in negative duration");
+
+            // Set to 0 if the result would be negative, otherwise subtract
+            ticks = std::max(0, ticks - other.ticks);
+            return *this;
+        }
+
         JUCE_LEAK_DETECTOR(NoteDuration)
     };
 

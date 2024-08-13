@@ -63,53 +63,58 @@ static SongDocument createTestSongDocument()
     document.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 4, 4, 160);
 
     // Helper function to create a note
+    const cctn::song::SongDocument::NoteDuration note_duration_quarter = cctn::song::SongDocument::DataFactory::convertNoteLengthToDuration(document, cctn::song::NoteLength::Quarter);
+    const cctn::song::SongDocument::NoteDuration note_duration_half = cctn::song::SongDocument::DataFactory::convertNoteLengthToDuration(document, cctn::song::NoteLength::Half);
+    const cctn::song::SongDocument::NoteDuration note_duration_whole = cctn::song::SongDocument::DataFactory::convertNoteLengthToDuration(document, cctn::song::NoteLength::Whole);
+    const cctn::song::SongDocument::NoteDuration note_duration_dotted_quarter = cctn::song::SongDocument::DataFactory::convertNoteLengthToDuration(document, cctn::song::NoteLength::DottedQuarter);
+    const cctn::song::SongDocument::NoteDuration note_duration_dotted_half = cctn::song::SongDocument::DataFactory::convertNoteLengthToDuration(document, cctn::song::NoteLength::DottedHalf);
 
     // Add notes for 16 bars
     // arguments: int id, int bar, int beat, int tick, int durationBars, int durationBeats, int durationTicks, int noteNumber, int velocity, const juce::String& lyric
     std::vector<cctn::song::SongDocument::Note> notes = {
-        cctn::song::SongDocument::DataFactory::makeNote(document, 1, 1, 0, 0, 1, 0, 60, 100, juce::CharPointer_UTF8("\xe3\x83\x89")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 1, 2, 0, 0, 1, 0, 62, 95, juce::CharPointer_UTF8("\xe3\x83\xac")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 1, 3, 0, 0, 1, 0, 64, 98, juce::CharPointer_UTF8("\xe3\x83\x9f")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 1, 4, 0, 0, 1, 0, 65, 90, juce::CharPointer_UTF8("\xe3\x83\x95\xe3\x82\xa1")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {1, 1, 0}, note_duration_quarter, 60, 100, juce::CharPointer_UTF8("\xe3\x83\x89")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {1, 2, 0}, note_duration_quarter, 62, 95, juce::CharPointer_UTF8("\xe3\x83\xac")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {1, 3, 0}, note_duration_quarter, 64, 98, juce::CharPointer_UTF8("\xe3\x83\x9f")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {1, 4, 0}, note_duration_quarter, 65, 90, juce::CharPointer_UTF8("\xe3\x83\x95\xe3\x82\xa1")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 2, 1, 0, 0, 2, 0, 67, 100, juce::CharPointer_UTF8("\xe3\x82\xbd")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 2, 3, 0, 0, 2, 0, 69, 95, juce::CharPointer_UTF8("\xe3\x83\xa9")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {2, 1, 0}, note_duration_half, 67, 100, juce::CharPointer_UTF8("\xe3\x82\xbd")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {2, 3, 0}, note_duration_half, 69, 95, juce::CharPointer_UTF8("\xe3\x83\xa9")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 3, 1, 0, 0, 4, 0, 71, 98, juce::CharPointer_UTF8("\xe3\x82\xb7")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {3, 1, 0}, note_duration_whole, 71, 98, juce::CharPointer_UTF8("\xe3\x82\xb7")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 4, 1, 0, 0, 4, 0, 72, 100, juce::CharPointer_UTF8("\xe3\x83\x89")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {4, 1, 0}, note_duration_whole, 72, 100, juce::CharPointer_UTF8("\xe3\x83\x89")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 5, 1, 0, 0, 1, 0, 71, 90, juce::CharPointer_UTF8("\xe3\x82\xb7")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 5, 2, 0, 0, 1, 0, 69, 95, juce::CharPointer_UTF8("\xe3\x83\xa9")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 5, 3, 0, 0, 1, 0, 67, 98, juce::CharPointer_UTF8("\xe3\x82\xbd")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {5, 1, 0}, note_duration_quarter, 71, 90, juce::CharPointer_UTF8("\xe3\x82\xb7")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {5, 2, 0}, note_duration_quarter, 69, 95, juce::CharPointer_UTF8("\xe3\x83\xa9")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {5, 3, 0}, note_duration_quarter, 67, 98, juce::CharPointer_UTF8("\xe3\x82\xbd")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 6, 1, 0, 0, 3, 0, 65, 100, juce::CharPointer_UTF8("\xe3\x83\x95\xe3\x82\xa1")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {6, 1, 0}, note_duration_dotted_half, 65, 100, juce::CharPointer_UTF8("\xe3\x83\x95\xe3\x82\xa1")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 7, 1, 0, 0, 2, 0, 64, 95, juce::CharPointer_UTF8("\xe3\x83\x9f")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 7, 3, 0, 0, 1, 0, 62, 90, juce::CharPointer_UTF8("\xe3\x83\xac")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {7, 1, 0}, note_duration_half, 64, 95, juce::CharPointer_UTF8("\xe3\x83\x9f")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {7, 3, 0}, note_duration_quarter, 62, 90, juce::CharPointer_UTF8("\xe3\x83\xac")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 8, 1, 0, 0, 3, 0, 60, 100, juce::CharPointer_UTF8("\xe3\x83\x89")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {8, 1, 0}, note_duration_dotted_half, 60, 100, juce::CharPointer_UTF8("\xe3\x83\x89")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 9, 1, 0, 0, 1, 240, 62, 95, juce::CharPointer_UTF8("\xe3\x83\xac")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 9, 3, 0, 0, 1, 240, 64, 98, juce::CharPointer_UTF8("\xe3\x83\x9f")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {9, 1, 0}, note_duration_dotted_quarter, 62, 95, juce::CharPointer_UTF8("\xe3\x83\xac")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {9, 3, 0}, note_duration_dotted_quarter, 64, 98, juce::CharPointer_UTF8("\xe3\x83\x9f")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 10, 2, 0, 0, 1, 240, 65, 90, juce::CharPointer_UTF8("\xe3\x83\x95\xe3\x82\xa1")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {10, 2, 0}, note_duration_dotted_quarter, 65, 90, juce::CharPointer_UTF8("\xe3\x83\x95\xe3\x82\xa1")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 11, 1, 0, 0, 3, 0, 67, 100, juce::CharPointer_UTF8("\xe3\x82\xbd")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {11, 1, 0}, note_duration_dotted_half, 67, 100, juce::CharPointer_UTF8("\xe3\x82\xbd")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 12, 1, 0, 0, 3, 0, 69, 95, juce::CharPointer_UTF8("\xe3\x83\xa9")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {12, 1, 0}, note_duration_dotted_half, 69, 95, juce::CharPointer_UTF8("\xe3\x83\xa9")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 13, 1, 0, 0, 2, 0, 71, 98, juce::CharPointer_UTF8("\xe3\x82\xb7")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 13, 3, 0, 0, 2, 0, 72, 100, juce::CharPointer_UTF8("\xe3\x83\x89")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 13, 5, 0, 0, 2, 0, 74, 95, juce::CharPointer_UTF8("\xe3\x83\xac")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 13, 7, 0, 0, 2, 0, 76, 90, juce::CharPointer_UTF8("\xe3\x83\x9f")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {13, 1, 0}, note_duration_quarter, 71, 98, juce::CharPointer_UTF8("\xe3\x82\xb7")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {13, 3, 0}, note_duration_quarter, 72, 100, juce::CharPointer_UTF8("\xe3\x83\x89")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {13, 5, 0}, note_duration_quarter, 74, 95, juce::CharPointer_UTF8("\xe3\x83\xac")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {13, 7, 0}, note_duration_quarter, 76, 90, juce::CharPointer_UTF8("\xe3\x83\x9f")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 14, 1, 0, 0, 8, 0, 77, 100, juce::CharPointer_UTF8("\xe3\x83\x95\xe3\x82\xa1")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {14, 1, 0}, note_duration_whole, 77, 100, juce::CharPointer_UTF8("\xe3\x83\x95\xe3\x82\xa1")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 15, 1, 0, 0, 2, 0, 76, 95, juce::CharPointer_UTF8("\xe3\x83\x9f")),
-        cctn::song::SongDocument::DataFactory::makeNote(document, 15, 3, 0, 0, 2, 0, 74, 98, juce::CharPointer_UTF8("\xe3\x83\xac")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {15, 1, 0}, note_duration_half, 76, 95, juce::CharPointer_UTF8("\xe3\x83\x9f")),
+        cctn::song::SongDocument::DataFactory::makeNote(document, {15, 3, 0}, note_duration_half, 74, 98, juce::CharPointer_UTF8("\xe3\x83\xac")),
 
-        cctn::song::SongDocument::DataFactory::makeNote(document, 16, 1, 0, 2, 0, 0, 72, 100, juce::CharPointer_UTF8("\xe3\x83\x89"))
+        cctn::song::SongDocument::DataFactory::makeNote(document, {16, 1, 0}, note_duration_whole + note_duration_whole, 72, 100, juce::CharPointer_UTF8("\xe3\x83\x89"))
     };
 
     // Add all notes to the document
