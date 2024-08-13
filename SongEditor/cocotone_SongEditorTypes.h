@@ -18,6 +18,7 @@ enum class NoteLength
     Triplet,         // Quarter note triplet
     EighthTriplet,   // Eighth note triplet
     SixteenthTriplet,// Sixteenth note triplet
+    DottedHalf,      // Dotted half note
     DottedQuarter,   // Dotted quarter note
     DottedEighth,    // Dotted eighth note
     DottedSixteenth  // Dotted sixteenth note
@@ -36,6 +37,7 @@ inline double getNoteValue(NoteLength noteLength)
     case NoteLength::Triplet: return 6.0;         // Quarter note triplet (3 in the space of 2)
     case NoteLength::EighthTriplet: return 12.0;  // Eighth note triplet (3 in the space of 2 eighth notes)
     case NoteLength::SixteenthTriplet: return 24.0; // Sixteenth note triplet (3 in the space of 2 sixteenth notes)
+    case NoteLength::DottedHalf: return 2.0 / 1.5;
     case NoteLength::DottedQuarter: return 4.0 / 1.5;
     case NoteLength::DottedEighth: return 8.0 / 1.5;
     case NoteLength::DottedSixteenth: return 16.0 / 1.5;
@@ -57,6 +59,7 @@ inline double getNoteLengthsPerQuarterNote(NoteLength noteLength)
     case NoteLength::Triplet: return 3.0;
     case NoteLength::EighthTriplet: return 6.0;
     case NoteLength::SixteenthTriplet: return 12.0;
+    case NoteLength::DottedHalf: return 1.0 / 3.0;
     case NoteLength::DottedQuarter: return 2.0 / 3.0;
     case NoteLength::DottedEighth: return 4.0 / 3.0;
     case NoteLength::DottedSixteenth: return 8.0 / 3.0;
