@@ -11,8 +11,6 @@
 #include "SongEditor/PianoRoll/cocotone_PianoRollPreviewSurface.h"
 #include "SongEditor/PianoRoll/cocotone_PianoRollInteractionSurface.h"
 
-#include "SongEditor/Transport/cocotone_BeatTimeUtility.h"
-
 #include "SongEditor/Quantize/cocotone_QuantizeEngine.h"
 
 #include "SongEditor/cocotone_SongEditorCommand.h"
