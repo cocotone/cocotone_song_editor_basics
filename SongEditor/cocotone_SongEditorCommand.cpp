@@ -14,6 +14,23 @@ SongEditorOperation::~SongEditorOperation()
 }
 
 //==============================================================================
+std::unique_ptr<cctn::song::SongDocument> SongEditorOperation::makeDefaultSongDocument()
+{
+    auto document = std::make_unique<cctn::song::SongDocument>();
+
+    // Set metadata
+    document->setMetadata(
+        juce::CharPointer_UTF8("\xe3\x82\xbd\xe3\x83\xb3\xe3\x82\xb0"),
+        juce::CharPointer_UTF8("\xe3\x82\xa2\xe3\x83\xbc\xe3\x83\x86\xe3\x82\xa3\xe3\x82\xb9\xe3\x83\x88")
+    );
+
+    // Start: 4/4 time signature, 120 BPM
+    document->addTempoEvent(0, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 4, 4, 120.0);
+
+    return std::move(document);
+}
+
+//==============================================================================
 void SongEditorOperation::attachDocument(std::shared_ptr<cctn::song::SongDocumentEditor> documentToAttach)
 {
     std::lock_guard lock(mutex);

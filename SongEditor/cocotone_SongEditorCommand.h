@@ -5,6 +5,8 @@ namespace cctn
 namespace song
 {
 
+class SongDocument;
+
 //==============================================================================
 class SongEditorOperation final
 {
@@ -12,6 +14,9 @@ public:
     //==============================================================================
     SongEditorOperation();
     ~SongEditorOperation();
+
+    //==============================================================================
+    static std::unique_ptr<cctn::song::SongDocument> makeDefaultSongDocument();
 
     //==============================================================================
     bool testNoteExist(const cctn::song::QueryForFindPianoRollNote& query);
