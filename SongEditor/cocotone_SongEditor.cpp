@@ -195,6 +195,9 @@ void SongEditor::registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocu
         valuePianoRollInputNoteLength = (int)songDocumentEditorPtr.lock()->getEditorContext().currentNoteLength;
 
         valuePianoRollInputMora = songDocumentEditorPtr.lock()->getEditorContext().currentNoteLyric.text;
+
+        const auto document_tail_seconds = songDocumentEditorPtr.lock()->getEditorContext().currentBeatTimePoints.back().timeInSeconds;
+        pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, document_tail_seconds}, juce::dontSendNotification);
     }
 }
 
@@ -209,6 +212,8 @@ void SongEditor::unregisterSongDocumentEditor(std::shared_ptr<cctn::song::SongDo
 
         pianoRollPreviewSurface->setDocumentForPreview(nullptr);
         pianoRollTimeRuler->setDocumentForPreview(nullptr);
+
+        pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, 600.0}, juce::dontSendNotification);
     }
 }
 
@@ -359,6 +364,9 @@ void SongEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
         if (source == songDocumentEditorPtr.lock().get())
         {
             songDocumentEditorPtr.lock()->updateEditorContext();
+
+            const auto document_tail_seconds = songDocumentEditorPtr.lock()->getEditorContext().currentBeatTimePoints.back().timeInSeconds;
+            pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, document_tail_seconds}, juce::dontSendNotification);
         }
     }
 }
