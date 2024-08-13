@@ -37,7 +37,7 @@ public:
     void deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query);
 
     //==============================================================================
-    std::optional<cctn::song::SongDocument::RegionInSeconds> findNearestQuantizeRegion(double timePositionInSeconds) const;
+    std::optional<cctn::song::SongDocument::RegionWithBeatInfo> findNearestQuantizeRegion(double timePositionInSeconds) const;
 
     //==============================================================================
     class EditorContext
