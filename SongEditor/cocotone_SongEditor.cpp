@@ -1,6 +1,3 @@
-#include "cocotone_SongEditor.h"
-
-
 namespace cctn
 {
 namespace song
