@@ -273,7 +273,7 @@ void PianoRollPreviewSurface::updateViewContext()
         }
     }
 
-    currentBeatTimePointList = documentEditorForPreviewPtr.lock()->getEditorContext().currentBeatTimePointList;
+    currentBeatTimePoints = documentEditorForPreviewPtr.lock()->getEditorContext().currentBeatTimePoints;
 
     // Update input region in seconds
     quantizedInputRegionInSeconds = juce::Range<double>{ 0.0f, 0.0f };
@@ -412,7 +412,7 @@ void PianoRollPreviewSurface::drawGridVerticalLinesInTimeSignatureDomain(juce::G
     // NOTE: This procedure will fit to feature of tempo map track.
     //const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd(), (cctn::song::NoteLength)(int)drawingGirdVerticalInterval.getValue());
     //const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(*scopedSongDocumentPtrToPaint, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd(), (cctn::song::NoteLength)(int)drawingGirdVerticalInterval.getValue());
-    const auto& precise_beat_and_time_array = currentBeatTimePointList;
+    const auto& precise_beat_and_time_array = currentBeatTimePoints;
 
     const auto vertical_line_positions = createVerticalLinePositionsInTimeSignatureDomain(rangeVisibleTimeInSeconds, precise_beat_and_time_array, getWidth());
 
@@ -653,7 +653,7 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSecondsDomain(const ju
 }
 
 juce::Array<PianoRollPreviewSurface::PositionWithTimeInfo> 
-PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const BeatTimePointList& beatTimePoints, int width)
+PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const cctn::song::SongDocument::BeatTimePoints& beatTimePoints, int width)
 {
     juce::Array<PositionWithTimeInfo> positions;
 
@@ -664,13 +664,13 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const 
 
     // Find the start and end indices in beatTimePoints that fall within the visible range
     auto start_iter = std::lower_bound(beatTimePoints.begin(), beatTimePoints.end(), visibleRangeSeconds.getStart(),
-        [](const BeatTimePoint& btp, double time) 
+        [](const cctn::song::SongDocument::BeatTimePoint& btp, double time) 
         { 
             return btp.timeInSeconds < time;
         });
 
     auto end_iter = std::upper_bound(beatTimePoints.begin(), beatTimePoints.end(), visibleRangeSeconds.getEnd(),
-        [](double time, const BeatTimePoint& btp)
+        [](double time, const cctn::song::SongDocument::BeatTimePoint& btp)
         { 
             return time < btp.timeInSeconds;
         });

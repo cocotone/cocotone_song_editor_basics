@@ -85,7 +85,7 @@ private:
     //==============================================================================
     std::weak_ptr<cctn::song::SongDocumentEditor> documentEditorForPreviewPtr;
     const cctn::song::SongDocument* scopedSongDocumentPtrToPaint;
-    cctn::song::BeatTimePointList currentBeatTimePointList{};
+    cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
 
     // TODO: should abstract
     juce::AudioPlayHead::PositionInfo currentPositionInfo;

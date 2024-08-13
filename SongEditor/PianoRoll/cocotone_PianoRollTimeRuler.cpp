@@ -179,7 +179,7 @@ void PianoRollTimeRuler::updateViewContext()
         return;
     }
 
-    currentBeatTimePointList = documentEditorForPreviewPtr.lock()->getEditorContext().currentBeatTimePointList;
+    currentBeatTimePoints = documentEditorForPreviewPtr.lock()->getEditorContext().currentBeatTimePoints;
 }
 
 //==============================================================================
@@ -221,24 +221,41 @@ void PianoRollTimeRuler::drawBeatRulerVerticalLines(juce::Graphics& g)
 
     // NOTE: This procedure will fit to feature of tempo map track.
     //const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd());
-    const auto precise_beat_and_time_array = currentBeatTimePointList;
+    const auto precise_beat_and_time_array = currentBeatTimePoints;
 
     // Set clipping mask
     g.reduceClipRegion(rectBeatRulerArea);
 
     g.setFont(juce::Font(juce::Font::getDefaultMonospacedFontName(), 10, 0));
 
+    juce::String last_beat_signature = "";
     for (const auto& beat_time_point : precise_beat_and_time_array)
     {
         const auto time_in_seconds = beat_time_point.timeInSeconds;
-        beat_time_point.beat;
-        const auto signature_text = beat_time_point.getFormattedTimeSignature(numerator, false);
+        //beat_time_point.beat;
+        //const auto signature_text = beat_time_point.getFormattedTimeSignature(numerator, false);
+
+#if 0
+        const auto signature_text = 
+            juce::String(beat_time_point.musicalTime.bar) + " | " + 
+            juce::String(beat_time_point.musicalTime.beat) + " | " + 
+            juce::String(beat_time_point.musicalTime.tick);
+#endif
+
+        const auto signature_text =
+            juce::String(beat_time_point.musicalTime.bar) + " | " +
+            juce::String(beat_time_point.musicalTime.beat);
 
         const auto position_x = timeToPositionX(time_in_seconds, rangeVisibleTimeInSeconds, rectBeatRulerArea.getX(), rectBeatRulerArea.getRight());
 
         g.setColour(juce::Colours::white);
         g.drawVerticalLine(position_x, 0.0f, getHeight());
-        g.drawText(signature_text, position_x + 2, rectBeatRulerArea.getY() + 2, 60, 20, juce::Justification::centredLeft);
+
+        if (signature_text != last_beat_signature)
+        {
+            g.drawText(signature_text, position_x + 2, rectBeatRulerArea.getY() + 2, 60, 20, juce::Justification::centredLeft);
+            last_beat_signature = signature_text;
+        }
     }
 }
 

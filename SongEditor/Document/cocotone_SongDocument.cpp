@@ -1,3 +1,4 @@
+#include "cocotone_SongDocument.h"
 namespace cctn
 {
 namespace song
@@ -30,6 +31,32 @@ void SongDocument::addTempoEvent(int64_t tick, TempoEvent::TempoEventType type, 
 void SongDocument::addNote(const Note& note)
 {
     notes.add(note);
+}
+
+//==============================================================================
+int64_t SongDocument::getTotalLengthInTicks() const
+{
+    if (notes.isEmpty())
+    {
+        // If there are no notes, return the last tempo event tick or 0
+        return tempoTrack.getEvents().empty() ? 0 : tempoTrack.getEvents().back().getTick();
+    }
+
+    // Find the last note's end position
+    int64_t lastNoteTick = 0;
+    for (const auto& note : notes)
+    {
+        const auto noteOffPosition =  Calculator::calculateNoteOffPosition(*this, note);
+        int64_t noteTick = Calculator::barToTick(*this, note.startTimeInMusicalTime);
+        int64_t noteEndTick = Calculator::barToTick(*this, noteOffPosition);
+        lastNoteTick = std::max(lastNoteTick, noteEndTick);
+    }
+
+    // Check if there's a tempo event after the last note
+    int64_t lastTempoEventTick = tempoTrack.getEvents().empty() ? 0 : tempoTrack.getEvents().back().getTick();
+
+    // Return the maximum of last note end and last tempo event
+    return std::max(lastNoteTick, lastTempoEventTick);
 }
 
 //==============================================================================
@@ -465,6 +492,74 @@ SongDocument::MusicalTime SongDocument::Calculator::calculateNoteOffPosition(con
     MusicalTime noteOffMusicalTime = tickToBar(document, tickOffPosition);
 
     return noteOffMusicalTime;
+}
+
+SongDocument::BeatTimePoints SongDocument::BeatTimePointsFactory::makeBeatTimePoints(const cctn::song::SongDocument& document, NoteLength resolution)
+{
+    BeatTimePoints beatPoints;
+    const auto& tempoTrack = document.getTempoTrack();
+    const auto& events = tempoTrack.getEvents();
+    int ticksPerQuarterNote = document.getTicksPerQuarterNote();
+
+    double currentTime = 0.0;
+    int64_t currentTick = 0;
+    double currentTempo = 120.0; // Default tempo
+    int currentNumerator = 4;
+    int currentDenominator = 4;
+
+    auto eventIt = events.begin();
+
+    double noteLengthsPerQuarterNote = cctn::song::getNoteLengthsPerQuarterNote(resolution);
+    double secondsPerQuarterNote = 60.0 / currentTempo;
+    double secondsPerNoteLength = secondsPerQuarterNote / noteLengthsPerQuarterNote;
+    int64_t ticksPerNoteLength = static_cast<int64_t>(ticksPerQuarterNote / noteLengthsPerQuarterNote);
+
+    while (true)
+    {
+        // Check if we've reached the next tempo or time signature change
+        while (eventIt != events.end() && currentTick >= eventIt->getTick())
+        {
+            if (eventIt->getEventType() == TempoEvent::TempoEventType::kTempo ||
+                eventIt->getEventType() == TempoEvent::TempoEventType::kBoth)
+            {
+                currentTempo = eventIt->getTempo();
+                secondsPerQuarterNote = 60.0 / currentTempo;
+                secondsPerNoteLength = secondsPerQuarterNote / noteLengthsPerQuarterNote;
+            }
+            if (eventIt->getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
+                eventIt->getEventType() == TempoEvent::TempoEventType::kBoth)
+            {
+                auto [numerator, denominator] = eventIt->getTimeSignature();
+                currentNumerator = numerator;
+                currentDenominator = denominator;
+            }
+            ++eventIt;
+        }
+
+        // Convert current tick to MusicalTime
+        const MusicalTime musicalTime = cctn::song::SongDocument::Calculator::tickToBar(document, currentTick);
+
+        // Add BeatTimePoint
+        beatPoints.push_back({ musicalTime, currentTime });
+
+        // Move to next beat point
+        currentTick += ticksPerNoteLength;
+        currentTime += secondsPerNoteLength;
+
+        // Check if we've reached the end of the song
+        if (eventIt == events.end() && currentTick >= document.getTotalLengthInTicks())
+        {
+            break;
+        }
+    }
+
+    // Add tail BeatTimePoint
+    {
+        const MusicalTime musicalTime = cctn::song::SongDocument::Calculator::tickToBar(document, currentTick);
+        beatPoints.push_back({ musicalTime, currentTime });
+    }
+
+    return beatPoints;
 }
 
 }  // namespace song

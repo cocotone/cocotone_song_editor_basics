@@ -1,4 +1,3 @@
-#include "cocotone_SongDocumentEditor.h"
 namespace cctn
 {
 namespace song
@@ -317,8 +316,9 @@ void SongDocumentEditor::updateQuantizeRegions(const juce::AudioPlayHead::Positi
     }
 
     //beatTimePointList = std::make_unique<BeatTimePointList>(BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, 0.0, 600.0, editorContext->currentGridInterval));
-    editorContext->currentBeatTimePointList = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(*documentToEdit.get(), 0.0, 600.0, editorContext->currentGridInterval);
-    quantizeEngine->updateQuantizeRegions(editorContext->currentBeatTimePointList);
+    //editorContext->currentBeatTimePointList = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(*documentToEdit.get(), 0.0, 600.0, editorContext->currentGridInterval);
+    editorContext->currentBeatTimePoints = cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(*documentToEdit.get(), editorContext->currentGridInterval);
+    //quantizeEngine->updateQuantizeRegions(editorContext->currentBeatTimePointList);
 }
 
 std::optional<QuantizeEngine::Region> SongDocumentEditor::findNearestQuantizeRegion(double timePositionInSeconds) const
@@ -331,12 +331,13 @@ void SongDocumentEditor::updateEditorContext()
 {
     if (documentToEdit.get() == nullptr)
     {
-        editorContext->currentBeatTimePointList = {};
+        editorContext->currentBeatTimePoints = {};
         return;
     }
 
-    editorContext->currentBeatTimePointList = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(*documentToEdit.get(), 0.0, 600.0, editorContext->currentGridInterval);
-    quantizeEngine->updateQuantizeRegions(editorContext->currentBeatTimePointList);
+    //editorContext->currentBeatTimePointList = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(*documentToEdit.get(), 0.0, 600.0, editorContext->currentGridInterval);
+    editorContext->currentBeatTimePoints = cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(*documentToEdit.get(), editorContext->currentGridInterval);
+    //quantizeEngine->updateQuantizeRegions(editorContext->currentBeatTimePointList);
 }
 
 #if 0

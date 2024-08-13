@@ -119,6 +119,28 @@ public:
     };
 
     //==============================================================================
+    struct BeatTimePoint
+    {
+        MusicalTime musicalTime;
+        double timeInSeconds{ 0.0 };
+
+        // Copy
+        BeatTimePoint(const BeatTimePoint&) = default;
+
+        // Move
+        BeatTimePoint(BeatTimePoint&&) noexcept = default;
+
+        // Copy assign operator
+        BeatTimePoint& operator=(const BeatTimePoint&) = default;
+
+        // Move assign operator
+        BeatTimePoint& operator=(BeatTimePoint&&) noexcept = default;
+
+        JUCE_LEAK_DETECTOR(BeatTimePoint)
+    };
+    using BeatTimePoints = std::vector<BeatTimePoint>;
+
+    //==============================================================================
     SongDocument();
     virtual ~SongDocument();
 
@@ -136,6 +158,10 @@ public:
     int getTicksPerQuarterNote() const { return ticksPerQuarterNote; }
     const TempoTrack& getTempoTrack() const { return tempoTrack; }
     const juce::Array<Note>& getNotes() const { return notes; }
+
+    //==============================================================================
+    // Get the total length of the song in ticks
+    int64_t getTotalLengthInTicks() const;
 
     //==============================================================================
     std::string dumpToString() const;
@@ -162,6 +188,21 @@ public:
         ~Calculator() = delete;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Calculator)
+    };
+
+    //==============================================================================
+    class BeatTimePointsFactory
+    {
+    public:
+        //==============================================================================
+        static BeatTimePoints makeBeatTimePoints(const cctn::song::SongDocument& document, NoteLength resolution);
+
+    private:
+        //==============================================================================
+        BeatTimePointsFactory() = delete;
+        ~BeatTimePointsFactory() = delete;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatTimePointsFactory)
     };
 
     //==============================================================================

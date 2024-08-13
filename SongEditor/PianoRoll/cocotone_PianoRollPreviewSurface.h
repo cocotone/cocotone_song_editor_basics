@@ -81,7 +81,7 @@ private:
         JUCE_LEAK_DETECTOR(PositionWithTimeInfo)
     };
     static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSecondsDomain(const juce::Range<double> visibleRangeSeconds, double timeStepInSeconds, int width);
-    static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const BeatTimePointList& beatTimePoints, int width);
+    static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const cctn::song::SongDocument::BeatTimePoints& beatTimePoints, int width);
     
     struct NoteDrawInfo
     {
@@ -123,7 +123,7 @@ private:
 
     std::weak_ptr<cctn::song::SongDocumentEditor> documentEditorForPreviewPtr;
     const cctn::song::SongDocument* scopedSongDocumentPtrToPaint;
-    cctn::song::BeatTimePointList currentBeatTimePointList{};
+    cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
 
     // TODO: should abstract
     juce::AudioPlayHead::PositionInfo currentPositionInfo;
