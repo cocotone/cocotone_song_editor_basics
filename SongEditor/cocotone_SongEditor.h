@@ -58,6 +58,7 @@ private:
     static void populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToNoteLength);
     static void populateComboBoxWithLyricMora(juce::ComboBox& comboBox, std::map<int, cctn::song::Mora>& mapIndexToMora);
 
+    //==============================================================================
     void initialUpdate();
 
     //==============================================================================

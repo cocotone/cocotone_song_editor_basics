@@ -494,6 +494,7 @@ void SongEditor::populateComboBoxWithLyricMora(juce::ComboBox& comboBox, std::ma
     comboBox.setSelectedItemIndex(0, juce::dontSendNotification);
 }
 
+//==============================================================================
 void SongEditor::initialUpdate()
 {
     valuePianoRollInputNoteLength = (int)cctn::song::NoteLength::Quarter;
