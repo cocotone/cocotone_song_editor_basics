@@ -117,8 +117,6 @@ std::string SongDocument::dumpToString() const
             << ", Beat " << note.startTimeInMusicalTime.beat
             << ", Tick " << note.startTimeInMusicalTime.tick << "\n";
         oss << "    Duration: "
-            << note.duration.bars << " bars, "
-            << note.duration.beats << " beats, "
             << note.duration.ticks << " ticks\n";
         oss << "    Note Number: " << note.noteNumber << "\n";
         oss << "    Velocity: " << note.velocity << "\n";
@@ -217,8 +215,6 @@ juce::var SongDocument::toJson() const
         jsonNote->setProperty("startTimeInMusicalTime", startTime);
 
         juce::DynamicObject* duration = new juce::DynamicObject();
-        duration->setProperty("bars", note.duration.bars);
-        duration->setProperty("beats", note.duration.beats);
         duration->setProperty("ticks", note.duration.ticks);
         jsonNote->setProperty("duration", duration);
 
@@ -458,38 +454,8 @@ SongDocument::MusicalTime SongDocument::Calculator::calculateNoteOffPosition(con
     // Calculate the tick position for the start of the note
     int64_t tickOnPosition = barToTick(document, note.startTimeInMusicalTime);
 
-    // Find the tempo and time signature at the note start position
-    const auto& events = document.getTempoTrack().getEvents();
-    auto eventIt = std::lower_bound(events.begin(), events.end(), tickOnPosition,
-        [](const TempoEvent& event, int64_t tick) {
-            return event.getTick() <= tick;
-        });
-
-    double currentTempo = 120.0; // Default tempo
-    int currentNumerator = 4;
-    int currentDenominator = 4;
-
-    // If we found an event before or at the start position, update tempo and time signature
-    if (eventIt != events.begin()) {
-        --eventIt;
-        if (eventIt->getEventType() == TempoEvent::TempoEventType::kTempo ||
-            eventIt->getEventType() == TempoEvent::TempoEventType::kBoth) {
-            currentTempo = eventIt->getTempo();
-        }
-        if (eventIt->getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
-            eventIt->getEventType() == TempoEvent::TempoEventType::kBoth) {
-            const auto timeSignature = eventIt->getTimeSignature();
-            currentNumerator = timeSignature.numerator;
-            currentDenominator = timeSignature.denominator;
-        }
-    }
-
     // Calculate duration in ticks
-    int ticksPerQuarterNote = document.getTicksPerQuarterNote();
-    int64_t durationInTicks = 0;
-    durationInTicks += note.duration.bars * currentNumerator * ticksPerQuarterNote * 4 / currentDenominator;
-    durationInTicks += note.duration.beats * ticksPerQuarterNote * 4 / currentDenominator;
-    durationInTicks += note.duration.ticks;
+    int durationInTicks = note.duration.ticks;
 
     // Calculate the tick-off position
     int64_t tickOffPosition = tickOnPosition + durationInTicks;
@@ -575,24 +541,18 @@ namespace
     static int nextId = 1;
 }
 
-SongDocument::Note SongDocument::DataFactory::makeNote(const cctn::song::SongDocument& document, int bar, int beat, int tick, int durationBars, int durationBeats, int durationTicks, int noteNumber, int velocity, const juce::String& lyric)
-{
-    MusicalTime startTime{ bar, beat, tick };
-    NoteDuration duration{ durationBars, durationBeats, durationTicks };
-
-    return Note(nextId++, startTime, duration, noteNumber, velocity, lyric);
-}
-
-SongDocument::Note SongDocument::DataFactory::makeNote(const cctn::song::SongDocument& document, const MusicalTime& startTime, int durationBars, int durationBeats, int durationTicks, int noteNumber, int velocity, const juce::String& lyric)
-{
-    NoteDuration duration{ durationBars, durationBeats, durationTicks };
-
-    return Note(nextId++, startTime, duration, noteNumber, velocity, lyric);
-}
-
 SongDocument::Note SongDocument::DataFactory::makeNote(const cctn::song::SongDocument& document, const MusicalTime& startTime, const NoteDuration& noteDuration, int noteNumber, int velocity, const juce::String& lyric)
 {
     return Note(nextId++, startTime, noteDuration, noteNumber, velocity, lyric);
+}
+
+SongDocument::NoteDuration SongDocument::DataFactory::convertNoteLengthToDuration(const SongDocument& document, NoteLength noteLength)
+{
+    int ticksPerQuarterNote = document.getTicksPerQuarterNote();
+    double quarterNotes = 1.0 / getNoteLengthsPerQuarterNote(noteLength);
+    int totalTicks = std::round(quarterNotes * ticksPerQuarterNote);
+
+    return NoteDuration{ totalTicks };
 }
 
 }  // namespace song

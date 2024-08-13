@@ -121,7 +121,7 @@ void SongDocumentEditor::createNote(const cctn::song::QueryForAddPianoRollNote& 
             const auto& start_time = quantize_region_optional.value().startMusicalTime;
 
             const auto note_duration = 
-                cctn::song::SongDocument::DataFactory::convertNoteLengthToDuration(*documentToEdit.get(), editorContext->currentNoteLength, start_time);
+                cctn::song::SongDocument::DataFactory::convertNoteLengthToDuration(*documentToEdit.get(), editorContext->currentNoteLength);
 
             const auto new_note =
                 cctn::song::SongDocument::DataFactory::makeNote(
