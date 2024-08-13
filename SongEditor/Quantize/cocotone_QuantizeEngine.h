@@ -23,7 +23,7 @@ public:
     ~QuantizeEngine();
 
     //==============================================================================
-    void updateQuantizeRegions(const cctn::song::BeatTimePointList& beatTimePoints);
+    void updateQuantizeRegions(const cctn::song::SongDocument::BeatTimePoints& beatTimePoints);
     std::optional<Region> findNearestQuantizeRegion(double timePositionInSeconds) const;
 
 private:

@@ -23,44 +23,44 @@ static SongDocument createTestSongDocument()
     int64_t ticks_per_bar = 0;
 
     // Start: 4/4 time signature, 120 BPM
-    doc.addTempoEvent(0, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 120.0, 4, 4);
+    doc.addTempoEvent(0, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 4, 4, 120.0);
 
     // ticks per bar: 1920
     ticks_per_bar = 1920;
     ticks_accumulated += ticks_per_bar * 1;
-    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 160.0, 4, 4);
+    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 4, 4, 160.0);
 
     ticks_accumulated += ticks_per_bar * 1;
-    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 120.0, 4, 4);
+    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 4, 4, 120.0);
 
     // Bar 3: Change tempo to 140 BPM
     ticks_accumulated += ticks_per_bar * 1;
-    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kTempo, 140.0);
+    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kTempo, 4, 4, 140.0);
 
     // Bar 5: Change to 3/4 time signature
     ticks_accumulated += ticks_per_bar * 1;
-    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kTimeSignature, 120.0, 3, 4);
+    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kTimeSignature, 3, 4, 120.0);
 
     // ticks per bar: 1440
     ticks_per_bar = 1440;
 
     // Bar 8: Change to 4/4 time signature
     ticks_accumulated += ticks_per_bar * 3;
-    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kTimeSignature, 120.0, 4, 4);
+    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kTimeSignature, 4, 4, 120.0);
 
     // ticks per bar: 1920
     ticks_per_bar = 1920;
 
     // Bar 13: Change to 8/8 time signature and 94 BPM
     ticks_accumulated += ticks_per_bar * 5;
-    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 94.0, 8, 8);
+    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 8, 8, 94.0);
 
     // ticks per bar: 1920
     ticks_per_bar = 1920;
 
     // Bar 15: Change to 4/4 time signature and 160 BPM
     ticks_accumulated += ticks_per_bar * 2;
-    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 160, 4, 4);
+    doc.addTempoEvent(ticks_accumulated, cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth, 4, 4, 160);
 
     // Helper function to create a note
     auto createNote = [](int id, int bar, int beat, int tick, int durationBars, int durationBeats, int durationTicks,

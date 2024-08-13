@@ -35,7 +35,6 @@ public:
     void deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query);
 
     //==============================================================================
-    void updateQuantizeRegions(const juce::AudioPlayHead::PositionInfo& positionInfo);
     std::optional<cctn::song::QuantizeEngine::Region> findNearestQuantizeRegion(double timePositionInSeconds) const;
 
     //==============================================================================
@@ -57,7 +56,6 @@ private:
     //==============================================================================
     std::shared_ptr<cctn::song::SongDocument> documentToEdit;
     std::unique_ptr<cctn::song::QuantizeEngine> quantizeEngine;
-    //std::unique_ptr<cctn::song::BeatTimePointList> beatTimePointList;
     std::unique_ptr<EditorContext> editorContext;
 
 #if 0

@@ -350,11 +350,6 @@ void SongEditor::timerCallback()
 
             pianoRollTimeRuler->setPlayingPositionInSeconds(current_position_in_seconds);
             pianoRollTimeRuler->setCurrentPositionInfo(position_info_optional.value());
-
-            if (!songDocumentEditorPtr.expired())
-            {
-                songDocumentEditorPtr.lock()->updateQuantizeRegions(position_info_optional.value());
-            }
         }
     }
 }
@@ -366,6 +361,7 @@ void SongEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
     {
         if (source == songDocumentEditorPtr.lock().get())
         {
+            songDocumentEditorPtr.lock()->updateEditorContext();
         }
     }
 }

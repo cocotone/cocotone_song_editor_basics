@@ -69,30 +69,28 @@ public:
     public:
         enum class TempoEventType
         { 
+            kTimeSignature,
             kTempo, 
-            kTimeSignature, 
             kBoth
         };
 
-        TempoEvent(int64_t tick, TempoEventType type, double tempo, int numerator = 4, int denominator = 4)
+        TempoEvent(int64_t tick, TempoEventType type, int numerator = 4, int denominator = 4, double tempo = 120)
             : tick(tick)
             , type(type)
+            , timeSignature({ numerator, denominator })
             , tempo(tempo)
-            , numerator(numerator)
-            , denominator(denominator) 
         {}
 
         int64_t getTick() const { return tick; }
         TempoEventType getEventType() const { return type; }
         double getTempo() const { return tempo; }
-        std::pair<int, int> getTimeSignature() const { return { numerator, denominator }; }
+        TimeSignature getTimeSignature() const { return timeSignature; }
 
     private:
         int64_t tick;
         TempoEventType type;
+        TimeSignature timeSignature;
         double tempo;
-        int numerator;
-        int denominator;
 
         JUCE_LEAK_DETECTOR(TempoEvent)
     };
@@ -105,7 +103,10 @@ public:
         {
             events.push_back(event);
             std::sort(events.begin(), events.end(),
-                [](const TempoEvent& a, const TempoEvent& b) { return a.getTick() < b.getTick(); });
+                [](const TempoEvent& a, const TempoEvent& b) 
+                {
+                    return a.getTick() < b.getTick(); 
+                });
         }
 
         // Other methods for querying and managing tempo events
@@ -146,7 +147,7 @@ public:
 
     //==============================================================================
     void setMetadata(const juce::String& title, const juce::String& artist);
-    void addTempoEvent(int64_t tick, TempoEvent::TempoEventType type, double tempo, int numerator = 4, int denominator = 4);
+    void addTempoEvent(int64_t tick, TempoEvent::TempoEventType type, int numerator = 4, int denominator = 4, double tempo = 120.0);
     void addNote(const Note& note);
 
     //==============================================================================

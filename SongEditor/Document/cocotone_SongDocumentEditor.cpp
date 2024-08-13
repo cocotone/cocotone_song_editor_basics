@@ -9,10 +9,6 @@ SongDocumentEditor::SongDocumentEditor()
     editorContext = std::make_unique<cctn::song::SongDocumentEditor::EditorContext>();
 
     quantizeEngine = std::make_unique<cctn::song::QuantizeEngine>();
-
-#if 0
-    documentData = std::make_unique<cctn::song::SongEditorDocumentData>();
-#endif
 }
 
 SongDocumentEditor::~SongDocumentEditor()
@@ -294,33 +290,6 @@ void SongDocumentEditor::deleteNoteSingle(const cctn::song::QueryForFindPianoRol
 }
 #endif
 
-void SongDocumentEditor::updateQuantizeRegions(const juce::AudioPlayHead::PositionInfo& positionInfo)
-{
-    return;
-
-    double bpm = 120.0;
-    int numerator = 4;
-    int denominator = 4;
-
-    const auto tempo_and_time_signature_optional = cctn::song::PositionInfoExtractor::extractTempoAndTimeSignature(positionInfo);
-    if (tempo_and_time_signature_optional.has_value())
-    {
-        bpm = tempo_and_time_signature_optional.value().bpm;
-        numerator = tempo_and_time_signature_optional.value().numerator;
-        denominator = tempo_and_time_signature_optional.value().denominator;
-    }
-
-    if (documentToEdit.get() == nullptr)
-    {
-        return;
-    }
-
-    //beatTimePointList = std::make_unique<BeatTimePointList>(BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, 0.0, 600.0, editorContext->currentGridInterval));
-    //editorContext->currentBeatTimePointList = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(*documentToEdit.get(), 0.0, 600.0, editorContext->currentGridInterval);
-    editorContext->currentBeatTimePoints = cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(*documentToEdit.get(), editorContext->currentGridInterval);
-    //quantizeEngine->updateQuantizeRegions(editorContext->currentBeatTimePointList);
-}
-
 std::optional<QuantizeEngine::Region> SongDocumentEditor::findNearestQuantizeRegion(double timePositionInSeconds) const
 {
     return quantizeEngine->findNearestQuantizeRegion(timePositionInSeconds);
@@ -335,9 +304,8 @@ void SongDocumentEditor::updateEditorContext()
         return;
     }
 
-    //editorContext->currentBeatTimePointList = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(*documentToEdit.get(), 0.0, 600.0, editorContext->currentGridInterval);
     editorContext->currentBeatTimePoints = cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(*documentToEdit.get(), editorContext->currentGridInterval);
-    //quantizeEngine->updateQuantizeRegions(editorContext->currentBeatTimePointList);
+    quantizeEngine->updateQuantizeRegions(editorContext->currentBeatTimePoints);
 }
 
 #if 0

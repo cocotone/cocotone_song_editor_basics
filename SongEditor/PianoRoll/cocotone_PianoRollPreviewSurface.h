@@ -83,6 +83,7 @@ private:
     static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSecondsDomain(const juce::Range<double> visibleRangeSeconds, double timeStepInSeconds, int width);
     static juce::Array<PositionWithTimeInfo> createVerticalLinePositionsInTimeSignatureDomain(const juce::Range<double> visibleRangeSeconds, const cctn::song::SongDocument::BeatTimePoints& beatTimePoints, int width);
     
+    //==============================================================================
     struct NoteDrawInfo
     {
         int positionLeftX{ 0 };
@@ -93,9 +94,6 @@ private:
 
         JUCE_LEAK_DETECTOR(NoteDrawInfo)
     };
-#if 0
-    static NoteDrawInfo createNoteDrawInfo(const cctn::song::SongEditorNoteExtended& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight);
-#endif
     static NoteDrawInfo createNoteDrawInfo(const cctn::song::SongDocument& document, const cctn::song::SongDocument::Note& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight);
 
     //==============================================================================

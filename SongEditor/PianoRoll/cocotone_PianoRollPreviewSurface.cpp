@@ -1,4 +1,3 @@
-#include "cocotone_PianoRollPreviewSurface.h"
 namespace cctn
 {
 namespace song
@@ -143,17 +142,6 @@ void PianoRollPreviewSurface::setDocumentForPreview(std::shared_ptr<cctn::song::
 void PianoRollPreviewSurface::paint(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
-
-#if 0
-    const cctn::song::SongEditorDocumentData* document_data_to_paint = nullptr;
-    if (!documentEditorForPreviewPtr.expired() &&
-        documentEditorForPreviewPtr.lock()->getRawDocumentData().has_value())
-    {
-        document_data_to_paint = documentEditorForPreviewPtr.lock()->getRawDocumentData().value();
-    }
-
-    juce::ScopedValueSetter<const cctn::song::SongEditorDocumentData*> svs(paintScopedDocumentDataPtr, document_data_to_paint);
-#endif
 
     const cctn::song::SongDocument* document_to_paint = nullptr;
     if (!documentEditorForPreviewPtr.expired() &&
@@ -391,27 +379,11 @@ void PianoRollPreviewSurface::drawGridVerticalLinesInTimeSignatureDomain(juce::G
 {
     juce::Graphics::ScopedSaveState save_state(g);
 
-    // NOTE: Make abstract.
-    double bpm = 120.0;
-    int numerator = 4;
-    int denominator = 4;
-
-    const auto tempo_and_time_signature_optional = cctn::song::PositionInfoExtractor::extractTempoAndTimeSignature(currentPositionInfo);
-    if (tempo_and_time_signature_optional.has_value())
-    {
-        bpm = tempo_and_time_signature_optional.value().bpm;
-        numerator = tempo_and_time_signature_optional.value().numerator;
-        denominator = tempo_and_time_signature_optional.value().denominator;
-    }
-
     if (scopedSongDocumentPtrToPaint == nullptr)
     {
         return;
     }
 
-    // NOTE: This procedure will fit to feature of tempo map track.
-    //const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(bpm, numerator, denominator, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd(), (cctn::song::NoteLength)(int)drawingGirdVerticalInterval.getValue());
-    //const auto precise_beat_and_time_array = cctn::song::BeatTimePointFactory::extractPreciseBeatPoints(*scopedSongDocumentPtrToPaint, rangeVisibleTimeInSeconds.getStart(), rangeVisibleTimeInSeconds.getEnd(), (cctn::song::NoteLength)(int)drawingGirdVerticalInterval.getValue());
     const auto& precise_beat_and_time_array = currentBeatTimePoints;
 
     const auto vertical_line_positions = createVerticalLinePositionsInTimeSignatureDomain(rangeVisibleTimeInSeconds, precise_beat_and_time_array, getWidth());
@@ -707,29 +679,7 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const 
     return positions;
 }
 
-#if 0
-PianoRollPreviewSurface::NoteDrawInfo 
-PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongEditorNoteExtended& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight)
-{
-    NoteDrawInfo result;
-
-    // Convert time to position X.
-    const double rect_left_x =
-        juce::jmap<double>(note.startPositionInSeconds, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), positionLeft, positionRight);
-
-    const double rect_right_x =
-        juce::jmap<double>(note.endPositionInSeconds, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), positionLeft, positionRight);
-
-    result.positionLeftX = rect_left_x;
-    result.positionRightX = rect_right_x;
-    result.lyric = note.lyric;
-    result.noteNumber = note.noteNumber;
-    result.isSelected = note.isSelected;
-
-    return result;
-}
-#endif
-
+//==============================================================================
 PianoRollPreviewSurface::NoteDrawInfo
 PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongDocument& document, const cctn::song::SongDocument::Note& note, const juce::Range<double> visibleRangeSeconds, int positionLeft, int positionRight)
 {

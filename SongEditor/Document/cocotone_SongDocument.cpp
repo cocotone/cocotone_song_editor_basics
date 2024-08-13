@@ -1,4 +1,3 @@
-#include "cocotone_SongDocument.h"
 namespace cctn
 {
 namespace song
@@ -23,9 +22,9 @@ void SongDocument::setMetadata(const juce::String& title, const juce::String& ar
     metadata.lastModified = metadata.created;
 }
 
-void SongDocument::addTempoEvent(int64_t tick, TempoEvent::TempoEventType type, double tempo, int numerator, int denominator)
+void SongDocument::addTempoEvent(int64_t tick, TempoEvent::TempoEventType type, int numerator, int denominator, double tempo)
 {
-    tempoTrack.addEvent(TempoEvent(tick, type, tempo, numerator, denominator));
+    tempoTrack.addEvent(TempoEvent(tick, type, numerator, denominator, tempo));
 }
 
 void SongDocument::addNote(const Note& note)
@@ -82,20 +81,20 @@ std::string SongDocument::dumpToString() const
 
         switch (event.getEventType())
         {
+        case TempoEvent::TempoEventType::kTimeSignature:
+        {
+            const auto timeSignature = event.getTimeSignature();
+            oss << "    Time Signature Change: " << timeSignature.numerator << "/" << timeSignature.denominator << "\n";
+        }
+        break;
         case TempoEvent::TempoEventType::kTempo:
             oss << "    Tempo Change: " << event.getTempo() << " BPM\n";
             break;
-        case TempoEvent::TempoEventType::kTimeSignature:
-        {
-            auto [numerator, denominator] = event.getTimeSignature();
-            oss << "    Time Signature Change: " << numerator << "/" << denominator << "\n";
-        }
-        break;
         case TempoEvent::TempoEventType::kBoth:
             oss << "    Tempo Change: " << event.getTempo() << " BPM\n";
             {
-                auto [numerator, denominator] = event.getTimeSignature();
-                oss << "    Time Signature Change: " << numerator << "/" << denominator << "\n";
+                const auto timeSignature = event.getTimeSignature();
+                oss << "    Time Signature Change: " << timeSignature.numerator << "/" << timeSignature.denominator << "\n";
             }
             break;
         }
@@ -166,28 +165,28 @@ juce::var SongDocument::toJson() const
 
         switch (event.getEventType())
         {
-        case cctn::song::SongDocument::TempoEvent::TempoEventType::kTempo:
-            tempoEvent->setProperty("type", "kTempo");
-            tempoEvent->setProperty("tempo", event.getTempo());
-            break;
         case cctn::song::SongDocument::TempoEvent::TempoEventType::kTimeSignature:
             tempoEvent->setProperty("type", "kTimeSignature");
             {
-                auto [numerator, denominator] = event.getTimeSignature();
+                const auto time_signature = event.getTimeSignature();
                 juce::DynamicObject* timeSignature = new juce::DynamicObject();
-                timeSignature->setProperty("numerator", numerator);
-                timeSignature->setProperty("denominator", denominator);
+                timeSignature->setProperty("numerator", time_signature.numerator);
+                timeSignature->setProperty("denominator", time_signature.denominator);
                 tempoEvent->setProperty("timeSignature", timeSignature);
             }
+            break;
+        case cctn::song::SongDocument::TempoEvent::TempoEventType::kTempo:
+            tempoEvent->setProperty("type", "kTempo");
+            tempoEvent->setProperty("tempo", event.getTempo());
             break;
         case cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth:
             tempoEvent->setProperty("type", "kBoth");
             tempoEvent->setProperty("tempo", event.getTempo());
             {
-                auto [numerator, denominator] = event.getTimeSignature();
+                const auto time_signature = event.getTimeSignature();
                 juce::DynamicObject* timeSignature = new juce::DynamicObject();
-                timeSignature->setProperty("numerator", numerator);
-                timeSignature->setProperty("denominator", denominator);
+                timeSignature->setProperty("numerator", time_signature.numerator);
+                timeSignature->setProperty("denominator", time_signature.denominator);
                 tempoEvent->setProperty("timeSignature", timeSignature);
             }
             break;
@@ -299,9 +298,9 @@ int64_t SongDocument::Calculator::barToTick(const cctn::song::SongDocument& docu
         if (event.getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
             event.getEventType() == TempoEvent::TempoEventType::kBoth)
         {
-            auto [numerator, denominator] = event.getTimeSignature();
-            currentNumerator = numerator;
-            currentDenominator = denominator;
+            const auto timeSignature = event.getTimeSignature();
+            currentNumerator = timeSignature.numerator;
+            currentDenominator = timeSignature.denominator;
         }
 
         ++eventIt;
@@ -370,9 +369,9 @@ SongDocument::MusicalTime SongDocument::Calculator::tickToBar(const cctn::song::
         if (event.getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
             event.getEventType() == TempoEvent::TempoEventType::kBoth)
         {
-            auto [numerator, denominator] = event.getTimeSignature();
-            currentNumerator = numerator;
-            currentDenominator = denominator;
+            const auto timeSignature = event.getTimeSignature();
+            currentNumerator = timeSignature.numerator;
+            currentDenominator = timeSignature.denominator;
 
             // Reset beat and tick for the new time signature
             result.beat = 1;
@@ -472,9 +471,9 @@ SongDocument::MusicalTime SongDocument::Calculator::calculateNoteOffPosition(con
         }
         if (eventIt->getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
             eventIt->getEventType() == TempoEvent::TempoEventType::kBoth) {
-            auto [numerator, denominator] = eventIt->getTimeSignature();
-            currentNumerator = numerator;
-            currentDenominator = denominator;
+            const auto timeSignature = eventIt->getTimeSignature();
+            currentNumerator = timeSignature.numerator;
+            currentDenominator = timeSignature.denominator;
         }
     }
 
@@ -529,9 +528,9 @@ SongDocument::BeatTimePoints SongDocument::BeatTimePointsFactory::makeBeatTimePo
             if (eventIt->getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
                 eventIt->getEventType() == TempoEvent::TempoEventType::kBoth)
             {
-                auto [numerator, denominator] = eventIt->getTimeSignature();
-                currentNumerator = numerator;
-                currentDenominator = denominator;
+                const auto timeSignature = eventIt->getTimeSignature();
+                currentNumerator = timeSignature.numerator;
+                currentDenominator = timeSignature.denominator;
             }
             ++eventIt;
         }

@@ -13,7 +13,7 @@ QuantizeEngine::~QuantizeEngine()
 }
 
 //==============================================================================
-void QuantizeEngine::updateQuantizeRegions(const cctn::song::BeatTimePointList& beatTimePoints)
+void QuantizeEngine::updateQuantizeRegions(const cctn::song::SongDocument::BeatTimePoints& beatTimePoints)
 {
     quantizeRegions.clear();
 
