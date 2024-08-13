@@ -62,7 +62,7 @@ void SongDocumentEditor::deserialize()
 //==============================================================================
 std::optional<cctn::song::SongDocument::Note> SongDocumentEditor::findNote(const cctn::song::QueryForFindPianoRollNote& query)
 {
-    if (documentToEdit.get() != nullptr)
+    if (documentToEdit.get() == nullptr)
     {
         return std::nullopt;
     }
@@ -82,7 +82,7 @@ std::optional<cctn::song::SongDocument::Note> SongDocumentEditor::findNote(const
 
 void SongDocumentEditor::selectNote(const cctn::song::QueryForFindPianoRollNote& query)
 {
-    if (documentToEdit.get() != nullptr)
+    if (documentToEdit.get() == nullptr)
     {
         return;
     }
@@ -107,63 +107,41 @@ void SongDocumentEditor::selectNote(const cctn::song::QueryForFindPianoRollNote&
 
 void SongDocumentEditor::createNote(const cctn::song::QueryForAddPianoRollNote& query)
 {
-    if (documentToEdit.get() != nullptr)
+    if (documentToEdit.get() == nullptr)
     {
         return;
     }
-
-    cctn::song::SongDocument::Note new_note;
-
-#if 0
-    new_note.noteNumber = query.noteNumber;
-    new_note.startPositionInSeconds = query.startTimeInSeconds;
-    new_note.endPositionInSeconds = query.endTimeInSeconds;
-    new_note.isSelected = true;
-    new_note.lyric = editorContext->currentNoteLyric.text;
 
     if (query.snapToQuantizeGrid)
     {
         const auto quantize_region_optional = quantizeEngine->findNearestQuantizeRegion(query.startTimeInSeconds);
         if (quantize_region_optional.has_value())
         {
-            new_note.startPositionInSeconds = quantize_region_optional.value().startPositionInSeconds;
-            new_note.endPositionInSeconds = quantize_region_optional.value().endPositionInSeconds;
-        }
+            const auto& start_time = quantize_region_optional.value().startMusicalTime;
 
-        // TODO: support offset
-        const auto region_optional = quantizeEngine->findNearestQuantizeRegion(query.startTimeInSeconds);
-        if (region_optional.has_value())
-        {
-            // Get the note values
-            const auto note_end_position_in_seconds =
-                calculate_note_end_time(
-                    region_optional.value().startPositionInSeconds,
-                    region_optional.value().endPositionInSeconds,
-                    editorContext->currentGridInterval,
-                    editorContext->currentNoteLength);
+            const auto note_duration = 
+                cctn::song::SongDocument::DataFactory::convertNoteLengthToDuration(*documentToEdit.get(), editorContext->currentNoteLength, start_time);
 
-            new_note.startPositionInSeconds = region_optional.value().startPositionInSeconds;
-            new_note.endPositionInSeconds = note_end_position_in_seconds;
+            const auto new_note =
+                cctn::song::SongDocument::DataFactory::makeNote(
+                    *documentToEdit.get(),
+                    start_time,
+                    note_duration,
+                    query.noteNumber, 100,
+                    editorContext->currentNoteLyric.text);
+
+            documentToEdit->addNote(new_note);
+
+            editorContext->currentSelectedNoteId = new_note.id;
         }
     }
-
-    for (auto& note : (*documentData).notes)
-    {
-        if (juce::Range<double>(new_note.startPositionInSeconds, new_note.endPositionInSeconds).contains(note.startPositionInSeconds))
-        {
-            new_note.endPositionInSeconds = note.startPositionInSeconds;
-        }
-    }
-
-    documentData->notes.add(new_note);
-#endif
 
     sendChangeMessage();
 }
 
 void SongDocumentEditor::deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query)
 {
-    if (documentToEdit.get() != nullptr)
+    if (documentToEdit.get() == nullptr)
     {
         return;
     }

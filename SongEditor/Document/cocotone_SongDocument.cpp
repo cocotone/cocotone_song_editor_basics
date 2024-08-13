@@ -1,3 +1,4 @@
+#include "cocotone_SongDocument.h"
 namespace cctn
 {
 namespace song
@@ -559,6 +560,33 @@ SongDocument::BeatTimePoints SongDocument::BeatTimePointsFactory::makeBeatTimePo
     }
 
     return beatPoints;
+}
+
+//==============================================================================
+namespace
+{
+    // Static variable to generate unique IDs
+    static int nextId = 1;
+}
+
+SongDocument::Note SongDocument::DataFactory::makeNote(const cctn::song::SongDocument& document, int bar, int beat, int tick, int durationBars, int durationBeats, int durationTicks, int noteNumber, int velocity, const juce::String& lyric)
+{
+    MusicalTime startTime{ bar, beat, tick };
+    NoteDuration duration{ durationBars, durationBeats, durationTicks };
+
+    return Note(nextId++, startTime, duration, noteNumber, velocity, lyric);
+}
+
+SongDocument::Note SongDocument::DataFactory::makeNote(const cctn::song::SongDocument& document, const MusicalTime& startTime, int durationBars, int durationBeats, int durationTicks, int noteNumber, int velocity, const juce::String& lyric)
+{
+    NoteDuration duration{ durationBars, durationBeats, durationTicks };
+
+    return Note(nextId++, startTime, duration, noteNumber, velocity, lyric);
+}
+
+SongDocument::Note SongDocument::DataFactory::makeNote(const cctn::song::SongDocument& document, const MusicalTime& startTime, const NoteDuration& noteDuration, int noteNumber, int velocity, const juce::String& lyric)
+{
+    return Note(nextId++, startTime, noteDuration, noteNumber, velocity, lyric);
 }
 
 }  // namespace song

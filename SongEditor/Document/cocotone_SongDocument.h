@@ -10,6 +10,10 @@ class SongDocument
 {
 public:
     //==============================================================================
+    // Forward declaration
+    class DataFactory;
+
+    //==============================================================================
     // Internal Data Types
     //==============================================================================
     struct Metadata
@@ -55,12 +59,27 @@ public:
     //==============================================================================
     struct Note
     {
+    private:
+        // Private constructor
+        Note(int id, MusicalTime startTime, NoteDuration dur, int noteNum, int vel, const juce::String& lyr)
+            : id(id)
+            , startTimeInMusicalTime(startTime)
+            , duration(dur)
+            , noteNumber(noteNum)
+            , velocity(vel)
+            , lyric(lyr)
+        {}
+
+    public:
         int id;
         MusicalTime startTimeInMusicalTime;
         NoteDuration duration;
         int noteNumber;
         int velocity;
         juce::String lyric;
+
+        // Make DataFactory a friend so it can access the private constructor
+        friend class DataFactory;
 
         JUCE_LEAK_DETECTOR(Note)
     };
@@ -144,12 +163,13 @@ public:
     using BeatTimePoints = std::vector<BeatTimePoint>;
 
     //==============================================================================
-    struct RegionInSeconds
+    struct RegionWithBeatInfo
     {
         double startPositionInSeconds;
         double endPositionInSeconds;
+        MusicalTime startMusicalTime;
 
-        JUCE_LEAK_DETECTOR(RegionInSeconds)
+        JUCE_LEAK_DETECTOR(RegionWithBeatInfo)
     };
 
     //==============================================================================
@@ -217,6 +237,191 @@ public:
         ~BeatTimePointsFactory() = delete;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatTimePointsFactory)
+    };
+
+    //==============================================================================
+    class DataFactory
+    {
+    public:
+        //==============================================================================
+        static Note makeNote(const cctn::song::SongDocument& document, int bar, int beat, int tick, int durationBars, int durationBeats, int durationTicks, int noteNumber, int velocity, const juce::String& lyric);
+        static Note makeNote(const cctn::song::SongDocument& document, const MusicalTime& startTime, int durationBars, int durationBeats, int durationTicks, int noteNumber, int velocity, const juce::String& lyric);
+        static Note makeNote(const cctn::song::SongDocument& document, const MusicalTime& startTime, const NoteDuration& noteDuration, int noteNumber, int velocity, const juce::String& lyric);
+
+        //=========================================================================
+        // Helper function to convert MusicalTime to tick (should be part of SongDocument or a utility class)
+        static int64_t musicalTimeToTick(const SongDocument& document, const MusicalTime& musicalTime)
+        {
+            return cctn::song::SongDocument::Calculator::barToTick(document, musicalTime);
+        }
+
+        static NoteDuration convertNoteLengthToDuration(const SongDocument& document, NoteLength noteLength, const MusicalTime& startTime)
+        {
+            int64_t startTick = musicalTimeToTick(document, startTime);
+            int ticksPerQuarterNote = document.getTicksPerQuarterNote();
+            double quarterNotes = 1.0 / getNoteLengthsPerQuarterNote(noteLength);
+            int64_t totalTicks = static_cast<int64_t>(std::round(quarterNotes * ticksPerQuarterNote));
+
+            int bars = 0;
+            int beats = 0;
+            int ticks = 0;
+
+            const auto& tempoTrack = document.getTempoTrack();
+            const auto& events = tempoTrack.getEvents();
+
+            int currentNumerator = 4;
+            int currentDenominator = 4;
+
+            auto eventIt = std::lower_bound(events.begin(), events.end(), startTick,
+                [](const TempoEvent& event, int64_t tick) 
+                {
+                    return event.getTick() < tick;
+                });
+
+            if (eventIt != events.begin())
+            {
+                --eventIt;
+                if (eventIt->getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
+                    eventIt->getEventType() == TempoEvent::TempoEventType::kBoth)
+                {
+                    const auto timeSignature = eventIt->getTimeSignature();
+                    currentNumerator = timeSignature.numerator;
+                    currentDenominator = timeSignature.denominator;
+                }
+            }
+
+            int64_t currentTick = startTick;
+            int64_t endTick = startTick + totalTicks;
+
+            while (currentTick < endTick) {
+                int64_t ticksPerBar = currentNumerator * ticksPerQuarterNote * 4 / currentDenominator;
+                int64_t ticksToNextBar = ticksPerBar - (currentTick % ticksPerBar);
+
+                if (currentTick + ticksToNextBar <= endTick) {
+                    bars++;
+                    currentTick += ticksToNextBar;
+                }
+                else {
+                    int64_t remainingTicks = endTick - currentTick;
+                    int64_t ticksPerBeat = ticksPerQuarterNote * 4 / currentDenominator;
+                    beats += static_cast<int>(remainingTicks / ticksPerBeat);
+                    ticks = static_cast<int>(remainingTicks % ticksPerBeat);
+                    break;
+                }
+
+                // Update time signature if needed
+                while (eventIt != events.end() && eventIt->getTick() <= currentTick)
+                {
+                    if (eventIt->getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
+                        eventIt->getEventType() == TempoEvent::TempoEventType::kBoth)
+                    {
+                        const auto timeSignature = eventIt->getTimeSignature();
+                        currentNumerator = timeSignature.numerator;
+                        currentDenominator = timeSignature.denominator;
+                    }
+                    ++eventIt;
+                }
+            }
+
+            return NoteDuration{ bars, beats, ticks };
+        }
+
+        NoteLength approximateNoteLengthFromDuration(const SongDocument& document, const NoteDuration& duration, const MusicalTime& startTime)
+        {
+            int64_t startTick = musicalTimeToTick(document, startTime);
+            int64_t totalTicks = 0;
+            const auto& tempoTrack = document.getTempoTrack();
+            const auto& events = tempoTrack.getEvents();
+
+            int currentNumerator = 4;
+            int currentDenominator = 4;
+            int ticksPerQuarterNote = document.getTicksPerQuarterNote();
+
+            auto eventIt = std::lower_bound(events.begin(), events.end(), startTick,
+                [](const TempoEvent& event, int64_t tick) 
+                { 
+                    return event.getTick() < tick;
+                });
+
+            if (eventIt != events.begin())
+            {
+                --eventIt;
+                if (eventIt->getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
+                    eventIt->getEventType() == TempoEvent::TempoEventType::kBoth)
+                {
+                    const auto timeSignature = eventIt->getTimeSignature();
+                    currentNumerator = timeSignature.numerator;
+                    currentDenominator = timeSignature.denominator;
+                }
+            }
+
+            int64_t currentTick = startTick;
+
+            // Calculate total ticks for bars
+            for (int i = 0; i < duration.bars; ++i)
+            {
+                int64_t ticksPerBar = currentNumerator * ticksPerQuarterNote * 4 / currentDenominator;
+                totalTicks += ticksPerBar;
+                currentTick += ticksPerBar;
+
+                // Update time signature if needed
+                while (eventIt != events.end() && eventIt->getTick() <= currentTick)
+                {
+                    if (eventIt->getEventType() == TempoEvent::TempoEventType::kTimeSignature ||
+                        eventIt->getEventType() == TempoEvent::TempoEventType::kBoth)
+                    {
+                        const auto timeSignature = eventIt->getTimeSignature();
+                        currentNumerator = timeSignature.numerator;
+                        currentDenominator = timeSignature.denominator;
+                    }
+                    ++eventIt;
+                }
+            }
+
+            // Add ticks for beats and remaining ticks
+            totalTicks += duration.beats * ticksPerQuarterNote * 4 / currentDenominator + duration.ticks;
+
+            double quarterNotes = static_cast<double>(totalTicks) / ticksPerQuarterNote;
+
+            // Find the closest matching note length (same as before)
+            std::vector<NoteLength> noteLengths = {
+                NoteLength::Whole,
+                NoteLength::DottedQuarter,
+                NoteLength::Half,
+                NoteLength::Quarter,
+                NoteLength::DottedEighth,
+                NoteLength::Eighth,
+                NoteLength::DottedSixteenth,
+                NoteLength::Sixteenth,
+                NoteLength::ThirtySecond,
+                NoteLength::SixtyFourth,
+                NoteLength::Triplet,
+                NoteLength::EighthTriplet,
+                NoteLength::SixteenthTriplet
+            };
+
+            NoteLength closestNoteLength = NoteLength::Quarter;
+            double smallestDifference = std::numeric_limits<double>::max();
+
+            for (const auto& note_length : noteLengths)
+            {
+                double difference = std::abs(quarterNotes - (1.0 / getNoteLengthsPerQuarterNote(note_length)));
+                if (difference < smallestDifference)
+                {
+                    smallestDifference = difference;
+                    closestNoteLength = note_length;
+                }
+            }
+
+            return closestNoteLength;
+        }
+
+    private:
+        //==============================================================================
+        DataFactory() = delete;
+        ~DataFactory() = delete;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DataFactory)
     };
 
     //==============================================================================
