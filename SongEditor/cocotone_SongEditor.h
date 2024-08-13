@@ -12,6 +12,8 @@ class PianoRollPreviewSurface;
 class PianoRollInteractionSurface;
 class PianoRollEventDispatcher;
 class IPositionInfoProvider;
+class SongDocumentEditor;
+class SongEditorOperation;
 
 //==============================================================================
 class SongEditor final

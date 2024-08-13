@@ -77,37 +77,6 @@ struct NoteLyric
     JUCE_LEAK_DETECTOR(NoteLyric)
 };
 
-#if 0
-==============================================================================
-struct SongEditorNoteBasic
-{
-    double startPositionInSeconds;
-    double endPositionInSeconds;
-    juce::int64 noteNumber;
-    juce::String lyric;
-    juce::String extraPhoneme;
-
-    JUCE_LEAK_DETECTOR(SongEditorNoteBasic)
-};
-
-//==============================================================================
-struct SongEditorNoteExtended
-    : public SongEditorNoteBasic
-{
-    bool isSelected;
-
-    JUCE_LEAK_DETECTOR(SongEditorNoteExtended)
-};
-
-//==============================================================================
-struct SongEditorDocumentData
-{
-    juce::Array<SongEditorNoteExtended> notes;
-
-    JUCE_LEAK_DETECTOR(SongEditorDocumentData)
-};
-#endif
-
 //==============================================================================
 struct QueryForFindPianoRollNote
 {

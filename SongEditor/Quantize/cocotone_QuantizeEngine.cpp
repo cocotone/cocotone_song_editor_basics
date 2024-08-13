@@ -24,14 +24,14 @@ void QuantizeEngine::updateQuantizeRegions(const cctn::song::SongDocument::BeatT
 
     for (size_t i = 0; i < beatTimePoints.size() - 1; ++i)
     {
-        Region region;
+        cctn::song::SongDocument::RegionInSeconds region;
         region.startPositionInSeconds = beatTimePoints[i].timeInSeconds;
         region.endPositionInSeconds = beatTimePoints[i + 1].timeInSeconds;
         quantizeRegions.add(region);
     }
 }
 
-std::optional<QuantizeEngine::Region> QuantizeEngine::findNearestQuantizeRegion(double timePositionInSeconds) const
+std::optional<cctn::song::SongDocument::RegionInSeconds> QuantizeEngine::findNearestQuantizeRegion(double timePositionInSeconds) const
 {
     if (quantizeRegions.isEmpty() || timePositionInSeconds < 0.0)
     {
@@ -40,7 +40,7 @@ std::optional<QuantizeEngine::Region> QuantizeEngine::findNearestQuantizeRegion(
 
     // Find the first region whose end is greater than the given time
     auto it = std::lower_bound(quantizeRegions.begin(), quantizeRegions.end(), timePositionInSeconds,
-        [](const Region& region, double time) {
+        [](const cctn::song::SongDocument::RegionInSeconds& region, double time) {
             return region.endPositionInSeconds <= time;
         });
 

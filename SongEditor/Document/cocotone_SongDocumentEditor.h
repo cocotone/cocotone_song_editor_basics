@@ -5,6 +5,8 @@ namespace cctn
 namespace song
 {
 
+class QuantizeEngine;
+
 //==============================================================================
 class SongDocumentEditor
     : public juce::ChangeBroadcaster
@@ -35,7 +37,7 @@ public:
     void deleteNoteSingle(const cctn::song::QueryForFindPianoRollNote& query);
 
     //==============================================================================
-    std::optional<cctn::song::QuantizeEngine::Region> findNearestQuantizeRegion(double timePositionInSeconds) const;
+    std::optional<cctn::song::SongDocument::RegionInSeconds> findNearestQuantizeRegion(double timePositionInSeconds) const;
 
     //==============================================================================
     class EditorContext

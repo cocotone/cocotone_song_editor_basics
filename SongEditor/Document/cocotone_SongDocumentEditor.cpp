@@ -290,7 +290,7 @@ void SongDocumentEditor::deleteNoteSingle(const cctn::song::QueryForFindPianoRol
 }
 #endif
 
-std::optional<QuantizeEngine::Region> SongDocumentEditor::findNearestQuantizeRegion(double timePositionInSeconds) const
+std::optional<cctn::song::SongDocument::RegionInSeconds> SongDocumentEditor::findNearestQuantizeRegion(double timePositionInSeconds) const
 {
     return quantizeEngine->findNearestQuantizeRegion(timePositionInSeconds);
 }

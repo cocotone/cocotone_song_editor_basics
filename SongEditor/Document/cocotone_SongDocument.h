@@ -10,6 +10,8 @@ class SongDocument
 {
 public:
     //==============================================================================
+    // Internal Data Types
+    //==============================================================================
     struct Metadata
     {
         juce::String title;
@@ -141,6 +143,17 @@ public:
     };
     using BeatTimePoints = std::vector<BeatTimePoint>;
 
+    //==============================================================================
+    struct RegionInSeconds
+    {
+        double startPositionInSeconds;
+        double endPositionInSeconds;
+
+        JUCE_LEAK_DETECTOR(RegionInSeconds)
+    };
+
+    //==============================================================================
+    // SongDocument
     //==============================================================================
     SongDocument();
     virtual ~SongDocument();
