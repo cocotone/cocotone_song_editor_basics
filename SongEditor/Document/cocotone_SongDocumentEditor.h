@@ -47,6 +47,7 @@ public:
         cctn::song::NoteLength currentNoteLength{ cctn::song::NoteLength::Quarter };
         cctn::song::NoteLyric currentNoteLyric{ juce::CharPointer_UTF8("\xe3\x83\xa9") }; // ra
         cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
+        int currentSelectedNoteId{ -1 };
 
     private:
         JUCE_LEAK_DETECTOR(EditorContext)

@@ -88,9 +88,9 @@ private:
     {
         int positionLeftX{ 0 };
         int positionRightX{ 0 };
+        int noteId { 0 };
         int noteNumber{ 0 };
         juce::String lyric{ "" };
-        bool isSelected{ false };
 
         JUCE_LEAK_DETECTOR(NoteDrawInfo)
     };
@@ -107,6 +107,7 @@ private:
     double userInputPositionInSeconds;
     int userInputPositionInNoteNumber;
     bool isInputPositionInsertable;
+    int selectedNoteId;
     juce::Point<int> lastMousePosition;
     juce::Range<double> quantizedInputRegionInSeconds;
 

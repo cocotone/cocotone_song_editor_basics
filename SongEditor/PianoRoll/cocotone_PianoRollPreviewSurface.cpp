@@ -283,6 +283,14 @@ void PianoRollPreviewSurface::updateViewContext()
                 juce::Range<double>{ region_optional.value().startPositionInSeconds, note_end_position_in_seconds };
         }
     }
+
+    // Update selected note id
+    selectedNoteId = -1;
+    if (!documentEditorForPreviewPtr.expired() &&
+        documentEditorForPreviewPtr.lock()->getCurrentDocument().has_value())
+    {
+        selectedNoteId = documentEditorForPreviewPtr.lock()->getEditorContext().currentSelectedNoteId;
+    }
 }
 
 //==============================================================================
@@ -437,7 +445,7 @@ void PianoRollPreviewSurface::drawCurrentPreviewData(juce::Graphics& g)
             g.fillRect(rect_to_fill);
         }
 
-        if (note_draw_info.isSelected)
+        if (note_draw_info.noteId == selectedNoteId)
         {
             g.setColour(kColourGridNoteSelected);
             g.fillRect(rect_to_fill);
@@ -705,7 +713,7 @@ PianoRollPreviewSurface::createNoteDrawInfo(const cctn::song::SongDocument& docu
     result.positionRightX = rect_right_x;
     result.lyric = note.lyric;
     result.noteNumber = note.noteNumber;
-    result.isSelected = false;  // TODO: add support
+    result.noteId = note.id;
 
     return result;
 }
