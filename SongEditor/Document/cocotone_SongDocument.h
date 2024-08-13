@@ -332,6 +332,8 @@ private:
     TempoTrack tempoTrack;
     juce::Array<Note> notes;
 
+    const int minimumTotalLengthInTicks;
+
     JUCE_LEAK_DETECTOR(SongDocument)
 };
 

@@ -7,6 +7,7 @@ namespace song
 //==============================================================================
 SongDocument::SongDocument()
     : ticksPerQuarterNote(480)
+    , minimumTotalLengthInTicks(ticksPerQuarterNote * 4 * 128)
 {
 }
 
@@ -44,8 +45,8 @@ int64_t SongDocument::getTotalLengthInTicks() const
 {
     if (notes.isEmpty())
     {
-        // If there are no notes, return the last tempo event tick or 0
-        return tempoTrack.getEvents().empty() ? 0 : tempoTrack.getEvents().back().getTick();
+        // If there are no notes, return the last tempo event tick or minimumTotalLengthInTicks
+        return std::max<int64_t>(minimumTotalLengthInTicks, tempoTrack.getEvents().back().getTick());;
     }
 
     // Find the last note's end position
@@ -53,16 +54,16 @@ int64_t SongDocument::getTotalLengthInTicks() const
     for (const auto& note : notes)
     {
         const auto noteOffPosition =  Calculator::calculateNoteOffPosition(*this, note);
-        int64_t noteTick = Calculator::barToTick(*this, note.startTimeInMusicalTime);
-        int64_t noteEndTick = Calculator::barToTick(*this, noteOffPosition);
+        const int64_t noteTick = Calculator::barToTick(*this, note.startTimeInMusicalTime);
+        const int64_t noteEndTick = Calculator::barToTick(*this, noteOffPosition);
         lastNoteTick = std::max(lastNoteTick, noteEndTick);
     }
 
     // Check if there's a tempo event after the last note
-    int64_t lastTempoEventTick = tempoTrack.getEvents().empty() ? 0 : tempoTrack.getEvents().back().getTick();
+    const int64_t lastTempoEventTick = tempoTrack.getEvents().empty() ? 0 : tempoTrack.getEvents().back().getTick();
 
     // Return the maximum of last note end and last tempo event
-    return std::max(lastNoteTick, lastTempoEventTick);
+    return std::max<int64_t>(minimumTotalLengthInTicks, std::max<int64_t>(lastNoteTick, lastTempoEventTick));
 }
 
 //==============================================================================
