@@ -23,10 +23,6 @@ public:
     juce::String debugDumpDocument() const;
 
     //==============================================================================
-    void serialize() const;
-    void deserialize();
-
-    //==============================================================================
     std::optional<cctn::song::SongDocument::Note> findNote(const cctn::song::QueryForFindPianoRollNote& query);
     void selectNote(const cctn::song::QueryForFindPianoRollNote& query);
 
@@ -60,24 +56,6 @@ private:
     std::shared_ptr<cctn::song::SongDocument> documentToEdit;
     std::unique_ptr<cctn::song::QuantizeEngine> quantizeEngine;
     std::unique_ptr<EditorContext> editorContext;
-
-#if 0
-    //==============================================================================
-    std::optional<cctn::song::SongEditorNoteExtended> findNote(const cctn::song::QueryForFindPianoRollNote& query);
-    std::optional<const cctn::song::SongEditorDocumentData*> getRawDocumentData() const;
-    std::unique_ptr<cctn::song::SongEditorDocumentData> documentData;
-
-    //==============================================================================
-    // voicevox specified format
-    juce::var createScoreJson_outdated() const;
-    juce::String createScoreJsonString_outdated() const;
-    juce::String createScoreJsonString() const;
-
-    //==============================================================================
-    static double calculateDocumentDuration(const cctn::song::SongEditorDocumentData& data, double minimumDuration = 0.05);
-    static cctn::song::SongEditorNoteExtended createSilenceNote(double startPositionInSeconds, double endPositionInSeconds);
-    static cctn::song::SongEditorDocumentData makeSilenceFilledScore(const cctn::song::SongEditorDocumentData& data, double documentDuration);
-#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SongDocumentEditor)
 };
