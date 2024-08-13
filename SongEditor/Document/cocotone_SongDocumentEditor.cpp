@@ -187,7 +187,7 @@ void SongDocumentEditor::updateEditorContext()
         return;
     }
 
-    editorContext->currentBeatTimePoints = cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(*documentToEdit.get(), editorContext->currentGridInterval);
+    editorContext->currentBeatTimePoints = cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(*documentToEdit.get(), editorContext->currentGridSize);
     quantizeEngine->updateQuantizeRegions(editorContext->currentBeatTimePoints);
 }
 

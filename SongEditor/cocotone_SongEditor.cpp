@@ -1,3 +1,4 @@
+#include "cocotone_SongEditor.h"
 namespace cctn
 {
 namespace song
@@ -47,29 +48,29 @@ SongEditor::SongEditor()
     pianoRollTimeRuler = std::make_unique<PianoRollTimeRuler>();
     addAndMakeVisible(pianoRollTimeRuler.get());
 
-    // Grid Interval
-    labelPianoRollGridInterval = std::make_unique<juce::Label>();
-    labelPianoRollGridInterval->setText("Grid Interval: ", juce::dontSendNotification);
-    labelPianoRollGridInterval->setJustificationType(juce::Justification::centredRight);
-    addAndMakeVisible(labelPianoRollGridInterval.get());
+    // Grid Size
+    labelPianoRollGridSize = std::make_unique<juce::Label>();
+    labelPianoRollGridSize->setText("Grid Size: ", juce::dontSendNotification);
+    labelPianoRollGridSize->setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(labelPianoRollGridSize.get());
 
-    comboboxPianoRollGridInterval = std::make_unique<juce::ComboBox>();
-    comboboxPianoRollGridInterval->onChange =
+    comboboxPianoRollGridSize = std::make_unique<juce::ComboBox>();
+    comboboxPianoRollGridSize->onChange =
         [safe_this = juce::Component::SafePointer(this)]() {
         if (safe_this.getComponent() == nullptr)
         {
             return;
         }
 
-        const auto item_idx = safe_this->comboboxPianoRollGridInterval->getSelectedItemIndex();
-        if (safe_this->mapIndexToGridInterval.count(item_idx) > 0)
+        const auto item_idx = safe_this->comboboxPianoRollGridSize->getSelectedItemIndex();
+        if (safe_this->mapIndexToGridSize.count(item_idx) > 0)
         {
-            safe_this->valuePianoRollGridInterval = (int)safe_this->mapIndexToGridInterval[item_idx];
+            safe_this->valuePianoRollGridSize = (int)safe_this->mapIndexToGridSize[item_idx];
         }
         };
-    addAndMakeVisible(comboboxPianoRollGridInterval.get());
+    addAndMakeVisible(comboboxPianoRollGridSize.get());
 
-    populateComboBoxWithNoteLength(*comboboxPianoRollGridInterval.get(), mapIndexToGridInterval);
+    populateComboBoxWithGridSize(*comboboxPianoRollGridSize.get(), mapIndexToGridSize);
 
     // Note Length
     labelInputNoteLength = std::make_unique<juce::Label>();
@@ -124,7 +125,7 @@ SongEditor::SongEditor()
     pianoRollScrollBarHorizontal->addListener(this);
 
     valuePianoRollBottomKeyNumber.addListener(this);
-    valuePianoRollGridInterval.addListener(this);
+    valuePianoRollGridSize.addListener(this);
     valuePianoRollInputNoteLength.addListener(this);
     valuePianoRollInputMora.addListener(this);
 
@@ -148,7 +149,7 @@ SongEditor::~SongEditor()
     stopTimer();
 
     valuePianoRollBottomKeyNumber.removeListener(this);
-    valuePianoRollGridInterval.removeListener(this);
+    valuePianoRollGridSize.removeListener(this);
     valuePianoRollInputNoteLength.removeListener(this);
     valuePianoRollInputMora.removeListener(this);
 
@@ -190,7 +191,7 @@ void SongEditor::registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocu
         pianoRollPreviewSurface->setDocumentForPreview(documentEditor);
         pianoRollTimeRuler->setDocumentForPreview(documentEditor);
 
-        valuePianoRollGridInterval = (int)songDocumentEditorPtr.lock()->getEditorContext().currentGridInterval;
+        valuePianoRollGridSize = (int)songDocumentEditorPtr.lock()->getEditorContext().currentGridSize;
 
         valuePianoRollInputNoteLength = (int)songDocumentEditorPtr.lock()->getEditorContext().currentNoteLength;
 
@@ -231,8 +232,8 @@ void SongEditor::resized()
     const auto piano_roll_main_top = piano_roll_time_ruler_top + height_piano_roll_time_ruler;
     const auto piano_roll_main_bottom = getHeight() - width_piano_roll_scrollbar;
 
-    labelPianoRollGridInterval->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
-    comboboxPianoRollGridInterval->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
+    labelPianoRollGridSize->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
+    comboboxPianoRollGridSize->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
 
     labelInputNoteLength->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
     comboboxInputNoteLength->setBounds(rectInputOptions.removeFromLeft(160).reduced(4));
@@ -302,12 +303,12 @@ void SongEditor::valueChanged(juce::Value& value)
         songDocumentEditorPtr.lock()->getEditorContext().currentNoteLength = (cctn::song::NoteLength)(int)valuePianoRollInputNoteLength.getValue();
         songDocumentEditorPtr.lock()->updateEditorContext();
     }
-    else if (value.refersToSameSourceAs(valuePianoRollGridInterval))
+    else if (value.refersToSameSourceAs(valuePianoRollGridSize))
     {
-        comboboxPianoRollGridInterval->setSelectedItemIndex((int)valuePianoRollGridInterval.getValue(), juce::dontSendNotification);
-        pianoRollPreviewSurface->setDrawingGridInterval((cctn::song::NoteLength)(int)valuePianoRollGridInterval.getValue());
+        comboboxPianoRollGridSize->setSelectedItemIndex((int)valuePianoRollGridSize.getValue(), juce::dontSendNotification);
+        pianoRollPreviewSurface->setDrawingGridInterval((cctn::song::NoteLength)(int)valuePianoRollGridSize.getValue());
 
-        songDocumentEditorPtr.lock()->getEditorContext().currentGridInterval = (cctn::song::NoteLength)(int)valuePianoRollGridInterval.getValue();
+        songDocumentEditorPtr.lock()->getEditorContext().currentGridSize = (cctn::song::NoteLength)(int)valuePianoRollGridSize.getValue();
         songDocumentEditorPtr.lock()->updateEditorContext();
     }
     else if (value.refersToSameSourceAs(valuePianoRollInputMora))
@@ -364,6 +365,63 @@ void SongEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
 }
 
 //==============================================================================
+void SongEditor::populateComboBoxWithGridSize(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToNoteLength)
+{
+    struct NoteLengthItem
+    {
+        cctn::song::NoteLength noteLength;
+        const juce::String name;
+    };
+
+    /**
+    enum class NoteLength
+    {
+        Whole,           // Whole note
+        Half,            // Half note
+        Quarter,         // Quarter note
+        Eighth,          // Eighth note
+        Sixteenth,       // Sixteenth note
+        ThirtySecond,    // Thirty-second note
+        SixtyFourth,     // Sixty-fourth note
+        Triplet,         // Quarter note triplet
+        EighthTriplet,   // Eighth note triplet
+        SixteenthTriplet,// Sixteenth note triplet
+        //DottedHalf,      // Dotted half note
+        //DottedQuarter,   // Dotted quarter note
+        //DottedEighth,    // Dotted eighth note
+        //DottedSixteenth  // Dotted sixteenth note
+    };
+    */
+    const NoteLengthItem items[] =
+    {
+        { NoteLength::Whole, "1/1" },
+        { NoteLength::Half, "1/2" },
+        { NoteLength::Quarter, "1/4" },
+        { NoteLength::Eighth, "1/8" },
+        { NoteLength::Sixteenth, "1/16" },
+        { NoteLength::ThirtySecond, "1/32" },
+        { NoteLength::SixtyFourth, "1/64" },
+        { NoteLength::Triplet, "1/4T" },
+        { NoteLength::EighthTriplet, "1/8T" },
+        { NoteLength::SixteenthTriplet, "1/16T" },
+        //{ NoteLength::DottedHalf, "1/2." },
+        //{ NoteLength::DottedQuarter, "1/4." },
+        //{ NoteLength::DottedEighth, "1/8." },
+        //{ NoteLength::DottedSixteenth, "1/16." }
+    };
+
+    comboBox.clear(juce::dontSendNotification);
+    mapIndexToNoteLength.clear();
+
+    for (int item_idx = 0; item_idx < std::size(items); item_idx++)
+    {
+        comboBox.addItem(items[item_idx].name, item_idx + 1);
+        mapIndexToNoteLength[item_idx] = items[item_idx].noteLength;
+    }
+
+    comboBox.setSelectedItemIndex((int)cctn::song::NoteLength::Quarter, juce::dontSendNotification);
+}
+
 void SongEditor::populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToNoteLength)
 {
     struct NoteLengthItem 
@@ -385,6 +443,7 @@ void SongEditor::populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::m
         Triplet,         // Quarter note triplet
         EighthTriplet,   // Eighth note triplet
         SixteenthTriplet,// Sixteenth note triplet
+        DottedHalf,      // Dotted half note
         DottedQuarter,   // Dotted quarter note
         DottedEighth,    // Dotted eighth note
         DottedSixteenth  // Dotted sixteenth note
@@ -402,6 +461,7 @@ void SongEditor::populateComboBoxWithNoteLength(juce::ComboBox& comboBox, std::m
         { NoteLength::Triplet, "1/4T" },
         { NoteLength::EighthTriplet, "1/8T" },
         { NoteLength::SixteenthTriplet, "1/16T" },
+        { NoteLength::DottedHalf, "1/2." },
         { NoteLength::DottedQuarter, "1/4." },
         { NoteLength::DottedEighth, "1/8." },
         { NoteLength::DottedSixteenth, "1/16." }
@@ -438,7 +498,7 @@ void SongEditor::populateComboBoxWithLyricMora(juce::ComboBox& comboBox, std::ma
 void SongEditor::initialUpdate()
 {
     valuePianoRollInputNoteLength = (int)cctn::song::NoteLength::Quarter;
-    valuePianoRollGridInterval = (int)cctn::song::NoteLength::Sixteenth;
+    valuePianoRollGridSize = (int)cctn::song::NoteLength::Sixteenth;
 }
 
 }

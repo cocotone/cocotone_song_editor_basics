@@ -276,7 +276,7 @@ void PianoRollPreviewSurface::updateViewContext()
                 calculate_note_end_time(
                     region_optional.value().startPositionInSeconds, 
                     region_optional.value().endPositionInSeconds, 
-                    documentEditorForPreviewPtr.lock()->getEditorContext().currentGridInterval,
+                    documentEditorForPreviewPtr.lock()->getEditorContext().currentGridSize,
                     documentEditorForPreviewPtr.lock()->getEditorContext().currentNoteLength);
 
             quantizedInputRegionInSeconds =

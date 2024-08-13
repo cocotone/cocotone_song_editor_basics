@@ -39,7 +39,7 @@ public:
     class EditorContext
     {
     public:
-        cctn::song::NoteLength currentGridInterval{ cctn::song::NoteLength::Quarter };
+        cctn::song::NoteLength currentGridSize{ cctn::song::NoteLength::Quarter };
         cctn::song::NoteLength currentNoteLength{ cctn::song::NoteLength::Quarter };
         cctn::song::NoteLyric currentNoteLyric{ juce::CharPointer_UTF8("\xe3\x83\xa9") }; // ra
         cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
