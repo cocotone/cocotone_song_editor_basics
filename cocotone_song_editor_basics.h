@@ -36,6 +36,7 @@
 #include "SongEditor/cocotone_SongEditorTypes.h"
 #include "SongEditor/cocotone_SongEditor.h"
 #include "SongEditor/cocotone_SongEditorCommand.h"
+#include "SongEditor/cocotone_IAudioThumbnailProvider.h"
 #include "SongEditor/cocotone_IPositionInfoProvider.h"
 
 #include "SongEditor/Document/cocotone_SongDocument.h"

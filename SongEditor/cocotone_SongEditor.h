@@ -12,6 +12,7 @@ class PianoRollPreviewSurface;
 class PianoRollInteractionSurface;
 class PianoRollEventDispatcher;
 class IPositionInfoProvider;
+class IAudioThumbnailProvider;
 class SongDocumentEditor;
 class SongEditorOperation;
 
@@ -31,6 +32,10 @@ public:
     //==============================================================================
     void registerPositionInfoProvider(IPositionInfoProvider* provider);
     void unregisterPositionInfoProvider(IPositionInfoProvider* provider);
+
+    //==============================================================================
+    void registerAudioThumbnailProvider(IAudioThumbnailProvider* provider);
+    void unregisterAudioThumbnailProvider(IAudioThumbnailProvider* provider);
 
     //==============================================================================
     void registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);

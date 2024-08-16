@@ -36,6 +36,10 @@ public:
     void setDocumentForPreview(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
 
     //==============================================================================
+    void registerAudioThumbnailProvider(IAudioThumbnailProvider* provider);
+    void unregisterAudioThumbnailProvider(IAudioThumbnailProvider* provider);
+
+    //==============================================================================
     enum class VisibleGridVerticalType
     {
         kNone = 0,
@@ -66,6 +70,7 @@ private:
     void drawUserInputPositionMarker(juce::Graphics& g);
     void drawQuantizedInputRegionRectangle(juce::Graphics& g);
     void drawUserInputPositionCellRectangle(juce::Graphics& g);
+    void drawCurrentAudioThumbnail(juce::Graphics& g);
 
     //==============================================================================
     // For fast painitng.
@@ -126,6 +131,11 @@ private:
 
     // TODO: should abstract
     juce::AudioPlayHead::PositionInfo currentPositionInfo;
+
+    IAudioThumbnailProvider* audioThumbnailProviderPtr;
+    juce::AudioThumbnail* scopedAudioThumbnailPtrToPaint;
+
+    mutable std::mutex mutex;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollPreviewSurface)
 };

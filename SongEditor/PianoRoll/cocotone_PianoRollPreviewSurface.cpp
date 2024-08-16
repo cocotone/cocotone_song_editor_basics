@@ -1,3 +1,4 @@
+#include "cocotone_PianoRollPreviewSurface.h"
 namespace cctn
 {
 namespace song
@@ -13,7 +14,9 @@ PianoRollPreviewSurface::PianoRollPreviewSurface(const PianoRollKeyboard& pianoR
     , quantizedInputRegionInSeconds(juce::Range<double>{0.0, 0.0})
     , isInputPositionInsertable(false)
     , scopedSongDocumentPtrToPaint(nullptr)
+    , scopedAudioThumbnailPtrToPaint(nullptr)
     , visibleGridVerticalLineType(juce::var((int)VisibleGridVerticalType::kTimeSignature))
+    , selectedNoteId(-1)
 {
     numVisibleWhiteAndBlackKeys = 12 * numVisibleOctaves;
     numVisibleWhiteKeys = 7 * numVisibleOctaves;
@@ -138,6 +141,23 @@ void PianoRollPreviewSurface::setDocumentForPreview(std::shared_ptr<cctn::song::
     repaint();
 }
 
+void PianoRollPreviewSurface::registerAudioThumbnailProvider(IAudioThumbnailProvider* provider)
+{
+    std::unique_lock lock(mutex);
+
+    audioThumbnailProviderPtr = provider;
+}
+
+void PianoRollPreviewSurface::unregisterAudioThumbnailProvider(IAudioThumbnailProvider* provider)
+{
+    std::unique_lock lock(mutex);
+
+    if (audioThumbnailProviderPtr == provider)
+    {
+        audioThumbnailProviderPtr = nullptr;
+    }
+}
+
 //==============================================================================
 void PianoRollPreviewSurface::paint(juce::Graphics& g)
 {
@@ -150,7 +170,16 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
         document_to_paint = documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
     }
 
-    juce::ScopedValueSetter<const cctn::song::SongDocument*> svs(scopedSongDocumentPtrToPaint, document_to_paint);
+    juce::ScopedValueSetter<const cctn::song::SongDocument*> svs_1(scopedSongDocumentPtrToPaint, document_to_paint);
+
+    juce::AudioThumbnail* audio_thumbnail_to_paint = nullptr;
+    if(audioThumbnailProviderPtr != nullptr && 
+        audioThumbnailProviderPtr->getAudioThumbnail().has_value())
+    {
+        audio_thumbnail_to_paint = audioThumbnailProviderPtr->getAudioThumbnail().value();
+    }
+
+    juce::ScopedValueSetter<juce::AudioThumbnail*> svs_2(scopedAudioThumbnailPtrToPaint, audio_thumbnail_to_paint);
 
     updateViewContext();
 
@@ -183,6 +212,8 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
     drawQuantizedInputRegionRectangle(g);
 
     drawUserInputPositionCellRectangle(g);
+
+    drawCurrentAudioThumbnail(g);
 }
 
 void PianoRollPreviewSurface::resized()
@@ -543,6 +574,30 @@ void PianoRollPreviewSurface::drawUserInputPositionCellRectangle(juce::Graphics&
         }
 
         g.drawRect(rect_to_draw, 2.0f);
+    }
+}
+
+void PianoRollPreviewSurface::drawCurrentAudioThumbnail(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    if (scopedAudioThumbnailPtrToPaint == nullptr)
+    {
+        return;
+    }
+
+    g.setColour(juce::Colours::grey.withAlpha(0.6f));
+
+    if (scopedAudioThumbnailPtrToPaint->getTotalLength() > 0.0)
+    {
+        auto thumbArea = getLocalBounds().removeFromBottom(getLocalBounds().getHeight() * 0.3f);
+
+        scopedAudioThumbnailPtrToPaint->drawChannel(g,
+            thumbArea.reduced(2),
+            rangeVisibleTimeInSeconds.getStart(),
+            rangeVisibleTimeInSeconds.getEnd(),
+            0,
+            1.0f);
     }
 }
 

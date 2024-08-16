@@ -179,6 +179,19 @@ void SongEditor::unregisterPositionInfoProvider(IPositionInfoProvider* provider)
 }
 
 //==============================================================================
+void SongEditor::registerAudioThumbnailProvider(IAudioThumbnailProvider* provider)
+{
+    // Bypass function
+    pianoRollPreviewSurface->registerAudioThumbnailProvider(provider);
+}
+
+void SongEditor::unregisterAudioThumbnailProvider(IAudioThumbnailProvider* provider)
+{
+    // Bypass function
+    pianoRollPreviewSurface->unregisterAudioThumbnailProvider(provider);
+}
+
+//==============================================================================
 void SongEditor::registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor)
 {
     if (songDocumentEditorPtr.lock().get() != documentEditor.get())
