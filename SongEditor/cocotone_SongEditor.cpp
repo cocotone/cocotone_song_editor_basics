@@ -17,6 +17,9 @@ SongEditor::SongEditor()
 
     pianoRollEventDispatcher = std::make_unique<cctn::song::PianoRollEventDispatcher>(songEditorOperation);
 
+    multiTrackEditor = std::make_unique<cctn::song::MultiTrackEditor>();
+    addAndMakeVisible(multiTrackEditor.get());
+
     pianoRollKeyboard = std::make_unique<cctn::song::PianoRollKeyboard>(kNumVisibleOctaves);
     addAndMakeVisible(pianoRollKeyboard.get());
 
@@ -158,6 +161,8 @@ SongEditor::~SongEditor()
     pianoRollScrollBarHorizontal.reset();
     pianoRollPreviewSurface.reset();
     pianoRollKeyboard.reset();
+
+    multiTrackEditor.reset();
 }
 
 //==============================================================================
@@ -211,6 +216,8 @@ void SongEditor::registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocu
 
         const auto document_tail_seconds = songDocumentEditorPtr.lock()->getEditorContext().currentBeatTimePoints.back().timeInSeconds;
         pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, document_tail_seconds}, juce::dontSendNotification);
+
+        multiTrackEditor->setDocumentEditor(documentEditor);
     }
 }
 
@@ -227,6 +234,8 @@ void SongEditor::unregisterSongDocumentEditor(std::shared_ptr<cctn::song::SongDo
         pianoRollTimeRuler->setDocumentForPreview(nullptr);
 
         pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, 600.0}, juce::dontSendNotification);
+
+        multiTrackEditor->setDocumentEditor(nullptr);
     }
 }
 
@@ -239,6 +248,9 @@ void SongEditor::paint(juce::Graphics& g)
 void SongEditor::resized()
 {
     auto rect_area = getLocalBounds();
+
+    rectMultiTrackEditor = rect_area.removeFromTop(120);
+    multiTrackEditor->setBounds(rectMultiTrackEditor.reduced(4));
 
     rectInputOptions = rect_area.removeFromTop(32);
 

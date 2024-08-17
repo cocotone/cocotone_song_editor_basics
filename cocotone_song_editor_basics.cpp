@@ -3,6 +3,13 @@
 //==============================================================================
 #include "SongEditor/Lyric/cocotone_MoraKana.h"
 
+#include "SongEditor/View/Track/cocotone_TrackComponentBase.h"
+#include "SongEditor/View/Track/Impl/cocotone_TimeSignatureTrack.h"
+#include "SongEditor/View/Track/Impl/cocotone_MusicalTimePreviewTrack.h"
+#include "SongEditor/View/Track/Impl/cocotone_AbsoluteTimePreviewTrack.h"
+#include "SongEditor/View/Track/Impl/cocotone_TempoTrack.h"
+#include "SongEditor/View/Track/cocotone_MultiTrackEditor.h"
+
 #include "SongEditor/View/PianoRoll/cocotone_PianoRollColours.h"
 #include "SongEditor/View/PianoRoll/cocotone_PianoRollPositionUtility.h"
 #include "SongEditor/View/PianoRoll/cocotone_PianoRollKeyboard.h"
@@ -17,6 +24,12 @@
 
 //==============================================================================
 #include "SongEditor/Lyric/cocotone_MoraKana.cpp"
+
+#include "SongEditor/View/Track/Impl/cocotone_TimeSignatureTrack.cpp"
+#include "SongEditor/View/Track/Impl/cocotone_MusicalTimePreviewTrack.cpp"
+#include "SongEditor/View/Track/Impl/cocotone_AbsoluteTimePreviewTrack.cpp"
+#include "SongEditor/View/Track/Impl/cocotone_TempoTrack.cpp"
+#include "SongEditor/View/Track/cocotone_MultiTrackEditor.cpp"
 
 #include "SongEditor/View/PianoRoll/cocotone_PianoRollKeyboard.cpp"
 #include "SongEditor/View/PianoRoll/cocotone_PianoRollTimeRuler.cpp"

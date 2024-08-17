@@ -6,6 +6,7 @@ namespace song
 {
 
 //==============================================================================
+class MultiTrackEditor;
 class PianoRollKeyboard;
 class PianoRollTimeRuler;
 class PianoRollPreviewSurface;
@@ -67,6 +68,9 @@ private:
     void initialUpdate();
 
     //==============================================================================
+    std::unique_ptr<cctn::song::MultiTrackEditor> multiTrackEditor;
+    juce::Rectangle<int> rectMultiTrackEditor;
+
     std::unique_ptr<cctn::song::PianoRollKeyboard> pianoRollKeyboard;
     std::unique_ptr<cctn::song::PianoRollTimeRuler> pianoRollTimeRuler;
     std::unique_ptr<cctn::song::PianoRollPreviewSurface> pianoRollPreviewSurface;
