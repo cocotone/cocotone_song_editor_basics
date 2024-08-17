@@ -10,6 +10,7 @@ class MultiTrackEditor final
     : public juce::Component
     , private juce::ChangeListener
     , private juce::ScrollBar::Listener
+    , private juce::Value::Listener
 {
 public:
     //==============================================================================
@@ -34,6 +35,9 @@ private:
     // juce::ScrollBar::Listener
     void scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart) override;
 
+    // juce::Value::Listener
+    void valueChanged(juce::Value& value) override;
+
     //==============================================================================
     void updateContent();
 
@@ -48,6 +52,8 @@ private:
     std::unique_ptr<cctn::song::TrackComponentBase> musicalTimePreviewTrack;
     std::unique_ptr<cctn::song::TrackComponentBase> tempoTrack;
     std::unique_ptr<cctn::song::TrackComponentBase> absoluteTimePreviewTrack;
+
+    juce::Value valueMusicalTimePreviewGridSize;
 
     mutable std::mutex mutex;
 

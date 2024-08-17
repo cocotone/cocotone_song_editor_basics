@@ -12,17 +12,6 @@ TimeSignatureTrack::~TimeSignatureTrack()
 }
 
 //==============================================================================
-void TimeSignatureTrack::paint(juce::Graphics& g)
-{
-    auto randomInt = juce::Random::getSystemRandom().nextInt64();
-    g.fillAll(juce::Colour(randomInt).withAlpha(1.0f));
-}
-
-void TimeSignatureTrack::resized()
-{
-}
-
-//==============================================================================
 void TimeSignatureTrack::handleAsyncUpdate()
 {
     repaint();

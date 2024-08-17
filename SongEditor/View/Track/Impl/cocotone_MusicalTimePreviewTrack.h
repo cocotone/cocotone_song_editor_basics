@@ -16,23 +16,17 @@ public:
 
 private:
     //==============================================================================
-    void paint(juce::Graphics& g) override;
-    void resized() override;
-
-    //==============================================================================
     void handleAsyncUpdate() override;
 
     //==============================================================================
     void updateContent(const cctn::song::SongDocumentEditor& songDocumentEditor) override;
 
     //==============================================================================
-    void drawMusicalTimeGrid(juce::Graphics& g);
+    cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
 
     //==============================================================================
-    cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
-    std::vector<int64_t> currentAbsoluteTicksRelatedBeatTimePoints{};
-
-    juce::AudioPlayHead::PositionInfo currentPositionInfo;
+    std::unique_ptr<cctn::song::TrackHeaderBase> headerComponent;
+    std::unique_ptr<cctn::song::TrackLaneBase<cctn::song::SongDocument::BeatTimePoints>> laneComponent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MusicalTimePreviewTrack)
 };

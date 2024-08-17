@@ -71,20 +71,36 @@ void MultiTrackEditor::setCurrentPositionInfo(const juce::AudioPlayHead::Positio
 //==============================================================================
 void MultiTrackEditor::paint(juce::Graphics& g)
 {
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    g.fillAll(kColourMainBackground);
+
+    auto rect_area = getLocalBounds();
     auto randomInt = juce::Random::getSystemRandom().nextInt64();
-    g.fillAll(juce::Colour(randomInt).withAlpha(1.0f));
+    g.setColour(juce::Colour(randomInt).withAlpha(1.0f));
+    g.drawRect(rect_area, 2);
 }
 
 void MultiTrackEditor::resized()
 {
     auto rect_area = getLocalBounds();
 
-    scrollBarHorizontal->setBounds(rect_area.removeFromBottom(20));
+    const auto ratio_track_header = 0.125f;
+    const auto width_track_header = rect_area.getWidth() * ratio_track_header;
 
-    timeSignatureTrack->setBounds(rect_area.removeFromTop(20));
-    musicalTimePreviewTrack->setBounds(rect_area.removeFromTop(20));
-    tempoTrack->setBounds(rect_area.removeFromTop(20));
-    absoluteTimePreviewTrack->setBounds(rect_area.removeFromTop(20));
+    timeSignatureTrack->setHeaderRatio(ratio_track_header);
+    timeSignatureTrack->setBounds(rect_area.removeFromTop(56));
+
+    musicalTimePreviewTrack->setHeaderRatio(ratio_track_header);
+    musicalTimePreviewTrack->setBounds(rect_area.removeFromTop(40));
+    
+    tempoTrack->setHeaderRatio(ratio_track_header);
+    tempoTrack->setBounds(rect_area.removeFromTop(56));
+    
+    absoluteTimePreviewTrack->setHeaderRatio(ratio_track_header);
+    absoluteTimePreviewTrack->setBounds(rect_area.removeFromTop(40));
+
+    scrollBarHorizontal->setBounds(rect_area.removeFromBottom(20).withTrimmedLeft(width_track_header));
 }
 
 //==============================================================================
@@ -106,6 +122,11 @@ void MultiTrackEditor::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, do
 {
     musicalTimePreviewTrack->setViewRangeInTicks(scrollBarHorizontal->getCurrentRange());
     absoluteTimePreviewTrack->setViewRangeInTicks(scrollBarHorizontal->getCurrentRange());
+}
+
+//==============================================================================
+void MultiTrackEditor::valueChanged(juce::Value& value)
+{
 }
 
 //==============================================================================
