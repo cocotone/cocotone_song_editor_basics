@@ -3,13 +3,13 @@
 //==============================================================================
 #include "SongEditor/Lyric/cocotone_MoraKana.h"
 
-#include "SongEditor/PianoRoll/cocotone_PianoRollColours.h"
-#include "SongEditor/PianoRoll/cocotone_PianoRollPositionUtility.h"
-#include "SongEditor/PianoRoll/cocotone_PianoRollKeyboard.h"
-#include "SongEditor/PianoRoll/cocotone_PianoRollTimeRuler.h"
-#include "SongEditor/PianoRoll/cocotone_PianoRollEventDispatcher.h"
-#include "SongEditor/PianoRoll/cocotone_PianoRollPreviewSurface.h"
-#include "SongEditor/PianoRoll/cocotone_PianoRollInteractionSurface.h"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollColours.h"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollPositionUtility.h"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollKeyboard.h"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollTimeRuler.h"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollEventDispatcher.h"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollPreviewSurface.h"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollInteractionSurface.h"
 
 #include "SongEditor/Quantize/cocotone_QuantizeEngine.h"
 
@@ -18,11 +18,11 @@
 //==============================================================================
 #include "SongEditor/Lyric/cocotone_MoraKana.cpp"
 
-#include "SongEditor/PianoRoll/cocotone_PianoRollKeyboard.cpp"
-#include "SongEditor/PianoRoll/cocotone_PianoRollTimeRuler.cpp"
-#include "SongEditor/PianoRoll/cocotone_PianoRollEventDispatcher.cpp"
-#include "SongEditor/PianoRoll/cocotone_PianoRollPreviewSurface.cpp"
-#include "SongEditor/PianoRoll/cocotone_PianoRollInteractionSurface.cpp"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollKeyboard.cpp"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollTimeRuler.cpp"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollEventDispatcher.cpp"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollPreviewSurface.cpp"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollInteractionSurface.cpp"
 
 #include "SongEditor/Transport/cocotone_TransportEmulator.cpp"
 

@@ -141,6 +141,7 @@ void PianoRollPreviewSurface::setDocumentForPreview(std::shared_ptr<cctn::song::
     repaint();
 }
 
+//==============================================================================
 void PianoRollPreviewSurface::registerAudioThumbnailProvider(IAudioThumbnailProvider* provider)
 {
     std::unique_lock lock(mutex);
