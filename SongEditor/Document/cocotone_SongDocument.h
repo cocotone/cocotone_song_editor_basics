@@ -181,8 +181,9 @@ public:
     //==============================================================================
     struct BeatTimePoint
     {
+        int64_t absoluteTicks{ 0 };
         MusicalTime musicalTime;
-        double timeInSeconds{ 0.0 };
+        double absoluteTimeInSeconds{ 0.0 };
 
         // Copy
         BeatTimePoint(const BeatTimePoint&) = default;

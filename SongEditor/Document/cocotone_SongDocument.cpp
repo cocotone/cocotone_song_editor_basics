@@ -513,7 +513,7 @@ SongDocument::BeatTimePoints SongDocument::BeatTimePointsFactory::makeBeatTimePo
         const MusicalTime musicalTime = cctn::song::SongDocument::Calculator::tickToBar(document, currentTick);
 
         // Add BeatTimePoint
-        beatPoints.push_back({ musicalTime, currentTime });
+        beatPoints.push_back({ currentTick, musicalTime, currentTime });
 
         // Move to next beat point
         currentTick += ticksPerNoteLength;
@@ -529,7 +529,7 @@ SongDocument::BeatTimePoints SongDocument::BeatTimePointsFactory::makeBeatTimePo
     // Add tail BeatTimePoint
     {
         const MusicalTime musicalTime = cctn::song::SongDocument::Calculator::tickToBar(document, currentTick);
-        beatPoints.push_back({ musicalTime, currentTime });
+        beatPoints.push_back({ currentTick, musicalTime, currentTime });
     }
 
     return beatPoints;

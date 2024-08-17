@@ -702,13 +702,13 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const 
     auto start_iter = std::lower_bound(beatTimePoints.begin(), beatTimePoints.end(), visibleRangeSeconds.getStart(),
         [](const cctn::song::SongDocument::BeatTimePoint& btp, double time) 
         { 
-            return btp.timeInSeconds < time;
+            return btp.absoluteTimeInSeconds < time;
         });
 
     auto end_iter = std::upper_bound(beatTimePoints.begin(), beatTimePoints.end(), visibleRangeSeconds.getEnd(),
         [](double time, const cctn::song::SongDocument::BeatTimePoint& btp)
         { 
-            return time < btp.timeInSeconds;
+            return time < btp.absoluteTimeInSeconds;
         });
 
     if (start_iter == beatTimePoints.end() || end_iter == beatTimePoints.begin())
@@ -717,7 +717,7 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const 
     }
 
     // If the first visible beat is after the start of the visible range, include the previous beat
-    if (start_iter != beatTimePoints.begin() && start_iter->timeInSeconds > visibleRangeSeconds.getStart())
+    if (start_iter != beatTimePoints.begin() && start_iter->absoluteTimeInSeconds > visibleRangeSeconds.getStart())
     {
         --start_iter;
     }
@@ -726,15 +726,15 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const 
 
     for (auto it = start_iter; it != end_iter; ++it)
     {
-        if (it->timeInSeconds >= visibleRangeSeconds.getStart() && it->timeInSeconds <= visibleRangeSeconds.getEnd())
+        if (it->absoluteTimeInSeconds >= visibleRangeSeconds.getStart() && it->absoluteTimeInSeconds <= visibleRangeSeconds.getEnd())
         {
             // Convert time to position X.
             const double position_x =
-                juce::jmap<double>(it->timeInSeconds, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), 0, width);
+                juce::jmap<double>(it->absoluteTimeInSeconds, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), 0, width);
 
             PositionWithTimeInfo pos;
             pos.positionX = (int)position_x;
-            pos.timeInSeconds = it->timeInSeconds;
+            pos.timeInSeconds = it->absoluteTimeInSeconds;
 
             positions.add(pos);
         }
