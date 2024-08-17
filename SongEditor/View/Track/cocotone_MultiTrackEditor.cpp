@@ -9,13 +9,13 @@ MultiTrackEditor::MultiTrackEditor()
     timeSignatureTrack = std::make_unique<cctn::song::TimeSignatureTrack>();
     addAndMakeVisible(timeSignatureTrack.get());
 
-    musicalTimePreviewTrack = std::make_unique<cctn::song::MusicalTimePreviewTrack>();
+    musicalTimePreviewTrack = std::make_unique<cctn::song::MusicalTimePreviewTrack>(*this);
     addAndMakeVisible(musicalTimePreviewTrack.get());
 
     tempoTrack = std::make_unique<cctn::song::TempoTrack>();
     addAndMakeVisible(tempoTrack.get());
 
-    absoluteTimePreviewTrack = std::make_unique<cctn::song::AbsoluteTimePreviewTrack>();
+    absoluteTimePreviewTrack = std::make_unique<cctn::song::AbsoluteTimePreviewTrack>(*this);
     addAndMakeVisible(absoluteTimePreviewTrack.get());
 
     scrollBarHorizontal = std::make_unique<juce::ScrollBar>(false);
@@ -120,13 +120,29 @@ void MultiTrackEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
 //==============================================================================
 void MultiTrackEditor::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart)
 {
-    musicalTimePreviewTrack->setViewRangeInTicks(scrollBarHorizontal->getCurrentRange());
-    absoluteTimePreviewTrack->setViewRangeInTicks(scrollBarHorizontal->getCurrentRange());
+    musicalTimePreviewTrack->triggerUpdateVisibleRange();
+    absoluteTimePreviewTrack->triggerUpdateVisibleRange();
 }
 
 //==============================================================================
 void MultiTrackEditor::valueChanged(juce::Value& value)
 {
+}
+
+//==============================================================================
+std::optional<cctn::song::SongDocumentEditor*> MultiTrackEditor::getSongDocumentEditor()
+{
+    if (!documentEditorForPreviewPtr.expired())
+    {
+        return documentEditorForPreviewPtr.lock().get();
+    }
+
+    return std::nullopt;
+}
+
+std::optional<juce::Range<double>> MultiTrackEditor::getVisibleRangeInTicks()
+{
+    return scrollBarHorizontal->getCurrentRange();
 }
 
 //==============================================================================
@@ -146,11 +162,11 @@ void MultiTrackEditor::updateContent()
             scrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, (double)ticks_tail}, juce::dontSendNotification);
             scrollBarHorizontal->setCurrentRange(current_range.withLength(ticks_per_4bars), juce::dontSendNotification);
 
-            musicalTimePreviewTrack->setViewRangeInTicks(scrollBarHorizontal->getCurrentRange());
-            musicalTimePreviewTrack->updateContent(song_document_editor);
+            musicalTimePreviewTrack->triggerUpdateContent();
+            absoluteTimePreviewTrack->triggerUpdateContent();
 
-            absoluteTimePreviewTrack->setViewRangeInTicks(scrollBarHorizontal->getCurrentRange());
-            absoluteTimePreviewTrack->updateContent(song_document_editor);
+            musicalTimePreviewTrack->triggerUpdateVisibleRange();
+            absoluteTimePreviewTrack->triggerUpdateVisibleRange();
         }
     }
 }

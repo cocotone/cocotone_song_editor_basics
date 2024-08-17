@@ -5,13 +5,15 @@ namespace cctn
 namespace song
 {
 
+class AbsoluteTimePreviewTrackHeader;
+
 //==============================================================================
 class AbsoluteTimePreviewTrack
     : public cctn::song::TrackComponentBase
 {
 public:
     //==============================================================================
-    AbsoluteTimePreviewTrack();
+    explicit AbsoluteTimePreviewTrack(cctn::song::ITrackDataAccessDelegate& trackAccessDelegate);
     virtual ~AbsoluteTimePreviewTrack() override;
 
 private:
@@ -19,14 +21,19 @@ private:
     void handleAsyncUpdate() override;
 
     //==============================================================================
-    void updateContent(const cctn::song::SongDocumentEditor& songDocumentEditor) override;
+    void triggerUpdateContent() override;
+    void triggerUpdateVisibleRange() override;
 
     //==============================================================================
     cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
 
     //==============================================================================
+    cctn::song::ITrackDataAccessDelegate& trackAccessDelegate;
+
     std::unique_ptr<cctn::song::TrackHeaderBase> headerComponent;
     std::unique_ptr<cctn::song::TrackLaneBase<cctn::song::SongDocument::BeatTimePoints>> laneComponent;
+
+    friend AbsoluteTimePreviewTrackHeader;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AbsoluteTimePreviewTrack)
 };

@@ -19,7 +19,8 @@ private:
     void handleAsyncUpdate() override;
 
     //==============================================================================
-    void updateContent(const cctn::song::SongDocumentEditor& songDocumentEditor) override;
+    void triggerUpdateContent() override;
+    void triggerUpdateVisibleRange() override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimeSignatureTrack)
 };

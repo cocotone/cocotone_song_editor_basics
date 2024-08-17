@@ -18,9 +18,13 @@ void TimeSignatureTrack::handleAsyncUpdate()
 }
 
 //==============================================================================
-void TimeSignatureTrack::updateContent(const cctn::song::SongDocumentEditor& songDocumentEditor)
+void TimeSignatureTrack::triggerUpdateContent()
 {
     repaint();
+}
+
+void TimeSignatureTrack::triggerUpdateVisibleRange()
+{
 }
 
 }

@@ -6,9 +6,11 @@ namespace song
 //==============================================================================
 class MusicalTimePreviewTrackHeader
     : public cctn::song::TrackHeaderBase
+    , private juce::Value::Listener
 {
 public:
-    MusicalTimePreviewTrackHeader()
+    explicit MusicalTimePreviewTrackHeader(MusicalTimePreviewTrack& owner)
+        : ownerComponent(owner)
     {
         // Grid Size
         labelGridSize = std::make_unique<juce::Label>();
@@ -33,10 +35,21 @@ public:
         addAndMakeVisible(comboboxGridSize.get());
 
         populateComboBoxWithGridSize(*comboboxGridSize.get(), mapIndexToGridSize);
+
+        valueGridSize.addListener(this);
+
+        initialUpdate();
     }
 
     ~MusicalTimePreviewTrackHeader() override
     {
+        valueGridSize.removeListener(this);
+    }
+
+    //==============================================================================
+    cctn::song::NoteLength getCurrenGridSize() const
+    {
+        return (cctn::song::NoteLength)(int)valueGridSize.getValue();
     }
 
 private:
@@ -52,6 +65,21 @@ private:
 
         labelGridSize->setBounds(rect_area.removeFromLeft(width_label));
         comboboxGridSize->setBounds(rect_area);
+    }
+
+    //==============================================================================
+    void valueChanged(juce::Value& value) override
+    {
+        if (value.refersToSameSourceAs(valueGridSize))
+        {
+            ownerComponent.triggerUpdateContent();
+        }
+    }
+
+    //==============================================================================
+    void initialUpdate()
+    {
+        valueGridSize = (int)cctn::song::NoteLength::Quarter;
     }
 
     static void populateComboBoxWithGridSize(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToGridSize)
@@ -70,11 +98,11 @@ private:
             Quarter,         // Quarter note
             Eighth,          // Eighth note
             Sixteenth,       // Sixteenth note
-            ThirtySecond,    // Thirty-second note
-            SixtyFourth,     // Sixty-fourth note
-            Triplet,         // Quarter note triplet
-            EighthTriplet,   // Eighth note triplet
-            SixteenthTriplet,// Sixteenth note triplet
+            //ThirtySecond,    // Thirty-second note
+            //SixtyFourth,     // Sixty-fourth note
+            //Triplet,         // Quarter note triplet
+            //EighthTriplet,   // Eighth note triplet
+            //SixteenthTriplet,// Sixteenth note triplet
             //DottedHalf,      // Dotted half note
             //DottedQuarter,   // Dotted quarter note
             //DottedEighth,    // Dotted eighth note
@@ -88,11 +116,11 @@ private:
             { NoteLength::Quarter, "1/4" },
             { NoteLength::Eighth, "1/8" },
             { NoteLength::Sixteenth, "1/16" },
-            { NoteLength::ThirtySecond, "1/32" },
-            { NoteLength::SixtyFourth, "1/64" },
-            { NoteLength::Triplet, "1/4T" },
-            { NoteLength::EighthTriplet, "1/8T" },
-            { NoteLength::SixteenthTriplet, "1/16T" },
+            //{ NoteLength::ThirtySecond, "1/32" },
+            //{ NoteLength::SixtyFourth, "1/64" },
+            //{ NoteLength::Triplet, "1/4T" },
+            //{ NoteLength::EighthTriplet, "1/8T" },
+            //{ NoteLength::SixteenthTriplet, "1/16T" },
             //{ NoteLength::DottedHalf, "1/2." },
             //{ NoteLength::DottedQuarter, "1/4." },
             //{ NoteLength::DottedEighth, "1/8." },
@@ -112,6 +140,7 @@ private:
     }
 
     //==============================================================================
+    MusicalTimePreviewTrack& ownerComponent;
 
     std::unique_ptr<juce::Label> labelGridSize;
     std::unique_ptr<juce::ComboBox> comboboxGridSize;
@@ -182,6 +211,12 @@ private:
                 g.drawText(signature_text, position_x + 2, rect_area.getY() + 2, 60, 20, juce::Justification::centredLeft);
                 last_beat_signature = signature_text;
             }
+            else
+            {
+                const auto position_x = ticksToPositionX(beat_time_point.absoluteTicks, getViewRangeInTicks(), rect_area.getX(), rect_area.getRight());
+                g.setColour(juce::Colours::white);
+                g.drawVerticalLine(position_x, 0.0f, getHeight());
+            }
         }
     }
 
@@ -191,9 +226,10 @@ private:
 };
 
 //==============================================================================
-MusicalTimePreviewTrack::MusicalTimePreviewTrack()
+MusicalTimePreviewTrack::MusicalTimePreviewTrack(cctn::song::ITrackDataAccessDelegate& trackAccessDelegate)
+    : trackAccessDelegate(trackAccessDelegate)
 {
-    headerComponent = std::make_unique<MusicalTimePreviewTrackHeader>();
+    headerComponent = std::make_unique<MusicalTimePreviewTrackHeader>(*this);
     addAndMakeVisible(headerComponent.get());
 
     laneComponent = std::make_unique<MusicalTimePreviewTrackLane>();
@@ -216,23 +252,43 @@ MusicalTimePreviewTrack::~MusicalTimePreviewTrack()
 //==============================================================================
 void MusicalTimePreviewTrack::handleAsyncUpdate()
 {
-    laneComponent->setViewRangeInTicks(getViewRangeInTicks());
-    repaint();
+
 }
 
 //==============================================================================
-void MusicalTimePreviewTrack::updateContent(const cctn::song::SongDocumentEditor& songDocumentEditor)
+void MusicalTimePreviewTrack::triggerUpdateContent()
 {
     currentBeatTimePoints.clear();
-    if (songDocumentEditor.getCurrentDocument().has_value())
+    
+    if (trackAccessDelegate.getSongDocumentEditor().has_value() && 
+        trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().has_value())
     {
+        auto grid_size = cctn::song::NoteLength::Quarter;
+        if (auto* track_header = dynamic_cast<MusicalTimePreviewTrackHeader*>(headerComponent.get()))
+        {
+            grid_size = track_header->getCurrenGridSize();
+        }
+
+        const auto& song_document = *trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().value();
         currentBeatTimePoints = 
-            cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(
-                *songDocumentEditor.getCurrentDocument().value(), 
-                cctn::song::NoteLength::Quarter
-            );
+            cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(song_document, grid_size);
     }
+
     laneComponent->updateContent(currentBeatTimePoints);
+
+    repaint();
+}
+
+void MusicalTimePreviewTrack::triggerUpdateVisibleRange()
+{
+    juce::Range<double> range_visible;
+
+    if (trackAccessDelegate.getVisibleRangeInTicks().has_value())
+    {
+        range_visible = trackAccessDelegate.getVisibleRangeInTicks().value();
+    }
+
+    laneComponent->setViewRangeInTicks(range_visible);
 
     repaint();
 }

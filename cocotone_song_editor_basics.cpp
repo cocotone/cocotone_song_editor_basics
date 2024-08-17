@@ -3,6 +3,7 @@
 //==============================================================================
 #include "SongEditor/Lyric/cocotone_MoraKana.h"
 
+#include "SongEditor/View/Track/cocotone_ITrackDataAccessDelegate.h"
 #include "SongEditor/View/Track/cocotone_TrackComponentBase.h"
 #include "SongEditor/View/Track/cocotone_TrackHeaderBase.h"
 #include "SongEditor/View/Track/cocotone_TrackLaneBase.h"

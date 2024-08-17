@@ -11,6 +11,7 @@ class MultiTrackEditor final
     , private juce::ChangeListener
     , private juce::ScrollBar::Listener
     , private juce::Value::Listener
+    , public cctn::song::ITrackDataAccessDelegate
 {
 public:
     //==============================================================================
@@ -37,6 +38,10 @@ private:
 
     // juce::Value::Listener
     void valueChanged(juce::Value& value) override;
+
+    // cctn::song::ITrackDataAccessDelegate
+    std::optional<cctn::song::SongDocumentEditor*> getSongDocumentEditor() override;
+    std::optional<juce::Range<double>> getVisibleRangeInTicks() override;
 
     //==============================================================================
     void updateContent();

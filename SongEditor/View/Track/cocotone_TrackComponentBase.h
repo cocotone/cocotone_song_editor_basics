@@ -15,19 +15,20 @@ public:
     virtual ~TrackComponentBase() = default;
 
     //==============================================================================
-    virtual void updateContent(const cctn::song::SongDocumentEditor& songDocumentEditor) = 0;
+    virtual void triggerUpdateContent() = 0;
+    virtual void triggerUpdateVisibleRange() = 0;
 
-    //==============================================================================
-    void setViewRangeInTicks(const juce::Range<double> viewRangeInTicks)
-    { 
-        currentViewRangeInTicks = viewRangeInTicks;
-        triggerAsyncUpdate();
-    }
-    
-    const juce::Range<double>& getViewRangeInTicks() const
-    {
-        return currentViewRangeInTicks;
-    }
+    ////==============================================================================
+    //void setViewRangeInTicks(const juce::Range<double> viewRangeInTicks)
+    //{ 
+    //    currentViewRangeInTicks = viewRangeInTicks;
+    //    triggerAsyncUpdate();
+    //}
+    //
+    //const juce::Range<double>& getViewRangeInTicks() const
+    //{
+    //    return currentViewRangeInTicks;
+    //}
 
     //==============================================================================
     void setHeaderRatio(float ratio)

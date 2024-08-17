@@ -19,9 +19,13 @@ void TempoTrack::handleAsyncUpdate()
 }
 
 //==============================================================================
-void TempoTrack::updateContent(const cctn::song::SongDocumentEditor& songDocumentEditor)
+void TempoTrack::triggerUpdateContent()
 {
     repaint();
+}
+
+void TempoTrack::triggerUpdateVisibleRange()
+{
 }
 
 }

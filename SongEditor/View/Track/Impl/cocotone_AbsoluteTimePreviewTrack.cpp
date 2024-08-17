@@ -6,17 +6,147 @@ namespace song
 //==============================================================================
 class AbsoluteTimePreviewTrackHeader
     : public cctn::song::TrackHeaderBase
+    , private juce::Value::Listener
 {
 public:
-    AbsoluteTimePreviewTrackHeader()
+    explicit AbsoluteTimePreviewTrackHeader(AbsoluteTimePreviewTrack& owner)
+        : ownerComponent(owner)
     {
+        // Grid Size
+        labelGridSize = std::make_unique<juce::Label>();
+        labelGridSize->setText("Time    Grid Size: ", juce::dontSendNotification);
+        labelGridSize->setJustificationType(juce::Justification::centredRight);
+        addAndMakeVisible(labelGridSize.get());
+
+        comboboxGridSize = std::make_unique<juce::ComboBox>();
+        comboboxGridSize->onChange =
+            [safe_this = juce::Component::SafePointer(this)]() {
+            if (safe_this.getComponent() == nullptr)
+            {
+                return;
+            }
+
+            const auto item_idx = safe_this->comboboxGridSize->getSelectedItemIndex();
+            if (safe_this->mapIndexToGridSize.count(item_idx) > 0)
+            {
+                safe_this->valueGridSize = (int)safe_this->mapIndexToGridSize[item_idx];
+            }
+            };
+        addAndMakeVisible(comboboxGridSize.get());
+
+        populateComboBoxWithGridSize(*comboboxGridSize.get(), mapIndexToGridSize);
+
+        valueGridSize.addListener(this);
+
+        initialUpdate();
     }
 
     ~AbsoluteTimePreviewTrackHeader() override
     {
+        valueGridSize.removeListener(this);
+    }
+
+    //==============================================================================
+    cctn::song::NoteLength getCurrenGridSize() const
+    {
+        return (cctn::song::NoteLength)(int)valueGridSize.getValue();
     }
 
 private:
+    //==============================================================================
+    void paint(juce::Graphics& g) override
+    {}
+
+    void resized() override
+    {
+        auto rect_area = getLocalBounds();
+
+        const auto width_label = rect_area.getWidth() * 0.6f;
+
+        labelGridSize->setBounds(rect_area.removeFromLeft(width_label));
+        comboboxGridSize->setBounds(rect_area);
+    }
+
+    //==============================================================================
+    void valueChanged(juce::Value& value) override
+    {
+        if (value.refersToSameSourceAs(valueGridSize))
+        {
+            ownerComponent.triggerUpdateContent();
+        }
+    }
+
+    //==============================================================================
+    void initialUpdate()
+    {
+        valueGridSize = (int)cctn::song::NoteLength::Quarter;
+    }
+
+    static void populateComboBoxWithGridSize(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToGridSize)
+    {
+        struct NoteLengthItem
+        {
+            cctn::song::NoteLength noteLength;
+            const juce::String name;
+        };
+
+        /**
+        enum class NoteLength
+        {
+            Whole,           // Whole note
+            Half,            // Half note
+            Quarter,         // Quarter note
+            Eighth,          // Eighth note
+            Sixteenth,       // Sixteenth note
+            //ThirtySecond,    // Thirty-second note
+            //SixtyFourth,     // Sixty-fourth note
+            //Triplet,         // Quarter note triplet
+            //EighthTriplet,   // Eighth note triplet
+            //SixteenthTriplet,// Sixteenth note triplet
+            //DottedHalf,      // Dotted half note
+            //DottedQuarter,   // Dotted quarter note
+            //DottedEighth,    // Dotted eighth note
+            //DottedSixteenth  // Dotted sixteenth note
+        };
+        */
+        const NoteLengthItem items[] =
+        {
+            { NoteLength::Whole, "1/1" },
+            { NoteLength::Half, "1/2" },
+            { NoteLength::Quarter, "1/4" },
+            { NoteLength::Eighth, "1/8" },
+            { NoteLength::Sixteenth, "1/16" },
+            //{ NoteLength::ThirtySecond, "1/32" },
+            //{ NoteLength::SixtyFourth, "1/64" },
+            //{ NoteLength::Triplet, "1/4T" },
+            //{ NoteLength::EighthTriplet, "1/8T" },
+            //{ NoteLength::SixteenthTriplet, "1/16T" },
+            //{ NoteLength::DottedHalf, "1/2." },
+            //{ NoteLength::DottedQuarter, "1/4." },
+            //{ NoteLength::DottedEighth, "1/8." },
+            //{ NoteLength::DottedSixteenth, "1/16." }
+        };
+
+        comboBox.clear(juce::dontSendNotification);
+        mapIndexToGridSize.clear();
+
+        for (int item_idx = 0; item_idx < std::size(items); item_idx++)
+        {
+            comboBox.addItem(items[item_idx].name, item_idx + 1);
+            mapIndexToGridSize[item_idx] = items[item_idx].noteLength;
+        }
+
+        comboBox.setSelectedItemIndex((int)cctn::song::NoteLength::Quarter, juce::dontSendNotification);
+    }
+
+
+    //==============================================================================
+    AbsoluteTimePreviewTrack& ownerComponent;
+
+    std::unique_ptr<juce::Label> labelGridSize;
+    std::unique_ptr<juce::ComboBox> comboboxGridSize;
+    std::map<int, cctn::song::NoteLength> mapIndexToGridSize;
+    juce::Value valueGridSize;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AbsoluteTimePreviewTrackHeader)
 };
@@ -89,9 +219,10 @@ private:
 };
 
 //==============================================================================
-AbsoluteTimePreviewTrack::AbsoluteTimePreviewTrack()
+AbsoluteTimePreviewTrack::AbsoluteTimePreviewTrack(cctn::song::ITrackDataAccessDelegate& delegate)
+    : trackAccessDelegate(delegate)
 {
-    headerComponent = std::make_unique<AbsoluteTimePreviewTrackHeader>();
+    headerComponent = std::make_unique<AbsoluteTimePreviewTrackHeader>(*this);
     addAndMakeVisible(headerComponent.get());
 
     laneComponent = std::make_unique<AbsoluteTimePreviewTrackLane>();
@@ -114,23 +245,44 @@ AbsoluteTimePreviewTrack::~AbsoluteTimePreviewTrack()
 //==============================================================================
 void AbsoluteTimePreviewTrack::handleAsyncUpdate()
 {
-    laneComponent->setViewRangeInTicks(getViewRangeInTicks());
+    
     repaint();
 }
 
 //==============================================================================
-void AbsoluteTimePreviewTrack::updateContent(const cctn::song::SongDocumentEditor& songDocumentEditor)
+void AbsoluteTimePreviewTrack::triggerUpdateContent()
 {
     currentBeatTimePoints.clear();
-    if (songDocumentEditor.getCurrentDocument().has_value())
+    
+    if (trackAccessDelegate.getSongDocumentEditor().has_value() &&
+        trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().has_value())
     {
+        auto grid_size = cctn::song::NoteLength::Quarter;
+        if (auto* track_header = dynamic_cast<AbsoluteTimePreviewTrackHeader*>(headerComponent.get()))
+        {
+            grid_size = track_header->getCurrenGridSize();
+        }
+
+        const auto& song_document = *trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().value();
         currentBeatTimePoints =
-            cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(
-                *songDocumentEditor.getCurrentDocument().value(),
-                cctn::song::NoteLength::Whole
-            );
+            cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(song_document, grid_size);
     }
+
     laneComponent->updateContent(currentBeatTimePoints);
+
+    repaint();
+}
+
+void AbsoluteTimePreviewTrack::triggerUpdateVisibleRange()
+{
+    juce::Range<double> range_visible;
+
+    if (trackAccessDelegate.getVisibleRangeInTicks().has_value())
+    {
+        range_visible = trackAccessDelegate.getVisibleRangeInTicks().value();
+    }
+
+    laneComponent->setViewRangeInTicks(range_visible);
 
     repaint();
 }
