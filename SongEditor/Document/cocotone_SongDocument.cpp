@@ -519,6 +519,19 @@ SongDocument::BeatTimePoints SongDocument::BeatTimePointsFactory::makeBeatTimePo
         currentTick += ticksPerNoteLength;
         currentTime += secondsPerNoteLength;
 
+        // Convert current tick to MusicalTime
+        MusicalTime next_musical_time = cctn::song::SongDocument::Calculator::tickToBar(document, currentTick);
+
+        // In case of bar is move to next bar and not equal to first beat of bar.
+        if (next_musical_time.bar != musicalTime.bar && next_musical_time.beat != 1)
+        {
+            next_musical_time.beat = 1;
+            next_musical_time.tick = 0;
+
+            currentTick = cctn::song::SongDocument::Calculator::barToTick(document, next_musical_time);
+            currentTime = cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, currentTick);
+        }
+
         // Check if we've reached the end of the song
         if (eventIt == events.end() && currentTick >= document.getTotalLengthInTicks())
         {
