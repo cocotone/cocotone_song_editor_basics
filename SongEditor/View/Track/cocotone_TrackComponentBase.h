@@ -18,18 +18,6 @@ public:
     virtual void triggerUpdateContent() = 0;
     virtual void triggerUpdateVisibleRange() = 0;
 
-    ////==============================================================================
-    //void setViewRangeInTicks(const juce::Range<double> viewRangeInTicks)
-    //{ 
-    //    currentViewRangeInTicks = viewRangeInTicks;
-    //    triggerAsyncUpdate();
-    //}
-    //
-    //const juce::Range<double>& getViewRangeInTicks() const
-    //{
-    //    return currentViewRangeInTicks;
-    //}
-
     //==============================================================================
     void setHeaderRatio(float ratio)
     {
@@ -58,12 +46,6 @@ private:
     void paint(juce::Graphics& g) override
     {
         juce::Graphics::ScopedSaveState save_state(g);
-
-        auto rect_area = getLocalBounds();
-
-        auto randomInt = juce::Random::getSystemRandom().nextInt64();
-        g.setColour(juce::Colour(randomInt).withAlpha(1.0f));
-        g.drawRect(rect_area);
     }
 
     void resized() override

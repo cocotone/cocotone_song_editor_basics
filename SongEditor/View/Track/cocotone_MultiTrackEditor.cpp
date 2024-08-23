@@ -6,13 +6,13 @@ namespace song
 //==============================================================================
 MultiTrackEditor::MultiTrackEditor()
 {
-    timeSignatureTrack = std::make_unique<cctn::song::TimeSignatureTrack>();
+    timeSignatureTrack = std::make_unique<cctn::song::TimeSignatureTrack>(*this);
     addAndMakeVisible(timeSignatureTrack.get());
 
     musicalTimePreviewTrack = std::make_unique<cctn::song::MusicalTimePreviewTrack>(*this);
     addAndMakeVisible(musicalTimePreviewTrack.get());
 
-    tempoTrack = std::make_unique<cctn::song::TempoTrack>();
+    tempoTrack = std::make_unique<cctn::song::TempoTrack>(*this);
     addAndMakeVisible(tempoTrack.get());
 
     absoluteTimePreviewTrack = std::make_unique<cctn::song::AbsoluteTimePreviewTrack>(*this);
@@ -74,11 +74,20 @@ void MultiTrackEditor::paint(juce::Graphics& g)
     juce::Graphics::ScopedSaveState save_state(g);
 
     g.fillAll(kColourMainBackground);
+}
 
-    auto rect_area = getLocalBounds();
-    auto randomInt = juce::Random::getSystemRandom().nextInt64();
-    g.setColour(juce::Colour(randomInt).withAlpha(1.0f));
-    g.drawRect(rect_area, 2);
+void MultiTrackEditor::paintOverChildren(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    g.setColour(juce::Colours::darkgrey);
+    g.drawRect(timeSignatureTrack->getBounds(), 1);
+    g.drawRect(musicalTimePreviewTrack->getBounds(), 1);
+    g.drawRect(tempoTrack->getBounds(), 1);
+    g.drawRect(absoluteTimePreviewTrack->getBounds(), 1);
+
+    g.setColour(juce::Colours::grey);
+    g.drawRect(getLocalBounds(), 2);
 }
 
 void MultiTrackEditor::resized()
@@ -88,19 +97,22 @@ void MultiTrackEditor::resized()
     const auto ratio_track_header = 0.125f;
     const auto width_track_header = rect_area.getWidth() * ratio_track_header;
 
+    const auto height_scroll_bar = 20;
+    const auto height_track = (rect_area.getHeight() - height_scroll_bar) / 4;
+
     timeSignatureTrack->setHeaderRatio(ratio_track_header);
-    timeSignatureTrack->setBounds(rect_area.removeFromTop(56));
+    timeSignatureTrack->setBounds(rect_area.removeFromTop(height_track));
 
     musicalTimePreviewTrack->setHeaderRatio(ratio_track_header);
-    musicalTimePreviewTrack->setBounds(rect_area.removeFromTop(40));
+    musicalTimePreviewTrack->setBounds(rect_area.removeFromTop(height_track));
     
     tempoTrack->setHeaderRatio(ratio_track_header);
-    tempoTrack->setBounds(rect_area.removeFromTop(56));
+    tempoTrack->setBounds(rect_area.removeFromTop(height_track));
     
     absoluteTimePreviewTrack->setHeaderRatio(ratio_track_header);
-    absoluteTimePreviewTrack->setBounds(rect_area.removeFromTop(40));
+    absoluteTimePreviewTrack->setBounds(rect_area.removeFromTop(height_track));
 
-    scrollBarHorizontal->setBounds(rect_area.removeFromBottom(20).withTrimmedLeft(width_track_header));
+    scrollBarHorizontal->setBounds(rect_area.removeFromBottom(height_scroll_bar).withTrimmedLeft(width_track_header));
 }
 
 //==============================================================================
@@ -120,7 +132,9 @@ void MultiTrackEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
 //==============================================================================
 void MultiTrackEditor::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart)
 {
+    timeSignatureTrack->triggerUpdateVisibleRange();
     musicalTimePreviewTrack->triggerUpdateVisibleRange();
+    tempoTrack->triggerUpdateVisibleRange();
     absoluteTimePreviewTrack->triggerUpdateVisibleRange();
 }
 
@@ -162,10 +176,14 @@ void MultiTrackEditor::updateContent()
             scrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, (double)ticks_tail}, juce::dontSendNotification);
             scrollBarHorizontal->setCurrentRange(current_range.withLength(ticks_per_4bars), juce::dontSendNotification);
 
+            timeSignatureTrack->triggerUpdateContent();
             musicalTimePreviewTrack->triggerUpdateContent();
+            tempoTrack->triggerUpdateContent();
             absoluteTimePreviewTrack->triggerUpdateContent();
 
+            timeSignatureTrack->triggerUpdateVisibleRange();
             musicalTimePreviewTrack->triggerUpdateVisibleRange();
+            tempoTrack->triggerUpdateVisibleRange();
             absoluteTimePreviewTrack->triggerUpdateVisibleRange();
         }
     }
