@@ -95,8 +95,8 @@ private:
                 tempo_event.getEventType() == cctn::song::SongDocument::TempoEvent::TempoEventType::kBoth)
             {
                 const auto signature_text = " " +
-                    juce::String(tempo_event.getTimeSignature().denominator) + "/" +
-                    juce::String(tempo_event.getTimeSignature().numerator);
+                    juce::String(tempo_event.getTimeSignature().numerator) + "/" +
+                    juce::String(tempo_event.getTimeSignature().denominator);
 
                 const auto position_x = ticksToPositionX(tempo_event.getTick(), getViewRangeInTicks(), rect_area.getX(), rect_area.getRight());
 
