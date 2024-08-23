@@ -449,6 +449,14 @@ double SongDocument::Calculator::tickToAbsoluteTime(const cctn::song::SongDocume
     return absoluteTime;
 }
 
+int64_t SongDocument::Calculator::noteLengthToTicks(const cctn::song::SongDocument& document, const NoteLength resolution)
+{
+    double noteLengthsPerQuarterNote = cctn::song::getNoteLengthsPerQuarterNote(resolution);
+    int64_t ticksPerNoteLength = static_cast<int64_t>(document.ticksPerQuarterNote / noteLengthsPerQuarterNote);
+
+    return ticksPerNoteLength;
+}
+
 //==============================================================================
 SongDocument::MusicalTime SongDocument::Calculator::calculateNoteOffPosition(const SongDocument& document, const Note& note)
 {

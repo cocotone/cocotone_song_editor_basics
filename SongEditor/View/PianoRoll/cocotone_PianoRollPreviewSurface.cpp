@@ -303,16 +303,18 @@ void PianoRollPreviewSurface::updateViewContext()
         const auto region_optional = documentEditorForPreviewPtr.lock()->findNearestQuantizeRegion(userInputPositionInSeconds);
         if (region_optional.has_value())
         {
-            // Get the note values
-            const auto note_end_position_in_seconds =
-                calculate_note_end_time(
-                    region_optional.value().startPositionInSeconds, 
-                    region_optional.value().endPositionInSeconds, 
-                    documentEditorForPreviewPtr.lock()->getEditorContext().currentGridSize,
-                    documentEditorForPreviewPtr.lock()->getEditorContext().currentNoteLength);
-
-            quantizedInputRegionInSeconds =
-                juce::Range<double>{ region_optional.value().startPositionInSeconds, note_end_position_in_seconds };
+            const auto& document = *documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
+            const auto note_length = documentEditorForPreviewPtr.lock()->getEditorContext().currentNoteLength;
+            const auto tick_of_region_start = cctn::song::SongDocument::Calculator::barToTick(document, region_optional.value().startMusicalTime);
+            const auto tick_of_region_end = 
+                tick_of_region_start + 
+                cctn::song::SongDocument::Calculator::noteLengthToTicks(document, note_length);
+            
+            quantizedInputRegionInSeconds = 
+                juce::Range<double>{ 
+                cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, tick_of_region_start), 
+                cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, tick_of_region_end)
+            };
         }
     }
 
