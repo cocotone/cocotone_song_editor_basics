@@ -14,7 +14,7 @@ public:
     {
         // Grid Size
         labelGridSize = std::make_unique<juce::Label>();
-        labelGridSize->setText("Time    Grid Size: ", juce::dontSendNotification);
+        labelGridSize->setText("Time  Grid Size: ", juce::dontSendNotification);
         labelGridSize->setJustificationType(juce::Justification::centredRight);
         addAndMakeVisible(labelGridSize.get());
 
@@ -29,7 +29,7 @@ public:
             const auto item_idx = safe_this->comboboxGridSize->getSelectedItemIndex();
             if (safe_this->mapIndexToGridSize.count(item_idx) > 0)
             {
-                safe_this->valueGridSize = (int)safe_this->mapIndexToGridSize[item_idx];
+                safe_this->valueGridSize = (double)safe_this->mapIndexToGridSize[item_idx];
             }
             };
         addAndMakeVisible(comboboxGridSize.get());
@@ -47,10 +47,12 @@ public:
     }
 
     //==============================================================================
-    cctn::song::NoteLength getCurrenGridSize() const
-    {
-        return (cctn::song::NoteLength)(int)valueGridSize.getValue();
-    }
+    virtual juce::var getProperties()
+    { 
+        juce::DynamicObject::Ptr properties = new juce::DynamicObject();
+        properties->setProperty("seconds", (double)valueGridSize.getValue());
+        return properties;
+    };
 
 private:
     //==============================================================================
@@ -79,52 +81,31 @@ private:
     //==============================================================================
     void initialUpdate()
     {
-        valueGridSize = (int)cctn::song::NoteLength::Quarter;
+        const auto item_idx = comboboxGridSize->getSelectedItemIndex();
+        if (mapIndexToGridSize.count(item_idx) > 0)
+        {
+            valueGridSize = (double)mapIndexToGridSize[item_idx];
+        }
+        else
+        {
+            valueGridSize = (double)0.5;
+        }
     }
 
-    static void populateComboBoxWithGridSize(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToGridSize)
+    static void populateComboBoxWithGridSize(juce::ComboBox& comboBox, std::map<int, double>& mapIndexToGridSize)
     {
-        struct NoteLengthItem
+        struct GridSizeItem
         {
-            cctn::song::NoteLength noteLength;
+            double seconds;
             const juce::String name;
         };
 
-        /**
-        enum class NoteLength
+        const GridSizeItem items[] =
         {
-            Whole,           // Whole note
-            Half,            // Half note
-            Quarter,         // Quarter note
-            Eighth,          // Eighth note
-            Sixteenth,       // Sixteenth note
-            //ThirtySecond,    // Thirty-second note
-            //SixtyFourth,     // Sixty-fourth note
-            //Triplet,         // Quarter note triplet
-            //EighthTriplet,   // Eighth note triplet
-            //SixteenthTriplet,// Sixteenth note triplet
-            //DottedHalf,      // Dotted half note
-            //DottedQuarter,   // Dotted quarter note
-            //DottedEighth,    // Dotted eighth note
-            //DottedSixteenth  // Dotted sixteenth note
-        };
-        */
-        const NoteLengthItem items[] =
-        {
-            { NoteLength::Whole, "1/1" },
-            { NoteLength::Half, "1/2" },
-            { NoteLength::Quarter, "1/4" },
-            { NoteLength::Eighth, "1/8" },
-            { NoteLength::Sixteenth, "1/16" },
-            //{ NoteLength::ThirtySecond, "1/32" },
-            //{ NoteLength::SixtyFourth, "1/64" },
-            //{ NoteLength::Triplet, "1/4T" },
-            //{ NoteLength::EighthTriplet, "1/8T" },
-            //{ NoteLength::SixteenthTriplet, "1/16T" },
-            //{ NoteLength::DottedHalf, "1/2." },
-            //{ NoteLength::DottedQuarter, "1/4." },
-            //{ NoteLength::DottedEighth, "1/8." },
-            //{ NoteLength::DottedSixteenth, "1/16." }
+            { 1.0,  "1.0 [seconds]" },
+            { 0.5,  "0.5 [seconds]" },
+            { 0.25, "0.25 [seconds]" },
+            { 0.1,  "0.1 [seconds]" },
         };
 
         comboBox.clear(juce::dontSendNotification);
@@ -133,10 +114,10 @@ private:
         for (int item_idx = 0; item_idx < std::size(items); item_idx++)
         {
             comboBox.addItem(items[item_idx].name, item_idx + 1);
-            mapIndexToGridSize[item_idx] = items[item_idx].noteLength;
+            mapIndexToGridSize[item_idx] = items[item_idx].seconds;
         }
 
-        comboBox.setSelectedItemIndex((int)cctn::song::NoteLength::Quarter, juce::dontSendNotification);
+        comboBox.setSelectedItemIndex(1, juce::dontSendNotification);
     }
 
 
@@ -145,7 +126,7 @@ private:
 
     std::unique_ptr<juce::Label> labelGridSize;
     std::unique_ptr<juce::ComboBox> comboboxGridSize;
-    std::map<int, cctn::song::NoteLength> mapIndexToGridSize;
+    std::map<int, double> mapIndexToGridSize;
     juce::Value valueGridSize;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AbsoluteTimePreviewTrackHeader)
@@ -153,9 +134,19 @@ private:
 
 //==============================================================================
 class AbsoluteTimePreviewTrackLane
-    : public cctn::song::TrackLaneBase<cctn::song::SongDocument::BeatTimePoints>
+    : public cctn::song::TrackLaneBase<cctn::song::SongDocument>
 {
 public:
+    //==============================================================================
+    struct TicksWithTimeInSeconds
+    {
+        juce::int64 absoluteTicks;
+        double absoluteTimeInSeconds;
+
+        JUCE_LEAK_DETECTOR(TicksWithTimeInSeconds)
+    };
+
+    //==============================================================================
     AbsoluteTimePreviewTrackLane()
     {
     }
@@ -176,9 +167,23 @@ private:
     }
 
     //==============================================================================
-    void updateContent(const cctn::song::SongDocument::BeatTimePoints& content) override
+    void updateContent(const cctn::song::SongDocument& content, const juce::var& properties) override
     {
-        currentBeatTimePoints = content;
+        currentTicksWithTime.clear();
+
+        const auto ticks_document_end = content.getTotalLengthInTicks();
+        const auto grid_size_in_seconds = (double)properties.getProperty("seconds", 0.5);
+        jassert(grid_size_in_seconds > 0.0);
+
+        const auto absolute_time_end_in_seconds = cctn::song::SongDocument::Calculator::tickToAbsoluteTime(content, ticks_document_end);
+        for (double seconds = 0.0; seconds < absolute_time_end_in_seconds; )
+        {
+            const auto ticks = cctn::song::SongDocument::Calculator::absoluteTimeToTick(content, seconds);
+
+            currentTicksWithTime.add(TicksWithTimeInSeconds{ ticks, seconds });
+
+            seconds += (double)properties.getProperty("seconds", grid_size_in_seconds);
+        }
     }
 
     //==============================================================================
@@ -188,19 +193,18 @@ private:
 
         const auto rect_area = getLocalBounds();
 
-        const auto precise_beat_and_time_array = currentBeatTimePoints;
         const auto range_visible_time_in_ticks = getViewRangeInTicks();
 
         g.setFont(juce::Font(juce::Font::getDefaultMonospacedFontName(), 10, 0));
 
         juce::String last_beat_signature = "";
-        for (const auto& beat_time_point : currentBeatTimePoints)
+        for (const auto& ticks_with_time : currentTicksWithTime)
         {
-            const auto time_text = juce::String(beat_time_point.absoluteTimeInSeconds, 1);
+            const auto time_text = juce::String(ticks_with_time.absoluteTimeInSeconds, 1);
 
             if (time_text != last_beat_signature)
             {
-                const auto position_x = ticksToPositionX(beat_time_point.absoluteTicks, getViewRangeInTicks(), rect_area.getX(), rect_area.getRight());
+                const auto position_x = ticksToPositionX(ticks_with_time.absoluteTicks, getViewRangeInTicks(), rect_area.getX(), rect_area.getRight());
 
                 g.setColour(juce::Colours::white);
                 g.drawVerticalLine(position_x, 0.0f, getHeight());
@@ -210,7 +214,7 @@ private:
         }
     }
 
-    cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
+    juce::Array<TicksWithTimeInSeconds> currentTicksWithTime{};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AbsoluteTimePreviewTrackLane)
 };
@@ -249,23 +253,13 @@ void AbsoluteTimePreviewTrack::handleAsyncUpdate()
 //==============================================================================
 void AbsoluteTimePreviewTrack::triggerUpdateContent()
 {
-    currentBeatTimePoints.clear();
-    
     if (trackAccessDelegate.getSongDocumentEditor().has_value() &&
         trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().has_value())
     {
-        auto grid_size = cctn::song::NoteLength::Quarter;
-        if (auto* track_header = dynamic_cast<AbsoluteTimePreviewTrackHeader*>(headerComponent.get()))
-        {
-            grid_size = track_header->getCurrenGridSize();
-        }
-
+        const auto header_properties = headerComponent->getProperties();
         const auto& song_document = *trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().value();
-        currentBeatTimePoints =
-            cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(song_document, grid_size);
+        laneComponent->updateContent(song_document, header_properties);
     }
-
-    laneComponent->updateContent(currentBeatTimePoints);
 
     repaint();
 }

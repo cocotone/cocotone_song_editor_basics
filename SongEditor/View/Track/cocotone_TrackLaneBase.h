@@ -15,7 +15,7 @@ public:
     virtual ~TrackLaneBase() = default;
 
     //==============================================================================
-    virtual void updateContent(const ContentType& content) = 0;
+    virtual void updateContent(const ContentType& content, const juce::var& properties) = 0;
 
     //==============================================================================
     void setViewRangeInTicks(const juce::Range<double> viewRangeInTicks)

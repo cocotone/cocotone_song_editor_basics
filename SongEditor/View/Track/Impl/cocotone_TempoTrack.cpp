@@ -69,7 +69,7 @@ private:
     }
 
     //==============================================================================
-    void updateContent(const cctn::song::SongDocument& content) override
+    void updateContent(const cctn::song::SongDocument& content, const juce::var& properties) override
     {
         currentTempoTrack = content.getTempoTrack();
     }
@@ -143,8 +143,9 @@ void TempoTrack::triggerUpdateContent()
     if (trackAccessDelegate.getSongDocumentEditor().has_value() &&
         trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().has_value())
     {
+        const auto header_properties = headerComponent->getProperties();
         const auto& song_document = *trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().value();
-        laneComponent->updateContent(song_document);
+        laneComponent->updateContent(song_document, header_properties);
     }
 
     repaint();

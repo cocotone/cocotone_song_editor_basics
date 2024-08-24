@@ -25,13 +25,10 @@ private:
     void triggerUpdateVisibleRange() override;
 
     //==============================================================================
-    cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
-
-    //==============================================================================
     cctn::song::ITrackDataAccessDelegate& trackAccessDelegate;
 
     std::unique_ptr<cctn::song::TrackHeaderBase> headerComponent;
-    std::unique_ptr<cctn::song::TrackLaneBase<cctn::song::SongDocument::BeatTimePoints>> laneComponent;
+    std::unique_ptr<cctn::song::TrackLaneBase<cctn::song::SongDocument>> laneComponent;
 
     friend AbsoluteTimePreviewTrackHeader;
 

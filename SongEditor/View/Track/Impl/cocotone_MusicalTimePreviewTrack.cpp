@@ -14,7 +14,7 @@ public:
     {
         // Grid Size
         labelGridSize = std::make_unique<juce::Label>();
-        labelGridSize->setText("Beat    Grid Size: ", juce::dontSendNotification);
+        labelGridSize->setText("Beat  Grid Size: ", juce::dontSendNotification);
         labelGridSize->setJustificationType(juce::Justification::centredRight);
         addAndMakeVisible(labelGridSize.get());
 
@@ -175,7 +175,7 @@ private:
     }
 
     //==============================================================================
-    void updateContent(const cctn::song::SongDocument::BeatTimePoints& content) override
+    void updateContent(const cctn::song::SongDocument::BeatTimePoints& content, const juce::var& properties) override
     {
         currentBeatTimePoints = content;
     }
@@ -260,6 +260,8 @@ void MusicalTimePreviewTrack::triggerUpdateContent()
     if (trackAccessDelegate.getSongDocumentEditor().has_value() && 
         trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().has_value())
     {
+        const auto header_properties = headerComponent->getProperties();
+
         auto grid_size = cctn::song::NoteLength::Quarter;
         if (auto* track_header = dynamic_cast<MusicalTimePreviewTrackHeader*>(headerComponent.get()))
         {
@@ -269,9 +271,9 @@ void MusicalTimePreviewTrack::triggerUpdateContent()
         const auto& song_document = *trackAccessDelegate.getSongDocumentEditor().value()->getCurrentDocument().value();
         currentBeatTimePoints = 
             cctn::song::SongDocument::BeatTimePointsFactory::makeBeatTimePoints(song_document, grid_size);
-    }
 
-    laneComponent->updateContent(currentBeatTimePoints);
+        laneComponent->updateContent(currentBeatTimePoints, header_properties);
+    }
 
     repaint();
 }
