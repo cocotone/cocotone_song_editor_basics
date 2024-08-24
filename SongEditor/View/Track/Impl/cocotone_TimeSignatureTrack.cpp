@@ -84,9 +84,6 @@ private:
         const auto precise_beat_and_time_array = currentTempoTrack;
         const auto range_visible_time_in_ticks = getViewRangeInTicks();
 
-        // Set clipping mask
-        //g.reduceClipRegion(rectBeatRulerArea);
-
         g.setFont(juce::Font(juce::Font::getDefaultMonospacedFontName(), 10, 0));
 
         for (const auto& tempo_event : currentTempoTrack.getEvents())
