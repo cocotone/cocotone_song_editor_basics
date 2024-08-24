@@ -58,6 +58,7 @@ private:
     std::unique_ptr<cctn::song::TrackComponentBase> musicalTimePreviewTrack;
     std::unique_ptr<cctn::song::TrackComponentBase> tempoTrack;
     std::unique_ptr<cctn::song::TrackComponentBase> absoluteTimePreviewTrack;
+    std::unique_ptr<cctn::song::TrackComponentBase> vocalTrack;
 
     juce::Value valueMusicalTimePreviewGridSize;
 
