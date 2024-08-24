@@ -215,7 +215,7 @@ void PianoRollTimeRuler::drawBeatRulerVerticalLines(juce::Graphics& g)
     juce::String last_beat_signature = "";
     for (const auto& beat_time_point : precise_beat_and_time_array)
     {
-        const auto time_in_seconds = beat_time_point.timeInSeconds;
+        const auto time_in_seconds = beat_time_point.absoluteTimeInSeconds;
 
         const auto signature_text = " " +
             juce::String(beat_time_point.musicalTime.bar) + ":" +

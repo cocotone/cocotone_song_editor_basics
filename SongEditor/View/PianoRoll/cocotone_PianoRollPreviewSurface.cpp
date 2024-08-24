@@ -1,3 +1,4 @@
+#include "cocotone_PianoRollPreviewSurface.h"
 namespace cctn
 {
 namespace song
@@ -13,7 +14,9 @@ PianoRollPreviewSurface::PianoRollPreviewSurface(const PianoRollKeyboard& pianoR
     , quantizedInputRegionInSeconds(juce::Range<double>{0.0, 0.0})
     , isInputPositionInsertable(false)
     , scopedSongDocumentPtrToPaint(nullptr)
+    , scopedAudioThumbnailPtrToPaint(nullptr)
     , visibleGridVerticalLineType(juce::var((int)VisibleGridVerticalType::kTimeSignature))
+    , selectedNoteId(-1)
 {
     numVisibleWhiteAndBlackKeys = 12 * numVisibleOctaves;
     numVisibleWhiteKeys = 7 * numVisibleOctaves;
@@ -139,6 +142,24 @@ void PianoRollPreviewSurface::setDocumentForPreview(std::shared_ptr<cctn::song::
 }
 
 //==============================================================================
+void PianoRollPreviewSurface::registerAudioThumbnailProvider(IAudioThumbnailProvider* provider)
+{
+    std::unique_lock lock(mutex);
+
+    audioThumbnailProviderPtr = provider;
+}
+
+void PianoRollPreviewSurface::unregisterAudioThumbnailProvider(IAudioThumbnailProvider* provider)
+{
+    std::unique_lock lock(mutex);
+
+    if (audioThumbnailProviderPtr == provider)
+    {
+        audioThumbnailProviderPtr = nullptr;
+    }
+}
+
+//==============================================================================
 void PianoRollPreviewSurface::paint(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
@@ -150,7 +171,16 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
         document_to_paint = documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
     }
 
-    juce::ScopedValueSetter<const cctn::song::SongDocument*> svs(scopedSongDocumentPtrToPaint, document_to_paint);
+    juce::ScopedValueSetter<const cctn::song::SongDocument*> svs_1(scopedSongDocumentPtrToPaint, document_to_paint);
+
+    juce::AudioThumbnail* audio_thumbnail_to_paint = nullptr;
+    if(audioThumbnailProviderPtr != nullptr && 
+        audioThumbnailProviderPtr->getAudioThumbnail().has_value())
+    {
+        audio_thumbnail_to_paint = audioThumbnailProviderPtr->getAudioThumbnail().value();
+    }
+
+    juce::ScopedValueSetter<juce::AudioThumbnail*> svs_2(scopedAudioThumbnailPtrToPaint, audio_thumbnail_to_paint);
 
     updateViewContext();
 
@@ -183,6 +213,8 @@ void PianoRollPreviewSurface::paint(juce::Graphics& g)
     drawQuantizedInputRegionRectangle(g);
 
     drawUserInputPositionCellRectangle(g);
+
+    drawCurrentAudioThumbnail(g);
 }
 
 void PianoRollPreviewSurface::resized()
@@ -271,16 +303,18 @@ void PianoRollPreviewSurface::updateViewContext()
         const auto region_optional = documentEditorForPreviewPtr.lock()->findNearestQuantizeRegion(userInputPositionInSeconds);
         if (region_optional.has_value())
         {
-            // Get the note values
-            const auto note_end_position_in_seconds =
-                calculate_note_end_time(
-                    region_optional.value().startPositionInSeconds, 
-                    region_optional.value().endPositionInSeconds, 
-                    documentEditorForPreviewPtr.lock()->getEditorContext().currentGridSize,
-                    documentEditorForPreviewPtr.lock()->getEditorContext().currentNoteLength);
-
-            quantizedInputRegionInSeconds =
-                juce::Range<double>{ region_optional.value().startPositionInSeconds, note_end_position_in_seconds };
+            const auto& document = *documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
+            const auto note_length = documentEditorForPreviewPtr.lock()->getEditorContext().currentNoteLength;
+            const auto tick_of_region_start = cctn::song::SongDocument::Calculator::barToTick(document, region_optional.value().startMusicalTime);
+            const auto tick_of_region_end = 
+                tick_of_region_start + 
+                cctn::song::SongDocument::Calculator::noteLengthToTicks(document, note_length);
+            
+            quantizedInputRegionInSeconds = 
+                juce::Range<double>{ 
+                cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, tick_of_region_start), 
+                cctn::song::SongDocument::Calculator::tickToAbsoluteTime(document, tick_of_region_end)
+            };
         }
     }
 
@@ -546,6 +580,30 @@ void PianoRollPreviewSurface::drawUserInputPositionCellRectangle(juce::Graphics&
     }
 }
 
+void PianoRollPreviewSurface::drawCurrentAudioThumbnail(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    if (scopedAudioThumbnailPtrToPaint == nullptr)
+    {
+        return;
+    }
+
+    g.setColour(juce::Colours::grey.withAlpha(0.6f));
+
+    if (scopedAudioThumbnailPtrToPaint->getTotalLength() > 0.0)
+    {
+        auto thumbArea = getLocalBounds().removeFromBottom(getLocalBounds().getHeight() * 0.3f);
+
+        scopedAudioThumbnailPtrToPaint->drawChannel(g,
+            thumbArea.reduced(2),
+            rangeVisibleTimeInSeconds.getStart(),
+            rangeVisibleTimeInSeconds.getEnd(),
+            0,
+            1.0f);
+    }
+}
+
 //==============================================================================
 void PianoRollPreviewSurface::updateMapVisibleKeyNoteNumberToVerticalPositionRange()
 {
@@ -646,13 +704,13 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const 
     auto start_iter = std::lower_bound(beatTimePoints.begin(), beatTimePoints.end(), visibleRangeSeconds.getStart(),
         [](const cctn::song::SongDocument::BeatTimePoint& btp, double time) 
         { 
-            return btp.timeInSeconds < time;
+            return btp.absoluteTimeInSeconds < time;
         });
 
     auto end_iter = std::upper_bound(beatTimePoints.begin(), beatTimePoints.end(), visibleRangeSeconds.getEnd(),
         [](double time, const cctn::song::SongDocument::BeatTimePoint& btp)
         { 
-            return time < btp.timeInSeconds;
+            return time < btp.absoluteTimeInSeconds;
         });
 
     if (start_iter == beatTimePoints.end() || end_iter == beatTimePoints.begin())
@@ -661,7 +719,7 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const 
     }
 
     // If the first visible beat is after the start of the visible range, include the previous beat
-    if (start_iter != beatTimePoints.begin() && start_iter->timeInSeconds > visibleRangeSeconds.getStart())
+    if (start_iter != beatTimePoints.begin() && start_iter->absoluteTimeInSeconds > visibleRangeSeconds.getStart())
     {
         --start_iter;
     }
@@ -670,15 +728,15 @@ PianoRollPreviewSurface::createVerticalLinePositionsInTimeSignatureDomain(const 
 
     for (auto it = start_iter; it != end_iter; ++it)
     {
-        if (it->timeInSeconds >= visibleRangeSeconds.getStart() && it->timeInSeconds <= visibleRangeSeconds.getEnd())
+        if (it->absoluteTimeInSeconds >= visibleRangeSeconds.getStart() && it->absoluteTimeInSeconds <= visibleRangeSeconds.getEnd())
         {
             // Convert time to position X.
             const double position_x =
-                juce::jmap<double>(it->timeInSeconds, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), 0, width);
+                juce::jmap<double>(it->absoluteTimeInSeconds, visibleRangeSeconds.getStart(), visibleRangeSeconds.getEnd(), 0, width);
 
             PositionWithTimeInfo pos;
             pos.positionX = (int)position_x;
-            pos.timeInSeconds = it->timeInSeconds;
+            pos.timeInSeconds = it->absoluteTimeInSeconds;
 
             positions.add(pos);
         }

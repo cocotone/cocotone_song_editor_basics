@@ -35,6 +35,22 @@ double positionXToTime(double positionX, double position_left, double position_r
     return time;
 }
 
+int ticksToPositionX(double timeInTicks, const juce::Range<double>& visibleRangeInTicks, double position_left, double position_right)
+{
+    if (visibleRangeInTicks.getLength() == 0.0)
+    {
+        return 0.0;
+    }
+
+    if (position_right - position_left == 0.0)
+    {
+        return 0.0;
+    }
+
+    const int position_x = juce::jmap<double>(timeInTicks, visibleRangeInTicks.getStart(), visibleRangeInTicks.getEnd(), position_left, position_right);
+    return position_x;
+}
+
 }
 }
 

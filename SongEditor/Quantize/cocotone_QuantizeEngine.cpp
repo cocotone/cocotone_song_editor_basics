@@ -25,8 +25,8 @@ void QuantizeEngine::updateQuantizeRegions(const cctn::song::SongDocument::BeatT
     for (size_t i = 0; i < beatTimePoints.size() - 1; ++i)
     {
         cctn::song::SongDocument::RegionWithBeatInfo region;
-        region.startPositionInSeconds = beatTimePoints[i].timeInSeconds;
-        region.endPositionInSeconds = beatTimePoints[i + 1].timeInSeconds;
+        region.startPositionInSeconds = beatTimePoints[i].absoluteTimeInSeconds;
+        region.endPositionInSeconds = beatTimePoints[i + 1].absoluteTimeInSeconds;
         region.startMusicalTime = beatTimePoints[i].musicalTime;
         quantizeRegions.add(region);
     }

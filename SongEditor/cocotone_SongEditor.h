@@ -6,12 +6,14 @@ namespace song
 {
 
 //==============================================================================
+class MultiTrackEditor;
 class PianoRollKeyboard;
 class PianoRollTimeRuler;
 class PianoRollPreviewSurface;
 class PianoRollInteractionSurface;
 class PianoRollEventDispatcher;
 class IPositionInfoProvider;
+class IAudioThumbnailProvider;
 class SongDocumentEditor;
 class SongEditorOperation;
 
@@ -31,6 +33,10 @@ public:
     //==============================================================================
     void registerPositionInfoProvider(IPositionInfoProvider* provider);
     void unregisterPositionInfoProvider(IPositionInfoProvider* provider);
+
+    //==============================================================================
+    void registerAudioThumbnailProvider(IAudioThumbnailProvider* provider);
+    void unregisterAudioThumbnailProvider(IAudioThumbnailProvider* provider);
 
     //==============================================================================
     void registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
@@ -62,6 +68,9 @@ private:
     void initialUpdate();
 
     //==============================================================================
+    std::unique_ptr<cctn::song::MultiTrackEditor> multiTrackEditor;
+    juce::Rectangle<int> rectMultiTrackEditor;
+
     std::unique_ptr<cctn::song::PianoRollKeyboard> pianoRollKeyboard;
     std::unique_ptr<cctn::song::PianoRollTimeRuler> pianoRollTimeRuler;
     std::unique_ptr<cctn::song::PianoRollPreviewSurface> pianoRollPreviewSurface;

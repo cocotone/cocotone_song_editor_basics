@@ -17,6 +17,9 @@ SongEditor::SongEditor()
 
     pianoRollEventDispatcher = std::make_unique<cctn::song::PianoRollEventDispatcher>(songEditorOperation);
 
+    multiTrackEditor = std::make_unique<cctn::song::MultiTrackEditor>();
+    addAndMakeVisible(multiTrackEditor.get());
+
     pianoRollKeyboard = std::make_unique<cctn::song::PianoRollKeyboard>(kNumVisibleOctaves);
     addAndMakeVisible(pianoRollKeyboard.get());
 
@@ -158,6 +161,8 @@ SongEditor::~SongEditor()
     pianoRollScrollBarHorizontal.reset();
     pianoRollPreviewSurface.reset();
     pianoRollKeyboard.reset();
+
+    multiTrackEditor.reset();
 }
 
 //==============================================================================
@@ -179,6 +184,19 @@ void SongEditor::unregisterPositionInfoProvider(IPositionInfoProvider* provider)
 }
 
 //==============================================================================
+void SongEditor::registerAudioThumbnailProvider(IAudioThumbnailProvider* provider)
+{
+    // Bypass function
+    pianoRollPreviewSurface->registerAudioThumbnailProvider(provider);
+}
+
+void SongEditor::unregisterAudioThumbnailProvider(IAudioThumbnailProvider* provider)
+{
+    // Bypass function
+    pianoRollPreviewSurface->unregisterAudioThumbnailProvider(provider);
+}
+
+//==============================================================================
 void SongEditor::registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor)
 {
     if (songDocumentEditorPtr.lock().get() != documentEditor.get())
@@ -196,8 +214,10 @@ void SongEditor::registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocu
 
         valuePianoRollInputMora = songDocumentEditorPtr.lock()->getEditorContext().currentNoteLyric.text;
 
-        const auto document_tail_seconds = songDocumentEditorPtr.lock()->getEditorContext().currentBeatTimePoints.back().timeInSeconds;
+        const auto document_tail_seconds = songDocumentEditorPtr.lock()->getEditorContext().currentBeatTimePoints.back().absoluteTimeInSeconds;
         pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, document_tail_seconds}, juce::dontSendNotification);
+
+        multiTrackEditor->setDocumentEditor(documentEditor);
     }
 }
 
@@ -214,6 +234,8 @@ void SongEditor::unregisterSongDocumentEditor(std::shared_ptr<cctn::song::SongDo
         pianoRollTimeRuler->setDocumentForPreview(nullptr);
 
         pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, 600.0}, juce::dontSendNotification);
+
+        multiTrackEditor->setDocumentEditor(nullptr);
     }
 }
 
@@ -226,6 +248,11 @@ void SongEditor::paint(juce::Graphics& g)
 void SongEditor::resized()
 {
     auto rect_area = getLocalBounds();
+
+    rectMultiTrackEditor = rect_area.removeFromTop(240);
+    multiTrackEditor->setBounds(rectMultiTrackEditor.reduced(4));
+
+    rect_area.removeFromTop(2);
 
     rectInputOptions = rect_area.removeFromTop(32);
 
@@ -365,14 +392,14 @@ void SongEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
         {
             songDocumentEditorPtr.lock()->updateEditorContext();
 
-            const auto document_tail_seconds = songDocumentEditorPtr.lock()->getEditorContext().currentBeatTimePoints.back().timeInSeconds;
+            const auto document_tail_seconds = songDocumentEditorPtr.lock()->getEditorContext().currentBeatTimePoints.back().absoluteTimeInSeconds;
             pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, document_tail_seconds}, juce::dontSendNotification);
         }
     }
 }
 
 //==============================================================================
-void SongEditor::populateComboBoxWithGridSize(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToNoteLength)
+void SongEditor::populateComboBoxWithGridSize(juce::ComboBox& comboBox, std::map<int, cctn::song::NoteLength>& mapIndexToGridSize)
 {
     struct NoteLengthItem
     {
@@ -418,12 +445,12 @@ void SongEditor::populateComboBoxWithGridSize(juce::ComboBox& comboBox, std::map
     };
 
     comboBox.clear(juce::dontSendNotification);
-    mapIndexToNoteLength.clear();
+    mapIndexToGridSize.clear();
 
     for (int item_idx = 0; item_idx < std::size(items); item_idx++)
     {
         comboBox.addItem(items[item_idx].name, item_idx + 1);
-        mapIndexToNoteLength[item_idx] = items[item_idx].noteLength;
+        mapIndexToGridSize[item_idx] = items[item_idx].noteLength;
     }
 
     comboBox.setSelectedItemIndex((int)cctn::song::NoteLength::Quarter, juce::dontSendNotification);
