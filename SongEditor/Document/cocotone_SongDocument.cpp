@@ -449,6 +449,45 @@ double SongDocument::Calculator::tickToAbsoluteTime(const cctn::song::SongDocume
     return absoluteTime;
 }
 
+int64_t SongDocument::Calculator::absoluteTimeToTick(const cctn::song::SongDocument& document, double targetTime)
+{
+    if (targetTime <= 0.0)
+        return 0;
+
+    int64_t resultTick = 0;
+    double currentTime = 0.0;
+    double currentTempo = 120.0; // Default tempo
+    int64_t lastEventTick = 0;
+
+    for (const auto& event : document.tempoTrack.getEvents())
+    {
+        if (event.getEventType() == TempoEvent::TempoEventType::kTempo ||
+            event.getEventType() == TempoEvent::TempoEventType::kBoth)
+        {
+            double secondsPerTick = 60.0 / (currentTempo * document.ticksPerQuarterNote);
+            double eventTime = currentTime + (event.getTick() - lastEventTick) * secondsPerTick;
+
+            if (eventTime >= targetTime)
+            {
+                // Target time is within this tempo section
+                resultTick = lastEventTick + static_cast<int64_t>((targetTime - currentTime) / secondsPerTick);
+                return resultTick;
+            }
+
+            // Update current position, time, and tempo
+            currentTime = eventTime;
+            lastEventTick = event.getTick();
+            currentTempo = event.getTempo();
+        }
+    }
+
+    // If target time is beyond all tempo changes
+    double secondsPerTick = 60.0 / (currentTempo * document.ticksPerQuarterNote);
+    resultTick = lastEventTick + static_cast<int64_t>((targetTime - currentTime) / secondsPerTick);
+
+    return resultTick;
+}
+
 int64_t SongDocument::Calculator::noteLengthToTicks(const cctn::song::SongDocument& document, const NoteLength resolution)
 {
     double noteLengthsPerQuarterNote = cctn::song::getNoteLengthsPerQuarterNote(resolution);

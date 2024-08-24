@@ -256,6 +256,7 @@ public:
         static int64_t barToTick(const cctn::song::SongDocument& document, const cctn::song::SongDocument::MusicalTime& musicalTime);
         static MusicalTime tickToBar(const cctn::song::SongDocument& document, int64_t targetTick);
         static double tickToAbsoluteTime(const cctn::song::SongDocument& document, int64_t targetTick);
+        static int64_t absoluteTimeToTick(const cctn::song::SongDocument& document, double targetTime);
         static int64_t noteLengthToTicks(const cctn::song::SongDocument& document, const NoteLength resolution);
 
         //==============================================================================
