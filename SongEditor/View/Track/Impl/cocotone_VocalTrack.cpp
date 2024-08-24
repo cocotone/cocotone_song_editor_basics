@@ -85,7 +85,11 @@ private:
         juce::int64 ticks_of_region_end = 0;
         juce::String lyrics_of_region = "";
 
-        for (const auto& note : content.getNotes())
+        auto current_notes = content.getNotes();
+        cctn::song::SongDocument::MusicalTmeDomainNoteComparator sorter;
+        current_notes.sort(sorter);
+
+        for (const auto& note : current_notes)
         {
             const auto ticks_note_start = cctn::song::SongDocument::Calculator::barToTick(content, note.startTimeInMusicalTime);
 
