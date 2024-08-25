@@ -379,6 +379,9 @@ void SongEditor::timerCallback()
 
             pianoRollTimeRuler->setPlayingPositionInSeconds(current_position_in_seconds);
             pianoRollTimeRuler->setCurrentPositionInfo(position_info_optional.value());
+
+            multiTrackEditor->setPlayingPositionInSeconds(current_position_in_seconds);
+            multiTrackEditor->setCurrentPositionInfo(position_info_optional.value());
         }
     }
 }

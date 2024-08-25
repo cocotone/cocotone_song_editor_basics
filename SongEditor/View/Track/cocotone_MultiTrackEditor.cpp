@@ -1,3 +1,4 @@
+#include "cocotone_MultiTrackEditor.h"
 namespace cctn
 {
 namespace song
@@ -5,6 +6,8 @@ namespace song
 
 //==============================================================================
 MultiTrackEditor::MultiTrackEditor()
+    : playingPositionInSeconds(0.0)
+    , playingPositionInTicks(0)
 {
     timeSignatureTrack = std::make_unique<cctn::song::TimeSignatureTrack>(*this);
     addAndMakeVisible(timeSignatureTrack.get());
@@ -65,9 +68,11 @@ void MultiTrackEditor::setDocumentEditor(std::shared_ptr<cctn::song::SongDocumen
 //==============================================================================
 void MultiTrackEditor::setPlayingPositionInSeconds(double positionInSeconds)
 {
+    playingPositionInSeconds = positionInSeconds;
+    repaint();
 }
 
-void MultiTrackEditor::setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo)
+void MultiTrackEditor::setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo&)
 {
 }
 
@@ -75,6 +80,17 @@ void MultiTrackEditor::setCurrentPositionInfo(const juce::AudioPlayHead::Positio
 void MultiTrackEditor::paint(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
+
+    const cctn::song::SongDocument* document_to_paint = nullptr;
+    if (!documentEditorForPreviewPtr.expired() &&
+        documentEditorForPreviewPtr.lock()->getCurrentDocument().has_value())
+    {
+        document_to_paint = documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
+    }
+
+    juce::ScopedValueSetter<const cctn::song::SongDocument*> svs_1(scopedSongDocumentPtrToPaint, document_to_paint);
+
+    updateViewContext();
 
     g.fillAll(kColourMainBackground);
 }
@@ -89,6 +105,8 @@ void MultiTrackEditor::paintOverChildren(juce::Graphics& g)
     g.drawRect(tempoTrack->getBounds(), 1);
     g.drawRect(absoluteTimePreviewTrack->getBounds(), 1);
     g.drawRect(vocalTrack->getBounds(), 1);
+
+    drawPlayingPositionMarker(g);
 
     g.setColour(juce::Colours::grey);
     g.drawRect(getLocalBounds(), 2);
@@ -120,6 +138,13 @@ void MultiTrackEditor::resized()
     vocalTrack->setBounds(rect_area.removeFromTop(height_track));
 
     scrollBarHorizontal->setBounds(rect_area.removeFromBottom(height_scroll_bar).withTrimmedLeft(width_track_header));
+
+    rectTrackLane = juce::Rectangle<int>{ 
+        (int)width_track_header, 
+        0,
+        getLocalBounds().getWidth() - (int)width_track_header,
+        getLocalBounds().getHeight() - (int)height_scroll_bar
+    };
 }
 
 //==============================================================================
@@ -165,6 +190,40 @@ std::optional<cctn::song::SongDocumentEditor*> MultiTrackEditor::getSongDocument
 std::optional<juce::Range<double>> MultiTrackEditor::getVisibleRangeInTicks()
 {
     return scrollBarHorizontal->getCurrentRange();
+}
+
+//==============================================================================
+void MultiTrackEditor::updateViewContext()
+{
+    JUCE_ASSERT_MESSAGE_MANAGER_EXISTS;
+
+    if (scopedSongDocumentPtrToPaint == nullptr)
+    {
+        return;
+    }
+
+    // Update playing position in ticks
+    {
+        const cctn::song::SongDocument& document = *scopedSongDocumentPtrToPaint;
+        playingPositionInTicks = cctn::song::SongDocument::Calculator::absoluteTimeToTick(document, playingPositionInSeconds);
+    }
+}
+
+void MultiTrackEditor::drawPlayingPositionMarker(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    const auto range_visible_time_in_ticks = scrollBarHorizontal->getCurrentRange();
+    const auto position_x = ticksToPositionX(playingPositionInTicks, range_visible_time_in_ticks, rectTrackLane.getX(), rectTrackLane.getRight());
+
+    juce::Rectangle<int> rect_marker =
+        juce::Rectangle<int>{ position_x, 0, 2, getHeight() };
+
+    // Set clipping mask
+    g.reduceClipRegion(rectTrackLane);
+
+    g.setColour(juce::Colours::yellow);
+    g.fillRect(rect_marker);
 }
 
 //==============================================================================

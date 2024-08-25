@@ -45,6 +45,10 @@ private:
     std::optional<juce::Range<double>> getVisibleRangeInTicks() override;
 
     //==============================================================================
+    void updateViewContext();
+    void drawPlayingPositionMarker(juce::Graphics& g);
+
+    //==============================================================================
     void updateContent();
 
     //==============================================================================
@@ -52,7 +56,7 @@ private:
     const cctn::song::SongDocument* scopedSongDocumentPtrToPaint;
     cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
 
-    std::unique_ptr<juce::ScrollBar> scrollBarHorizontal;
+    std::unique_ptr<juce::ScrollBar> scrollBarHorizontal;  // NOTE: Unit is Tick.
 
     std::unique_ptr<cctn::song::TrackComponentBase> timeSignatureTrack;
     std::unique_ptr<cctn::song::TrackComponentBase> musicalTimePreviewTrack;
@@ -61,6 +65,11 @@ private:
     std::unique_ptr<cctn::song::TrackComponentBase> vocalTrack;
 
     juce::Value valueMusicalTimePreviewGridSize;
+
+    juce::Rectangle<int> rectTrackLane;
+
+    double playingPositionInSeconds;
+    juce::int64 playingPositionInTicks;
 
     mutable std::mutex mutex;
 
