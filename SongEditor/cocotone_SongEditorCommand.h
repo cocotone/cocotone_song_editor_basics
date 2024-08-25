@@ -6,6 +6,8 @@ namespace song
 {
 
 class SongDocument;
+class MutliTrackEditor;
+class PianoRollEditor;
 
 //==============================================================================
 class SongEditorOperation final
@@ -30,6 +32,8 @@ private:
     void detachDocument();
 
     friend class SongEditor;
+    friend class MutliTrackEditor;
+    friend class PianoRollEditor;
 
     mutable std::mutex mutex;
     std::weak_ptr<cctn::song::SongDocumentEditor> attachedDocument;
