@@ -75,9 +75,12 @@ private:
     std::unique_ptr<cctn::song::PianoRollTimeRuler> pianoRollTimeRuler;
     std::unique_ptr<cctn::song::PianoRollPreviewSurface> pianoRollPreviewSurface;
     std::unique_ptr<cctn::song::PianoRollInteractionSurface> pianoRollInteractionSurface;
+    juce::Value valuePianoRollBottomKeyNumber;
+    
     std::unique_ptr<juce::Slider> pianoRollSliderVertical;
     std::unique_ptr<juce::ScrollBar> pianoRollScrollBarHorizontal;
-    juce::Value valuePianoRollBottomKeyNumber;
+    std::unique_ptr<juce::ToggleButton> buttonFollowPlayingPosition;
+    juce::Value valueFollowPlayingPosition;
     
     juce::Rectangle<int> rectInputOptions;
     

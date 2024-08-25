@@ -122,9 +122,22 @@ SongEditor::SongEditor()
 
     populateComboBoxWithLyricMora(*comboboxInputMora.get(), mapIndexToMora);
 
+    buttonFollowPlayingPosition = std::make_unique<juce::ToggleButton>();
+    buttonFollowPlayingPosition->setButtonText("Follow Position");
+    buttonFollowPlayingPosition->onStateChange =
+        [safe_this = juce::Component::SafePointer(this)]() {
+        if (safe_this.getComponent() == nullptr)
+        {
+            return;
+        }
+
+        safe_this->valueFollowPlayingPosition = (bool)safe_this->buttonFollowPlayingPosition->getToggleState();
+        };
+    addAndMakeVisible(buttonFollowPlayingPosition.get());
 
     // Add listener
     pianoRollScrollBarHorizontal->addListener(this);
+    valueFollowPlayingPosition.addListener(this);
 
     valuePianoRollBottomKeyNumber.addListener(this);
     valuePianoRollGridSize.addListener(this);
@@ -156,6 +169,7 @@ SongEditor::~SongEditor()
     valuePianoRollInputMora.removeListener(this);
 
     pianoRollScrollBarHorizontal->removeListener(this);
+    valueFollowPlayingPosition.removeListener(this);
 
     pianoRollSliderVertical.reset();
     pianoRollScrollBarHorizontal.reset();
@@ -296,6 +310,12 @@ void SongEditor::resized()
         width_piano_roll_scrollbar,
         piano_roll_main_bottom - piano_roll_main_top };
     
+    const auto rect_piano_roll_button_follow_position =
+        juce::Rectangle<int>{ 0,
+        piano_roll_main_bottom,
+        width_piano_roll_keyboard,
+        width_piano_roll_scrollbar };
+
     const auto rect_piano_roll_scrollbar_horizontal = 
         juce::Rectangle<int>{ width_piano_roll_keyboard,
         piano_roll_main_bottom,
@@ -307,6 +327,8 @@ void SongEditor::resized()
 
     pianoRollKeyboard->setBounds(rect_piano_roll_keyboard);
     pianoRollSliderVertical->setBounds(rect_piano_roll_scrollbar_vertical);
+
+    buttonFollowPlayingPosition->setBounds(rect_piano_roll_button_follow_position);
     pianoRollScrollBarHorizontal->setBounds(rect_piano_roll_scrollbar_horizontal);
 
     {
@@ -374,14 +396,23 @@ void SongEditor::timerCallback()
         {
             const double current_position_in_seconds = position_info_optional.value().getTimeInSeconds().orFallback(0.0);
             
+            multiTrackEditor->setPlayingPositionInSeconds(current_position_in_seconds);
+            multiTrackEditor->setCurrentPositionInfo(position_info_optional.value());
+
             pianoRollPreviewSurface->setPlayingPositionInSeconds(current_position_in_seconds);
             pianoRollPreviewSurface->setCurrentPositionInfo(position_info_optional.value());
 
             pianoRollTimeRuler->setPlayingPositionInSeconds(current_position_in_seconds);
             pianoRollTimeRuler->setCurrentPositionInfo(position_info_optional.value());
 
-            multiTrackEditor->setPlayingPositionInSeconds(current_position_in_seconds);
-            multiTrackEditor->setCurrentPositionInfo(position_info_optional.value());
+            if ((bool)valueFollowPlayingPosition.getValue())
+            {
+                if (!pianoRollScrollBarHorizontal->getCurrentRange().contains(current_position_in_seconds))
+                {
+                    auto new_range = pianoRollScrollBarHorizontal->getCurrentRange().movedToStartAt(current_position_in_seconds);
+                    pianoRollScrollBarHorizontal->setCurrentRange(new_range);
+                }
+            }
         }
     }
 }
@@ -537,6 +568,8 @@ void SongEditor::initialUpdate()
 {
     valuePianoRollInputNoteLength = (int)cctn::song::NoteLength::Quarter;
     valuePianoRollGridSize = (int)cctn::song::NoteLength::Sixteenth;
+
+    valueFollowPlayingPosition = (bool)buttonFollowPlayingPosition->getToggleState();
 }
 
 }
