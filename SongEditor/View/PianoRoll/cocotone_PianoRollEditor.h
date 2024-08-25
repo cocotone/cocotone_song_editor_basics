@@ -45,6 +45,7 @@ public:
 private:
     //==============================================================================
     void paint(juce::Graphics& g) override;
+    void paintOverChildren(juce::Graphics& g) override;
     void resized() override;
 
     // juce::Value::Listener

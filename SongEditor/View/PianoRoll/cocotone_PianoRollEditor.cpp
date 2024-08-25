@@ -249,7 +249,17 @@ void PianoRollEditor::setCurrentPositionInfo(const juce::AudioPlayHead::Position
 //==============================================================================
 void PianoRollEditor::paint(juce::Graphics& g)
 {
+    juce::Graphics::ScopedSaveState save_state(g);
+
     g.fillAll(kColourWallpaper);
+}
+
+void PianoRollEditor::paintOverChildren(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    g.setColour(juce::Colours::grey);
+    g.drawRect(getLocalBounds(), 2);
 }
 
 void PianoRollEditor::resized()
