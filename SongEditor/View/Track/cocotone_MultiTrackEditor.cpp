@@ -1,7 +1,8 @@
-#include "cocotone_MultiTrackEditor.h"
 namespace cctn
 {
 namespace song
+{
+namespace view
 {
 
 //==============================================================================
@@ -9,6 +10,8 @@ MultiTrackEditor::MultiTrackEditor()
     : playingPositionInSeconds(0.0)
     , playingPositionInTicks(0)
 {
+    songEditorOperationApi = std::make_shared<cctn::song::SongEditorOperation>();
+
     timeSignatureTrack = std::make_unique<cctn::song::TimeSignatureTrack>(*this);
     addAndMakeVisible(timeSignatureTrack.get());
 
@@ -62,20 +65,22 @@ void MultiTrackEditor::setDocumentEditor(std::shared_ptr<cctn::song::SongDocumen
 {
     std::lock_guard lock(mutex);
 
-    if (!documentEditorForPreviewPtr.expired())
+    if (!songDocumentEditorPtr.expired())
     {
-        if (documentEditorForPreviewPtr.lock().get() != documentEditor.get())
+        if (songDocumentEditorPtr.lock().get() != documentEditor.get())
         {
-            documentEditorForPreviewPtr.lock()->removeChangeListener(this);
-            documentEditorForPreviewPtr.reset();
+            songDocumentEditorPtr.lock()->removeChangeListener(this);
+            songDocumentEditorPtr.reset();
         }
     }
 
-    documentEditorForPreviewPtr = documentEditor;
+    songDocumentEditorPtr = documentEditor;
 
-    if (!documentEditorForPreviewPtr.expired())
+    songEditorOperationApi->attachDocument(documentEditor);
+
+    if (!songDocumentEditorPtr.expired())
     {
-        documentEditorForPreviewPtr.lock()->addChangeListener(this);
+        songDocumentEditorPtr.lock()->addChangeListener(this);
     }
 
     updateContent();
@@ -100,10 +105,10 @@ void MultiTrackEditor::paint(juce::Graphics& g)
     juce::Graphics::ScopedSaveState save_state(g);
 
     const cctn::song::SongDocument* document_to_paint = nullptr;
-    if (!documentEditorForPreviewPtr.expired() &&
-        documentEditorForPreviewPtr.lock()->getCurrentDocument().has_value())
+    if (!songDocumentEditorPtr.expired() &&
+        songDocumentEditorPtr.lock()->getCurrentDocument().has_value())
     {
-        document_to_paint = documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
+        document_to_paint = songDocumentEditorPtr.lock()->getCurrentDocument().value();
     }
 
     juce::ScopedValueSetter<const cctn::song::SongDocument*> svs_1(scopedSongDocumentPtrToPaint, document_to_paint);
@@ -145,10 +150,10 @@ void MultiTrackEditor::resized()
 
     musicalTimePreviewTrack->setHeaderRatio(ratio_track_header);
     musicalTimePreviewTrack->setBounds(rect_area.removeFromTop(height_track));
-    
+
     tempoTrack->setHeaderRatio(ratio_track_header);
     tempoTrack->setBounds(rect_area.removeFromTop(height_track));
-    
+
     absoluteTimePreviewTrack->setHeaderRatio(ratio_track_header);
     absoluteTimePreviewTrack->setBounds(rect_area.removeFromTop(height_track));
 
@@ -159,8 +164,8 @@ void MultiTrackEditor::resized()
     buttonFollowPlayingPosition->setBounds(rect_footer.removeFromLeft(width_track_header));
     scrollBarHorizontal->setBounds(rect_footer);
 
-    rectTrackLane = juce::Rectangle<int>{ 
-        (int)width_track_header, 
+    rectTrackLane = juce::Rectangle<int>{
+        (int)width_track_header,
         0,
         getLocalBounds().getWidth() - (int)width_track_header,
         getLocalBounds().getHeight() - (int)height_scroll_bar
@@ -170,9 +175,9 @@ void MultiTrackEditor::resized()
 //==============================================================================
 void MultiTrackEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    if (!documentEditorForPreviewPtr.expired())
+    if (!songDocumentEditorPtr.expired())
     {
-        if (source == documentEditorForPreviewPtr.lock().get())
+        if (source == songDocumentEditorPtr.lock().get())
         {
             updateContent();
 
@@ -199,9 +204,9 @@ void MultiTrackEditor::valueChanged(juce::Value& value)
 //==============================================================================
 std::optional<cctn::song::SongDocumentEditor*> MultiTrackEditor::getSongDocumentEditor()
 {
-    if (!documentEditorForPreviewPtr.expired())
+    if (!songDocumentEditorPtr.expired())
     {
-        return documentEditorForPreviewPtr.lock().get();
+        return songDocumentEditorPtr.lock().get();
     }
 
     return std::nullopt;
@@ -264,12 +269,12 @@ void MultiTrackEditor::drawPlayingPositionMarker(juce::Graphics& g)
 //==============================================================================
 void MultiTrackEditor::updateContent()
 {
-    if (!documentEditorForPreviewPtr.expired())
+    if (!songDocumentEditorPtr.expired())
     {
-        if (documentEditorForPreviewPtr.lock()->getCurrentDocument().has_value())
+        if (songDocumentEditorPtr.lock()->getCurrentDocument().has_value())
         {
-            const auto& song_document_editor = *documentEditorForPreviewPtr.lock();
-            const auto& song_document = *documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
+            const auto& song_document_editor = *songDocumentEditorPtr.lock();
+            const auto& song_document = *songDocumentEditorPtr.lock()->getCurrentDocument().value();
 
             const auto ticks_tail = song_document.getTotalLengthInTicks();
             const auto ticks_per_4bars = song_document.getTicksPerQuarterNote() * 4 * 4;
@@ -295,5 +300,4 @@ void MultiTrackEditor::updateContent()
 
 }
 }
-
-
+}

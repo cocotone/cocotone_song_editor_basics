@@ -4,6 +4,8 @@ namespace cctn
 {
 namespace song
 {
+namespace view
+{
 
 //==============================================================================
 class MultiTrackEditor final
@@ -55,7 +57,9 @@ private:
     void updateContent();
 
     //==============================================================================
-    std::weak_ptr<cctn::song::SongDocumentEditor> documentEditorForPreviewPtr;
+    std::weak_ptr<cctn::song::SongDocumentEditor> songDocumentEditorPtr;
+    std::shared_ptr<cctn::song::SongEditorOperation> songEditorOperationApi;
+
     const cctn::song::SongDocument* scopedSongDocumentPtrToPaint;
     cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
 
@@ -82,5 +86,6 @@ private:
     JUCE_LEAK_DETECTOR(MultiTrackEditor)
 };
 
+}
 }
 }

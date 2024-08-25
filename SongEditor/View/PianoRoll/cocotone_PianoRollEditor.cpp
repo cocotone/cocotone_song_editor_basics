@@ -2,6 +2,8 @@ namespace cctn
 {
 namespace song
 {
+namespace view
+{
 
 namespace
 {
@@ -10,15 +12,11 @@ constexpr int kNumVisibleOctaves = 2;
 
 //==============================================================================
 PianoRollEditor::PianoRollEditor()
-    : positionInfoProviderPtr(nullptr)
-    , songDocumentEditorPtr({})
+    : songDocumentEditorPtr({})
 {
-    songEditorOperation = std::make_shared<cctn::song::SongEditorOperation>();
+    songEditorOperationApi = std::make_shared<cctn::song::SongEditorOperation>();
 
-    pianoRollEventDispatcher = std::make_unique<cctn::song::PianoRollEventDispatcher>(songEditorOperation);
-
-    multiTrackEditor = std::make_unique<cctn::song::MultiTrackEditor>();
-    addAndMakeVisible(multiTrackEditor.get());
+    pianoRollEventDispatcher = std::make_unique<cctn::song::PianoRollEventDispatcher>(songEditorOperationApi);
 
     pianoRollKeyboard = std::make_unique<cctn::song::PianoRollKeyboard>(kNumVisibleOctaves);
     addAndMakeVisible(pianoRollKeyboard.get());
@@ -155,14 +153,10 @@ PianoRollEditor::PianoRollEditor()
 
     // Trigger Initial Update.
     initialUpdate();
-
-    startTimerHz(30);
 }
 
 PianoRollEditor::~PianoRollEditor()
 {
-    stopTimer();
-
     valuePianoRollBottomKeyNumber.removeListener(this);
     valuePianoRollGridSize.removeListener(this);
     valuePianoRollInputNoteLength.removeListener(this);
@@ -175,26 +169,6 @@ PianoRollEditor::~PianoRollEditor()
     pianoRollScrollBarHorizontal.reset();
     pianoRollPreviewSurface.reset();
     pianoRollKeyboard.reset();
-
-    multiTrackEditor.reset();
-}
-
-//==============================================================================
-void PianoRollEditor::registerPositionInfoProvider(IPositionInfoProvider* provider)
-{
-    std::unique_lock lock(mutex);
-
-    positionInfoProviderPtr = provider;
-}
-
-void PianoRollEditor::unregisterPositionInfoProvider(IPositionInfoProvider* provider)
-{
-    std::unique_lock lock(mutex);
-
-    if (positionInfoProviderPtr == provider)
-    {
-        positionInfoProviderPtr = nullptr;
-    }
 }
 
 //==============================================================================
@@ -217,7 +191,8 @@ void PianoRollEditor::registerSongDocumentEditor(std::shared_ptr<cctn::song::Son
     {
         songDocumentEditorPtr = documentEditor;
         songDocumentEditorPtr.lock()->addChangeListener(this);
-        songEditorOperation->attachDocument(songDocumentEditorPtr.lock());
+
+        songEditorOperationApi->attachDocument(songDocumentEditorPtr.lock());
 
         pianoRollPreviewSurface->setDocumentForPreview(documentEditor);
         pianoRollTimeRuler->setDocumentForPreview(documentEditor);
@@ -230,8 +205,6 @@ void PianoRollEditor::registerSongDocumentEditor(std::shared_ptr<cctn::song::Son
 
         const auto document_tail_seconds = songDocumentEditorPtr.lock()->getEditorContext().currentBeatTimePoints.back().absoluteTimeInSeconds;
         pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, document_tail_seconds}, juce::dontSendNotification);
-
-        multiTrackEditor->setDocumentEditor(documentEditor);
     }
 }
 
@@ -239,18 +212,38 @@ void PianoRollEditor::unregisterSongDocumentEditor(std::shared_ptr<cctn::song::S
 {
     if (songDocumentEditorPtr.lock().get() == documentEditor.get())
     {
-        songEditorOperation->detachDocument();
-        songDocumentEditorPtr.lock()->removeChangeListener(this);
+        songEditorOperationApi->detachDocument();
 
+        songDocumentEditorPtr.lock()->removeChangeListener(this);
         songDocumentEditorPtr.reset();
 
         pianoRollPreviewSurface->setDocumentForPreview(nullptr);
         pianoRollTimeRuler->setDocumentForPreview(nullptr);
 
         pianoRollScrollBarHorizontal->setRangeLimits(juce::Range<double>{0.0, 600.0}, juce::dontSendNotification);
-
-        multiTrackEditor->setDocumentEditor(nullptr);
     }
+}
+
+//==============================================================================
+void PianoRollEditor::setPlayingPositionInSeconds(double positionInSeconds)
+{
+    pianoRollPreviewSurface->setPlayingPositionInSeconds(positionInSeconds);
+    pianoRollTimeRuler->setPlayingPositionInSeconds(positionInSeconds);
+
+    if ((bool)valueFollowPlayingPosition.getValue())
+    {
+        if (!pianoRollScrollBarHorizontal->getCurrentRange().contains(positionInSeconds))
+        {
+            auto new_range = pianoRollScrollBarHorizontal->getCurrentRange().movedToStartAt(positionInSeconds);
+            pianoRollScrollBarHorizontal->setCurrentRange(new_range);
+        }
+    }
+}
+
+void PianoRollEditor::setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo)
+{
+    pianoRollPreviewSurface->setCurrentPositionInfo(positionInfo);
+    pianoRollTimeRuler->setCurrentPositionInfo(positionInfo);
 }
 
 //==============================================================================
@@ -262,11 +255,6 @@ void PianoRollEditor::paint(juce::Graphics& g)
 void PianoRollEditor::resized()
 {
     auto rect_area = getLocalBounds();
-
-    rectMultiTrackEditor = rect_area.removeFromTop(240);
-    multiTrackEditor->setBounds(rectMultiTrackEditor.reduced(4));
-
-    rect_area.removeFromTop(2);
 
     rectInputOptions = rect_area.removeFromTop(32);
 
@@ -381,39 +369,6 @@ void PianoRollEditor::scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, dou
         const auto current_range = pianoRollScrollBarHorizontal->getCurrentRange();
         pianoRollPreviewSurface->setVisibleRangeTimeInSeconds(current_range);
         pianoRollTimeRuler->setVisibleRangeTimeInSeconds(current_range);
-    }
-}
-
-//==============================================================================
-void PianoRollEditor::timerCallback()
-{
-    std::unique_lock lock(mutex);
-
-    if (positionInfoProviderPtr != nullptr)
-    {
-        const auto position_info_optional = positionInfoProviderPtr->getPositionInfo();
-        if (position_info_optional.has_value())
-        {
-            const double current_position_in_seconds = position_info_optional.value().getTimeInSeconds().orFallback(0.0);
-            
-            multiTrackEditor->setPlayingPositionInSeconds(current_position_in_seconds);
-            multiTrackEditor->setCurrentPositionInfo(position_info_optional.value());
-
-            pianoRollPreviewSurface->setPlayingPositionInSeconds(current_position_in_seconds);
-            pianoRollPreviewSurface->setCurrentPositionInfo(position_info_optional.value());
-
-            pianoRollTimeRuler->setPlayingPositionInSeconds(current_position_in_seconds);
-            pianoRollTimeRuler->setCurrentPositionInfo(position_info_optional.value());
-
-            if ((bool)valueFollowPlayingPosition.getValue())
-            {
-                if (!pianoRollScrollBarHorizontal->getCurrentRange().contains(current_position_in_seconds))
-                {
-                    auto new_range = pianoRollScrollBarHorizontal->getCurrentRange().movedToStartAt(current_position_in_seconds);
-                    pianoRollScrollBarHorizontal->setCurrentRange(new_range);
-                }
-            }
-        }
     }
 }
 
@@ -572,5 +527,6 @@ void PianoRollEditor::initialUpdate()
     valueFollowPlayingPosition = (bool)buttonFollowPlayingPosition->getToggleState();
 }
 
+}
 }
 }

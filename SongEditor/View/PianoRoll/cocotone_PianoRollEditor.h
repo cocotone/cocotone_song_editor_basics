@@ -6,23 +6,23 @@ namespace song
 {
 
 //==============================================================================
-class MultiTrackEditor;
 class PianoRollKeyboard;
 class PianoRollTimeRuler;
 class PianoRollPreviewSurface;
 class PianoRollInteractionSurface;
 class PianoRollEventDispatcher;
-class IPositionInfoProvider;
 class IAudioThumbnailProvider;
 class SongDocumentEditor;
 class SongEditorOperation;
+
+namespace view
+{
 
 //==============================================================================
 class PianoRollEditor final
     : public juce::Component
     , private juce::Value::Listener
     , private juce::ScrollBar::Listener
-    , private juce::Timer
     , public juce::ChangeListener
 {
 public:
@@ -31,16 +31,16 @@ public:
     ~PianoRollEditor() override;
 
     //==============================================================================
-    void registerPositionInfoProvider(IPositionInfoProvider* provider);
-    void unregisterPositionInfoProvider(IPositionInfoProvider* provider);
-
-    //==============================================================================
     void registerAudioThumbnailProvider(IAudioThumbnailProvider* provider);
     void unregisterAudioThumbnailProvider(IAudioThumbnailProvider* provider);
 
     //==============================================================================
     void registerSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
     void unregisterSongDocumentEditor(std::shared_ptr<cctn::song::SongDocumentEditor> documentEditor);
+
+    //==============================================================================
+    void setPlayingPositionInSeconds(double positionInSeconds);
+    void setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo);
 
 private:
     //==============================================================================
@@ -52,9 +52,6 @@ private:
 
     // juce::ScrollBar::Listener
     void scrollBarMoved(juce::ScrollBar* scrollBarThatHasMoved, double newRangeStart) override;
-
-    // juce::Timer
-    void timerCallback() override;
 
     // juce::ChangeListener
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
@@ -68,22 +65,19 @@ private:
     void initialUpdate();
 
     //==============================================================================
-    std::unique_ptr<cctn::song::MultiTrackEditor> multiTrackEditor;
-    juce::Rectangle<int> rectMultiTrackEditor;
-
     std::unique_ptr<cctn::song::PianoRollKeyboard> pianoRollKeyboard;
     std::unique_ptr<cctn::song::PianoRollTimeRuler> pianoRollTimeRuler;
     std::unique_ptr<cctn::song::PianoRollPreviewSurface> pianoRollPreviewSurface;
     std::unique_ptr<cctn::song::PianoRollInteractionSurface> pianoRollInteractionSurface;
     juce::Value valuePianoRollBottomKeyNumber;
-    
+
     std::unique_ptr<juce::Slider> pianoRollSliderVertical;
     std::unique_ptr<juce::ScrollBar> pianoRollScrollBarHorizontal;
     std::unique_ptr<juce::ToggleButton> buttonFollowPlayingPosition;
     juce::Value valueFollowPlayingPosition;
-    
+
     juce::Rectangle<int> rectInputOptions;
-    
+
     std::unique_ptr<juce::Label> labelPianoRollGridSize;
     std::unique_ptr<juce::ComboBox> comboboxPianoRollGridSize;
     std::map<int, cctn::song::NoteLength> mapIndexToGridSize;
@@ -102,14 +96,13 @@ private:
     std::unique_ptr<cctn::song::PianoRollEventDispatcher> pianoRollEventDispatcher;
 
     std::weak_ptr<cctn::song::SongDocumentEditor> songDocumentEditorPtr;
-    std::shared_ptr<cctn::song::SongEditorOperation> songEditorOperation;
-
-    IPositionInfoProvider* positionInfoProviderPtr;
+    std::shared_ptr<cctn::song::SongEditorOperation> songEditorOperationApi;
 
     mutable std::mutex mutex;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PianoRollEditor)
 };
 
+}
 }
 }
