@@ -2,10 +2,16 @@ namespace cctn
 {
 namespace song
 {
+namespace view
+{
 
 //==============================================================================
 MultiTrackEditor::MultiTrackEditor()
+    : playingPositionInSeconds(0.0)
+    , playingPositionInTicks(0)
 {
+    songEditorOperationApi = std::make_shared<cctn::song::SongEditorOperation>();
+
     timeSignatureTrack = std::make_unique<cctn::song::TimeSignatureTrack>(*this);
     addAndMakeVisible(timeSignatureTrack.get());
 
@@ -26,14 +32,32 @@ MultiTrackEditor::MultiTrackEditor()
     scrollBarHorizontal->setCurrentRange(juce::Range<double>{0.0, 6.0}, juce::dontSendNotification);
     addAndMakeVisible(scrollBarHorizontal.get());
 
+    buttonFollowPlayingPosition = std::make_unique<juce::ToggleButton>();
+    buttonFollowPlayingPosition->setButtonText("Follow Position");
+    buttonFollowPlayingPosition->onStateChange =
+        [safe_this = juce::Component::SafePointer(this)]() {
+        if (safe_this.getComponent() == nullptr)
+        {
+            return;
+        }
+
+        safe_this->valueFollowPlayingPosition = (bool)safe_this->buttonFollowPlayingPosition->getToggleState();
+        };
+    addAndMakeVisible(buttonFollowPlayingPosition.get());
+
     // Add listener
     scrollBarHorizontal->addListener(this);
+    valueFollowPlayingPosition.addListener(this);
+
+    // Initial update
+    initialUpdate();
 }
 
 MultiTrackEditor::~MultiTrackEditor()
 {
     // Remove listener
     scrollBarHorizontal->removeListener(this);
+    valueFollowPlayingPosition.removeListener(this);
 }
 
 //==============================================================================
@@ -41,20 +65,22 @@ void MultiTrackEditor::setDocumentEditor(std::shared_ptr<cctn::song::SongDocumen
 {
     std::lock_guard lock(mutex);
 
-    if (!documentEditorForPreviewPtr.expired())
+    if (!songDocumentEditorPtr.expired())
     {
-        if (documentEditorForPreviewPtr.lock().get() != documentEditor.get())
+        if (songDocumentEditorPtr.lock().get() != documentEditor.get())
         {
-            documentEditorForPreviewPtr.lock()->removeChangeListener(this);
-            documentEditorForPreviewPtr.reset();
+            songDocumentEditorPtr.lock()->removeChangeListener(this);
+            songDocumentEditorPtr.reset();
         }
     }
 
-    documentEditorForPreviewPtr = documentEditor;
+    songDocumentEditorPtr = documentEditor;
 
-    if (!documentEditorForPreviewPtr.expired())
+    songEditorOperationApi->attachDocument(documentEditor);
+
+    if (!songDocumentEditorPtr.expired())
     {
-        documentEditorForPreviewPtr.lock()->addChangeListener(this);
+        songDocumentEditorPtr.lock()->addChangeListener(this);
     }
 
     updateContent();
@@ -65,9 +91,11 @@ void MultiTrackEditor::setDocumentEditor(std::shared_ptr<cctn::song::SongDocumen
 //==============================================================================
 void MultiTrackEditor::setPlayingPositionInSeconds(double positionInSeconds)
 {
+    playingPositionInSeconds = positionInSeconds;
+    repaint();
 }
 
-void MultiTrackEditor::setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo& positionInfo)
+void MultiTrackEditor::setCurrentPositionInfo(const juce::AudioPlayHead::PositionInfo&)
 {
 }
 
@@ -75,6 +103,17 @@ void MultiTrackEditor::setCurrentPositionInfo(const juce::AudioPlayHead::Positio
 void MultiTrackEditor::paint(juce::Graphics& g)
 {
     juce::Graphics::ScopedSaveState save_state(g);
+
+    const cctn::song::SongDocument* document_to_paint = nullptr;
+    if (!songDocumentEditorPtr.expired() &&
+        songDocumentEditorPtr.lock()->getCurrentDocument().has_value())
+    {
+        document_to_paint = songDocumentEditorPtr.lock()->getCurrentDocument().value();
+    }
+
+    juce::ScopedValueSetter<const cctn::song::SongDocument*> svs_1(scopedSongDocumentPtrToPaint, document_to_paint);
+
+    updateViewContext();
 
     g.fillAll(kColourMainBackground);
 }
@@ -89,6 +128,8 @@ void MultiTrackEditor::paintOverChildren(juce::Graphics& g)
     g.drawRect(tempoTrack->getBounds(), 1);
     g.drawRect(absoluteTimePreviewTrack->getBounds(), 1);
     g.drawRect(vocalTrack->getBounds(), 1);
+
+    drawPlayingPositionMarker(g);
 
     g.setColour(juce::Colours::grey);
     g.drawRect(getLocalBounds(), 2);
@@ -109,25 +150,34 @@ void MultiTrackEditor::resized()
 
     musicalTimePreviewTrack->setHeaderRatio(ratio_track_header);
     musicalTimePreviewTrack->setBounds(rect_area.removeFromTop(height_track));
-    
+
     tempoTrack->setHeaderRatio(ratio_track_header);
     tempoTrack->setBounds(rect_area.removeFromTop(height_track));
-    
+
     absoluteTimePreviewTrack->setHeaderRatio(ratio_track_header);
     absoluteTimePreviewTrack->setBounds(rect_area.removeFromTop(height_track));
 
     vocalTrack->setHeaderRatio(ratio_track_header);
     vocalTrack->setBounds(rect_area.removeFromTop(height_track));
 
-    scrollBarHorizontal->setBounds(rect_area.removeFromBottom(height_scroll_bar).withTrimmedLeft(width_track_header));
+    auto rect_footer = rect_area.removeFromBottom(height_scroll_bar).withTrimmedBottom(2);
+    buttonFollowPlayingPosition->setBounds(rect_footer.removeFromLeft(width_track_header));
+    scrollBarHorizontal->setBounds(rect_footer);
+
+    rectTrackLane = juce::Rectangle<int>{
+        (int)width_track_header,
+        0,
+        getLocalBounds().getWidth() - (int)width_track_header,
+        getLocalBounds().getHeight() - (int)height_scroll_bar
+    };
 }
 
 //==============================================================================
 void MultiTrackEditor::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    if (!documentEditorForPreviewPtr.expired())
+    if (!songDocumentEditorPtr.expired())
     {
-        if (source == documentEditorForPreviewPtr.lock().get())
+        if (source == songDocumentEditorPtr.lock().get())
         {
             updateContent();
 
@@ -154,9 +204,9 @@ void MultiTrackEditor::valueChanged(juce::Value& value)
 //==============================================================================
 std::optional<cctn::song::SongDocumentEditor*> MultiTrackEditor::getSongDocumentEditor()
 {
-    if (!documentEditorForPreviewPtr.expired())
+    if (!songDocumentEditorPtr.expired())
     {
-        return documentEditorForPreviewPtr.lock().get();
+        return songDocumentEditorPtr.lock().get();
     }
 
     return std::nullopt;
@@ -168,14 +218,63 @@ std::optional<juce::Range<double>> MultiTrackEditor::getVisibleRangeInTicks()
 }
 
 //==============================================================================
+void MultiTrackEditor::initialUpdate()
+{
+    valueFollowPlayingPosition = (bool)buttonFollowPlayingPosition->getToggleState();
+}
+
+//==============================================================================
+void MultiTrackEditor::updateViewContext()
+{
+    JUCE_ASSERT_MESSAGE_MANAGER_EXISTS;
+
+    if (scopedSongDocumentPtrToPaint == nullptr)
+    {
+        return;
+    }
+
+    // Update playing position in ticks
+    {
+        const cctn::song::SongDocument& document = *scopedSongDocumentPtrToPaint;
+        playingPositionInTicks = cctn::song::SongDocument::Calculator::absoluteTimeToTick(document, playingPositionInSeconds);
+    }
+
+    if ((bool)valueFollowPlayingPosition.getValue())
+    {
+        if (!scrollBarHorizontal->getCurrentRange().contains(playingPositionInTicks))
+        {
+            auto new_range = scrollBarHorizontal->getCurrentRange().movedToStartAt(playingPositionInTicks);
+            scrollBarHorizontal->setCurrentRange(new_range);
+        }
+    }
+}
+
+void MultiTrackEditor::drawPlayingPositionMarker(juce::Graphics& g)
+{
+    juce::Graphics::ScopedSaveState save_state(g);
+
+    const auto range_visible_time_in_ticks = scrollBarHorizontal->getCurrentRange();
+    const auto position_x = ticksToPositionX(playingPositionInTicks, range_visible_time_in_ticks, rectTrackLane.getX(), rectTrackLane.getRight());
+
+    juce::Rectangle<int> rect_marker =
+        juce::Rectangle<int>{ position_x, 0, 2, getHeight() };
+
+    // Set clipping mask
+    g.reduceClipRegion(rectTrackLane);
+
+    g.setColour(juce::Colours::yellow);
+    g.fillRect(rect_marker);
+}
+
+//==============================================================================
 void MultiTrackEditor::updateContent()
 {
-    if (!documentEditorForPreviewPtr.expired())
+    if (!songDocumentEditorPtr.expired())
     {
-        if (documentEditorForPreviewPtr.lock()->getCurrentDocument().has_value())
+        if (songDocumentEditorPtr.lock()->getCurrentDocument().has_value())
         {
-            const auto& song_document_editor = *documentEditorForPreviewPtr.lock();
-            const auto& song_document = *documentEditorForPreviewPtr.lock()->getCurrentDocument().value();
+            const auto& song_document_editor = *songDocumentEditorPtr.lock();
+            const auto& song_document = *songDocumentEditorPtr.lock()->getCurrentDocument().value();
 
             const auto ticks_tail = song_document.getTotalLengthInTicks();
             const auto ticks_per_4bars = song_document.getTicksPerQuarterNote() * 4 * 4;
@@ -201,5 +300,4 @@ void MultiTrackEditor::updateContent()
 
 }
 }
-
-
+}

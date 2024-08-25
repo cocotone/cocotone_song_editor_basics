@@ -16,12 +16,13 @@
 #include "SongEditor/View/Track/cocotone_MultiTrackEditor.h"
 
 #include "SongEditor/View/PianoRoll/cocotone_PianoRollColours.h"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollPositionUtility.h"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollKeyboard.h"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollTimeRuler.h"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollEventDispatcher.h"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollPreviewSurface.h"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollInteractionSurface.h"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollPositionUtility.h"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollKeyboard.h"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollTimeRuler.h"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollEventDispatcher.h"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollPreviewSurface.h"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollInteractionSurface.h"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollEditor.h"
 
 #include "SongEditor/Quantize/cocotone_QuantizeEngine.h"
 
@@ -38,11 +39,12 @@
 #include "SongEditor/View/Track/Impl/cocotone_BackingTrack.cpp"
 #include "SongEditor/View/Track/cocotone_MultiTrackEditor.cpp"
 
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollKeyboard.cpp"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollTimeRuler.cpp"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollEventDispatcher.cpp"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollPreviewSurface.cpp"
-#include "SongEditor/View/PianoRoll/cocotone_PianoRollInteractionSurface.cpp"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollKeyboard.cpp"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollTimeRuler.cpp"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollEventDispatcher.cpp"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollPreviewSurface.cpp"
+#include "SongEditor/View/PianoRoll/Impl/cocotone_PianoRollInteractionSurface.cpp"
+#include "SongEditor/View/PianoRoll/cocotone_PianoRollEditor.cpp"
 
 #include "SongEditor/Transport/cocotone_TransportEmulator.cpp"
 

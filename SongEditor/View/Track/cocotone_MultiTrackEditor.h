@@ -4,6 +4,8 @@ namespace cctn
 {
 namespace song
 {
+namespace view
+{
 
 //==============================================================================
 class MultiTrackEditor final
@@ -45,14 +47,26 @@ private:
     std::optional<juce::Range<double>> getVisibleRangeInTicks() override;
 
     //==============================================================================
+    void initialUpdate();
+
+    //==============================================================================
+    void updateViewContext();
+    void drawPlayingPositionMarker(juce::Graphics& g);
+
+    //==============================================================================
     void updateContent();
 
     //==============================================================================
-    std::weak_ptr<cctn::song::SongDocumentEditor> documentEditorForPreviewPtr;
+    std::weak_ptr<cctn::song::SongDocumentEditor> songDocumentEditorPtr;
+    std::shared_ptr<cctn::song::SongEditorOperation> songEditorOperationApi;
+
     const cctn::song::SongDocument* scopedSongDocumentPtrToPaint;
     cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
 
-    std::unique_ptr<juce::ScrollBar> scrollBarHorizontal;
+    std::unique_ptr<juce::ToggleButton> buttonFollowPlayingPosition;
+    juce::Value valueFollowPlayingPosition;
+
+    std::unique_ptr<juce::ScrollBar> scrollBarHorizontal;  // NOTE: Unit is Tick.
 
     std::unique_ptr<cctn::song::TrackComponentBase> timeSignatureTrack;
     std::unique_ptr<cctn::song::TrackComponentBase> musicalTimePreviewTrack;
@@ -62,10 +76,16 @@ private:
 
     juce::Value valueMusicalTimePreviewGridSize;
 
+    juce::Rectangle<int> rectTrackLane;
+
+    double playingPositionInSeconds;
+    juce::int64 playingPositionInTicks;
+
     mutable std::mutex mutex;
 
     JUCE_LEAK_DETECTOR(MultiTrackEditor)
 };
 
+}
 }
 }

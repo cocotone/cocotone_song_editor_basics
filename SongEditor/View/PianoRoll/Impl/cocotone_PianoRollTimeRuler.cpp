@@ -113,6 +113,12 @@ void PianoRollTimeRuler::paint(juce::Graphics& g)
     g.fillRect(rectBeatRulerArea);
     g.fillRect(rectBeatRulerLabelArea);
 
+    g.setColour(juce::Colours::darkgrey);
+    g.drawRect(rectTimeRulerArea, 1);
+    g.drawRect(rectTimeRulerLabelArea, 1);
+    g.drawRect(rectBeatRulerArea, 1);
+    g.drawRect(rectTimeRulerLabelArea, 1);
+
     //
     drawTimeRulerVerticalLines(g);
     drawBeatRulerVerticalLines(g);
