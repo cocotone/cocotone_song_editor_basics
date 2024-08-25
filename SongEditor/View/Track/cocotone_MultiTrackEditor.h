@@ -45,6 +45,9 @@ private:
     std::optional<juce::Range<double>> getVisibleRangeInTicks() override;
 
     //==============================================================================
+    void initialUpdate();
+
+    //==============================================================================
     void updateViewContext();
     void drawPlayingPositionMarker(juce::Graphics& g);
 
@@ -55,6 +58,9 @@ private:
     std::weak_ptr<cctn::song::SongDocumentEditor> documentEditorForPreviewPtr;
     const cctn::song::SongDocument* scopedSongDocumentPtrToPaint;
     cctn::song::SongDocument::BeatTimePoints currentBeatTimePoints{};
+
+    std::unique_ptr<juce::ToggleButton> buttonFollowPlayingPosition;
+    juce::Value valueFollowPlayingPosition;
 
     std::unique_ptr<juce::ScrollBar> scrollBarHorizontal;  // NOTE: Unit is Tick.
 

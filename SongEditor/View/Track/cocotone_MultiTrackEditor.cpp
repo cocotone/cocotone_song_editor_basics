@@ -29,14 +29,32 @@ MultiTrackEditor::MultiTrackEditor()
     scrollBarHorizontal->setCurrentRange(juce::Range<double>{0.0, 6.0}, juce::dontSendNotification);
     addAndMakeVisible(scrollBarHorizontal.get());
 
+    buttonFollowPlayingPosition = std::make_unique<juce::ToggleButton>();
+    buttonFollowPlayingPosition->setButtonText("Follow Position");
+    buttonFollowPlayingPosition->onStateChange =
+        [safe_this = juce::Component::SafePointer(this)]() {
+        if (safe_this.getComponent() == nullptr)
+        {
+            return;
+        }
+
+        safe_this->valueFollowPlayingPosition = (bool)safe_this->buttonFollowPlayingPosition->getToggleState();
+        };
+    addAndMakeVisible(buttonFollowPlayingPosition.get());
+
     // Add listener
     scrollBarHorizontal->addListener(this);
+    valueFollowPlayingPosition.addListener(this);
+
+    // Initial update
+    initialUpdate();
 }
 
 MultiTrackEditor::~MultiTrackEditor()
 {
     // Remove listener
     scrollBarHorizontal->removeListener(this);
+    valueFollowPlayingPosition.removeListener(this);
 }
 
 //==============================================================================
@@ -137,7 +155,9 @@ void MultiTrackEditor::resized()
     vocalTrack->setHeaderRatio(ratio_track_header);
     vocalTrack->setBounds(rect_area.removeFromTop(height_track));
 
-    scrollBarHorizontal->setBounds(rect_area.removeFromBottom(height_scroll_bar).withTrimmedLeft(width_track_header));
+    auto rect_footer = rect_area.removeFromBottom(height_scroll_bar).withTrimmedBottom(2);
+    buttonFollowPlayingPosition->setBounds(rect_footer.removeFromLeft(width_track_header));
+    scrollBarHorizontal->setBounds(rect_footer);
 
     rectTrackLane = juce::Rectangle<int>{ 
         (int)width_track_header, 
@@ -193,6 +213,12 @@ std::optional<juce::Range<double>> MultiTrackEditor::getVisibleRangeInTicks()
 }
 
 //==============================================================================
+void MultiTrackEditor::initialUpdate()
+{
+    valueFollowPlayingPosition = (bool)buttonFollowPlayingPosition->getToggleState();
+}
+
+//==============================================================================
 void MultiTrackEditor::updateViewContext()
 {
     JUCE_ASSERT_MESSAGE_MANAGER_EXISTS;
@@ -206,6 +232,15 @@ void MultiTrackEditor::updateViewContext()
     {
         const cctn::song::SongDocument& document = *scopedSongDocumentPtrToPaint;
         playingPositionInTicks = cctn::song::SongDocument::Calculator::absoluteTimeToTick(document, playingPositionInSeconds);
+    }
+
+    if ((bool)valueFollowPlayingPosition.getValue())
+    {
+        if (!scrollBarHorizontal->getCurrentRange().contains(playingPositionInTicks))
+        {
+            auto new_range = scrollBarHorizontal->getCurrentRange().movedToStartAt(playingPositionInTicks);
+            scrollBarHorizontal->setCurrentRange(new_range);
+        }
     }
 }
 
